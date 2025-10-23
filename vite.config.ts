@@ -1,40 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tsconfigPaths from 'vite-tsconfig-paths'
-import fs from 'fs'
-import path from 'path'
+import tsconfigPaths from "vite-tsconfig-paths"
+
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    tsconfigPaths(),
-    {
-      name: 'copy-redirects',
-      apply: 'build',
-      closeBundle() {
-        const source = path.resolve(__dirname, '_redirects')
-        const destination = path.resolve(__dirname, 'dist/_redirects')
-
-        if (fs.existsSync(source)) {
-          fs.copyFileSync(source, destination)
-          console.log('✅ _redirects copié dans dist/')
-        } else {
-          console.log('ℹ️ Aucun fichier _redirects trouvé à la racine, skip.')
-        }
-      },
-    },
-  ],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          react: ['react', 'react-dom'],
-          ui: ['@chakra-ui/react', '@emotion/react', '@emotion/styled'],
-          math: ['mathjs', 'katex'],
-        },
-      },
-    },
-    chunkSizeWarningLimit: 1000,
-  },
+   plugins: [react(), tsconfigPaths()],
 })
