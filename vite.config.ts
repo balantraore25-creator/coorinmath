@@ -18,9 +18,9 @@ export default defineConfig({
 
         if (fs.existsSync(source)) {
           fs.copyFileSync(source, destination)
-          console.log('✅ Fichier _redirects copié dans dist/')
+          console.log('✅ _redirects copié dans dist/')
         } else {
-          console.warn('⚠️ Aucun fichier _redirects trouvé à la racine du projet.')
+          console.log('ℹ️ Aucun fichier _redirects trouvé à la racine, skip.')
         }
       },
     },
@@ -28,7 +28,6 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Découpage manuel des chunks pour éviter les bundles trop lourds
         manualChunks: {
           react: ['react', 'react-dom'],
           ui: ['@chakra-ui/react', '@emotion/react', '@emotion/styled'],
@@ -36,17 +35,6 @@ export default defineConfig({
         },
       },
     },
-    chunkSizeWarningLimit: 1000, // augmente la limite d’avertissement
+    chunkSizeWarningLimit: 1000,
   },
 })
-
-
-/*import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tsconfigPaths from "vite-tsconfig-paths"
-
-
-// https://vite.dev/config/
-export default defineConfig({
-   plugins: [react(), tsconfigPaths()],
-})*/
