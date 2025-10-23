@@ -14,7 +14,7 @@ interface AuthResponse {
 
 // Base query avec typage strict
 const baseQuery = fetchBaseQuery({
-  baseUrl: 'https://coorinmath.com/api',
+  baseUrl: 'https://coorinmath-api.onrender.com/api',
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token
