@@ -5,16 +5,17 @@ import type {
   FetchBaseQueryError,
 } from '@reduxjs/toolkit/query'
 import type { RootState } from '../../app/store'
-import { setCredentials } from '../../features/auth/authSlice'
+import { setCredentials, logOut } from '../../features/auth/authSlice'
 
-// Typage du token de l'auth
+// ✅ Typage du token de l'auth
 interface AuthResponse {
   accessToken: string
+  refreshToken?: string
 }
 
-// Base query avec typage strict
+// ✅ Base query avec typage strict
 const baseQuery = fetchBaseQuery({
-  baseUrl: 'https://coorinmath-api.onrender.com/api',
+  baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://coorinmath-api.onrender.com/api',
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token
@@ -25,32 +26,28 @@ const baseQuery = fetchBaseQuery({
   },
 })
 
-// Wrapper avec reauth
+// ✅ Wrapper avec reauth
 const baseQueryWithReauth: BaseQueryFn<
   string | FetchArgs,
   unknown,
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
-  // result est automatiquement typé : { data?: unknown; error?: FetchBaseQueryError }
   let result = await baseQuery(args, api, extraOptions)
 
   if (result.error?.status === 403) {
-    console.log('sending refresh token')
+    console.log('🔄 Access token expired, trying refresh...')
 
-    // refreshResult est aussi typé automatiquement
     const refreshResult = await baseQuery('/auth/refresh', api, extraOptions)
 
     if (refreshResult.data) {
-      // On sait que refreshResult.data est AuthResponse
-      api.dispatch(setCredentials(refreshResult.data as AuthResponse))
+      const { accessToken } = refreshResult.data as AuthResponse
+      api.dispatch(setCredentials({ accessToken }))
 
       // Retry de la requête initiale
       result = await baseQuery(args, api, extraOptions)
     } else {
-      if (refreshResult.error?.status === 403) {
-        ;(refreshResult.error.data as { message?: string }).message =
-          'Your login has expired.'
-      }
+      console.warn('❌ Refresh token invalid, logging out...')
+      api.dispatch(logOut())
       return refreshResult
     }
   }
@@ -58,13 +55,9 @@ const baseQueryWithReauth: BaseQueryFn<
   return result
 }
 
+// ✅ Création de l’API
 export const apiSlice = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ['Course', 'User'],
   endpoints: () => ({}),
 })
-
-
-
-
-

@@ -1,15 +1,11 @@
 import { apiSlice } from "../../app/api/apiSlice"
-import { logOut } from "./authSlice"
-import { setCredentials } from './authSlice'
+import { logOut, setCredentials } from "./authSlice"
 
-//import type { PayloadAction } from '@reduxjs/toolkit'
-// ✅ Typage des credentials
 interface LoginCredentials {
   username: string
   password: string
 }
 
-// ✅ Typage des réponses (à adapter selon ton backend)
 interface AuthResponse {
   accessToken: string
   refreshToken?: string
@@ -19,7 +15,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<AuthResponse, LoginCredentials>({
       query: (credentials) => ({
-        url: "/auth",
+        url: "/auth", // devient https://coorinmath-api.onrender.com/api/auth
         method: "POST",
         body: credentials,
       }),
@@ -32,8 +28,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
       }),
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
-          const{ data} = await queryFulfilled
-          console.log(data)
+          await queryFulfilled
           dispatch(logOut())
           setTimeout(() => {
             dispatch(apiSlice.util.resetApiState())
@@ -49,16 +44,15 @@ export const authApiSlice = apiSlice.injectEndpoints({
         url: "/auth/refresh",
         method: "GET",
       }),
-       async onQueryStarted(_, { dispatch, queryFulfilled }) {
-                      try {
-                          const { data } = await queryFulfilled
-                          console.log(data)
-                          const { accessToken } = data
-                          dispatch(setCredentials({ accessToken }))
-                      } catch (err) {
-                          console.log(err)
-                      }
-                  }
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled
+          const { accessToken } = data
+          dispatch(setCredentials({ accessToken }))
+        } catch (err) {
+          console.error("Refresh failed:", err)
+        }
+      },
     }),
   }),
 })
