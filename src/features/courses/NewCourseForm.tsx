@@ -38,13 +38,13 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
   })
 
   const linkCollection = createListCollection({
-    items: [
-      { label: "Euclidean Division", value: "/dash/courses/euclidean" },
-      { label: "Numeration", value: "/dash/courses/numeration" },
-      { label: "GCD", value: "/dash/courses/pgcd" },
-      { label: "Congruence mod n", value: "/dash/courses/congruence" },
-    ],
-  })
+  items: [
+    { label: <Link to="/dash/courses/euclidean">Euclidean Division</Link>, value: "/dash/courses/euclidean" },
+    { label: <Link to="/dash/courses/numeration">Numeration</Link>, value: "/dash/courses/numeration" },
+    { label: <Link to="/dash/courses/pgcd">GCD</Link>, value: "/dash/courses/pgcd" },
+    { label: <Link to="/dash/courses/congruence">Congruence mod n</Link>, value: "/dash/courses/congruence" },
+  ],
+})
 
   useEffect(() => {
     if (isSuccess) {
