@@ -12,7 +12,7 @@ import {
   createListCollection,
 } from "@chakra-ui/react"
 import { useState, useEffect } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useAddCourseMutation } from "./coursesApiSlice"
 import { FaSave } from "react-icons/fa"
 import type { SanitizedUser } from "../users/usersApiSlice"
@@ -38,13 +38,13 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
   })
 
   const linkCollection = createListCollection({
-  items: [
-    { label: <Link to="/dash/courses/euclidean">Euclidean Division</Link>, value: "/dash/courses/euclidean" },
-    { label: <Link to="/dash/courses/numeration">Numeration</Link>, value: "/dash/courses/numeration" },
-    { label: <Link to="/dash/courses/pgcd">GCD</Link>, value: "/dash/courses/pgcd" },
-    { label: <Link to="/dash/courses/congruence">Congruence mod n</Link>, value: "/dash/courses/congruence" },
-  ],
-})
+    items: [
+      { label: "Euclidean Division", value: "/dash/courses/euclidean" },
+      { label: "Numeration", value: "/dash/courses/numeration" },
+      { label: "GCD", value: "/dash/courses/pgcd" },
+      { label: "Congruence mod n", value: "/dash/courses/congruence" },
+    ],
+  })
 
   useEffect(() => {
     if (isSuccess) {
@@ -52,9 +52,9 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
       setText("")
       setAssignedUsers([])
       setLinkType("")
-      navigate("/dash/courses")
+      navigate(linkType) // redirige vers le cours sélectionné
     }
-  }, [isSuccess, navigate])
+  }, [isSuccess, navigate, linkType])
 
   const canSave =
     Boolean(title && text && assignedUsers.length > 0 && linkType !== "") &&
@@ -125,7 +125,7 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
                 <Select.Content>
                   {linkCollection.items.map((item) => (
                     <Select.Item key={item.value} item={item}>
-                      <Link to={item.value}>{item.label}</Link>
+                      {item.label}
                       <Select.ItemIndicator />
                     </Select.Item>
                   ))}
