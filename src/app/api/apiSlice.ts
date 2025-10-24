@@ -15,7 +15,7 @@ interface AuthResponse {
 
 // ✅ Base query avec typage strict
 const baseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://coorinmath.onrender.com',
+  baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://siramath.onrender.com',
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token
