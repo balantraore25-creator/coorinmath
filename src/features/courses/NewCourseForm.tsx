@@ -12,7 +12,7 @@ import {
   createListCollection,
 } from "@chakra-ui/react"
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useAddCourseMutation } from "./coursesApiSlice"
 import { FaSave } from "react-icons/fa"
 import type { SanitizedUser } from "../users/usersApiSlice"
@@ -125,7 +125,7 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
                 <Select.Content>
                   {linkCollection.items.map((item) => (
                     <Select.Item key={item.value} item={item}>
-                      {item.label}
+                      <Link to={item.value}>{item.label}</Link>
                       <Select.ItemIndicator />
                     </Select.Item>
                   ))}
