@@ -39,10 +39,10 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
 
   const linkCollection = createListCollection({
     items: [
-      { label: "Euclidean Division", value: "http://localhost:5173/dash/courses/euclidean" },
-      { label: "Numeration", value: "http://localhost:5173/dash/courses/numeration" },
-      { label: "GCD", value: "http://localhost:5173/dash/courses/pgcd" },
-      { label: "Congruence mod n", value: "http://localhost:5173/dash/courses/congruence" },
+      { label: "Euclidean Division", value: "/dash/courses/euclidean" },
+      { label: "Numeration", value: "/dash/courses/numeration" },
+      { label: "GCD", value: "/dash/courses/pgcd" },
+      { label: "Congruence mod n", value: "/dash/courses/congruence" },
     ],
   })
 
