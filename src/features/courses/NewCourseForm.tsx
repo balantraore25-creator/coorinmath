@@ -10,37 +10,20 @@ import {
   Field,
   Select,
   createListCollection,
-  Tooltip,
-  IconButton,
-  Flex,
 } from "@chakra-ui/react"
-import {
-  FaSave,
-  FaDivide,
-  FaSortNumericDown,
-  FaEquals,
-  FaInfinity,
-} from "react-icons/fa"
-import { motion } from "framer-motion"
+import { FaSave } from "react-icons/fa"
 import { useState, useEffect } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useAddCourseMutation } from "./coursesApiSlice"
 import type { SanitizedUser } from "../users/usersApiSlice"
+import { QuickLinksNav } from "../../components/QuickLinksNav"
+import { linkCollection } from "../../utils/linkPresets"
 
 interface NewCourseFormProps {
   users: SanitizedUser[]
 }
 
-const MotionIconButton = motion(IconButton)
-
-const linkCollection = [
-  { to: "/dash/courses/euclidean", label: "Euclidean Division", icon: <FaDivide /> },
-  { to: "/dash/courses/numeration", label: "Numeration", icon: <FaSortNumericDown /> },
-  { to: "/dash/courses/pgcd", label: "GCD", icon: <FaEquals /> },
-  { to: "/dash/courses/congruence", label: "Congruence mod n", icon: <FaInfinity /> },
-]
-
-const NewCourseForm = ({ users }: NewCourseFormProps) => {
+export const NewCourseForm = ({ users }: NewCourseFormProps) => {
   const [addCourse, { isLoading, isSuccess, isError, error }] = useAddCourseMutation()
   const navigate = useNavigate()
 
@@ -79,9 +62,7 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
 
   return (
     <Box maxW="lg" mx="auto" py={6}>
-      <Heading size="md" mb={4}>
-        New Course
-      </Heading>
+      <Heading size="md" mb={4}>New Course</Heading>
 
       {isError && (
         <Text color="red.500" mb={4}>
@@ -93,7 +74,6 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
 
       <form onSubmit={onSaveCourseClicked}>
         <VStack align="stretch" gap={4}>
-          {/* Champ Titre */}
           <Field.Root required invalid={!title}>
             <Field.Label>Title</Field.Label>
             <Input
@@ -104,7 +84,6 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
             {!title && <Field.ErrorText>Title is required</Field.ErrorText>}
           </Field.Root>
 
-          {/* Champ Contenu */}
           <Field.Root required invalid={!text}>
             <Field.Label>Content</Field.Label>
             <Textarea
@@ -116,7 +95,6 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
             {!text && <Field.ErrorText>Content is required</Field.ErrorText>}
           </Field.Root>
 
-          {/* Champ Type de lien */}
           <Field.Root required invalid={!linkType}>
             <Field.Label>Link Type</Field.Label>
             <Select.Root
@@ -127,7 +105,7 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
                 })),
               })}
               value={[linkType]}
-              onValueChange={({ value }) => setLinkType(value[0])} // ✅ sélection seule
+              onValueChange={({ value }) => setLinkType(value[0])}
             >
               <Select.HiddenSelect name="linkType" />
               <Select.Control>
@@ -141,12 +119,12 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
               </Select.Control>
               <Select.Positioner>
                 <Select.Content>
-                  {linkCollection.map(({ to, label, icon }) => (
+                  {linkCollection.map(({ to, label, icon: IconComponent }) => (
                     <Select.Item key={to} item={{ value: to, label }}>
-                      <Flex align="center" gap={2}>
-                        <Icon as={() => icon} />
-                        <Text>{label}</Text>
-                      </Flex>
+                      <Box display="flex" alignItems="center" gap={2}>
+                        <Icon as={IconComponent} />
+                        {label}
+                      </Box>
                       <Select.ItemIndicator />
                     </Select.Item>
                   ))}
@@ -156,7 +134,6 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
             {!linkType && <Field.ErrorText>Link type is required</Field.ErrorText>}
           </Field.Root>
 
-          {/* Champ Assignation utilisateur */}
           <Field.Root required invalid={assignedUsers.length === 0}>
             <Field.Label>Assigned to</Field.Label>
             <Select.Root
@@ -191,51 +168,15 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
             )}
           </Field.Root>
 
-          {/* Bouton Save */}
           <Button type="submit" colorScheme="teal" disabled={!canSave}>
-             <Icon>
-              <FaSave />
-            
-            </Icon>
+            <Icon><FaSave /></Icon>
             Save
           </Button>
         </VStack>
       </form>
 
-      {/* 🚀 Section liens rapides (navigation uniquement ici) */}
-      <Flex gap={4} mt={8} justify="center">
-        {linkCollection.map(({ to, label, icon }) => (
-          <Tooltip.Root key={to} openDelay={300} closeDelay={100}>
-            <Tooltip.Trigger asChild>
-              <Link to={to}>
-                <MotionIconButton
-                  aria-label={label}
-                  variant="ghost"
-                  whileHover={{ scale: 1.2, y: -2 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                   {icon}
-                </MotionIconButton> 
-              </Link>
-            </Tooltip.Trigger>
-            <Tooltip.Positioner>
-              <Tooltip.Content
-                bg="gray.800"
-                color="white"
-                px={3}
-                py={2}
-                borderRadius="md"
-                fontSize="sm"
-              >
-                {label}
-                <Tooltip.Arrow />
-              </Tooltip.Content>
-            </Tooltip.Positioner>
-          </Tooltip.Root>
-        ))}
-      </Flex>
+      {/* 🔗 Navigation rapide */}
+      <QuickLinksNav links={linkCollection} />
     </Box>
   )
 }
-
-export default NewCourseForm

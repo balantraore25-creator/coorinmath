@@ -7,9 +7,11 @@ import {
 } from "@chakra-ui/react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons"
-import { useNavigate, Link as RouterLink } from "react-router-dom"
+import { useNavigate} from "react-router-dom"
 import { useGetCoursesQuery, defaultGetCoursesArg } from "./coursesApiSlice"
 import { memo } from "react"
+import { QuickLinksNav } from "../../components/QuickLinksNav"
+import { FaExternalLinkAlt } from "react-icons/fa"
 
 interface CourseProps {
   courseId: string
@@ -50,9 +52,15 @@ const Course = ({ courseId }: CourseProps) => {
       <TableCell>{course.title}</TableCell>
       <TableCell>{course.username}</TableCell>
       <TableCell>
-  <RouterLink to={course.link} style={{ color: "#319795", fontWeight: 500 }}>
-    🔗 Accéder au cours
-  </RouterLink>
+  <QuickLinksNav
+  links={[
+    {
+      to: course.link,
+      label: "Accéder au cours",
+      icon: FaExternalLinkAlt,
+    },
+  ]}
+/>
 </TableCell>
       <TableCell textAlign="end">
         <Button
