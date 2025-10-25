@@ -1,5 +1,40 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tsconfigPaths from 'vite-tsconfig-paths'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react(), tsconfigPaths()],
+  base: '/', // nécessaire pour Render
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
+  build: {
+    outDir: 'dist',
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // 📦 découpage des bibliothèques lourdes
+          react: ['react', 'react-dom'],
+          motion: ['framer-motion'],
+          icons: ['react-icons'],
+          chakra: ['@chakra-ui/react', '@chakra-ui/icons'],
+          ark: ['@ark-ui/react'],
+          zod: ['zod'],
+          i18n: ['i18next', 'react-i18next'],
+        },
+      },
+    },
+  },
+})
+
+
+
+/*import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 import tsconfigPaths from "vite-tsconfig-paths"
 
 
@@ -10,4 +45,5 @@ export default defineConfig({
     build: {
     outDir: 'dist', // par défaut
   },
-})
+   
+})*/

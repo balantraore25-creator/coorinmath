@@ -4,8 +4,7 @@ import {
   FaSortNumericDown,
   FaEquals,
   FaInfinity,
-  FaCalculator,
-  FaBookOpen,
+ 
 } from "react-icons/fa"
 import type { IconType } from "react-icons"
 
@@ -38,14 +37,6 @@ export const linkCollection: LinkItem[] = [
     label: "Congruence mod n",
     icon: FaInfinity,
   },
-  {
-    to: "/dash/courses/arithmetic",
-    label: "Arithmetic",
-    icon: FaCalculator,
-  },
-  {
-    to: "/dash/courses/fractions",
-    label: "Fractions",
-    icon: FaBookOpen,
-  },
+  
 ]
+
