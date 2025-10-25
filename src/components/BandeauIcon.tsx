@@ -81,8 +81,8 @@ const BandeauIcon = () => {
                       whileHover={{ scale: 1.2, y: -2 }}
                       transition={{ type: "spring", stiffness: 300 }}
                     >
-                      {icon}
-                      </MotionIconButton>
+                     {icon}
+                      </MotionIconButton> 
                   </Link>
         </Tooltip>
       ))}

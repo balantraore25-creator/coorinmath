@@ -8,9 +8,9 @@ import {
   Textarea,
   Icon,
   Field,
-  Tooltip,
   Select,
   createListCollection,
+  Tooltip,
   IconButton,
   Flex,
 } from "@chakra-ui/react"
@@ -21,7 +21,6 @@ import {
   FaEquals,
   FaInfinity,
 } from "react-icons/fa"
-//import { Tooltip } from "@/components/ui/tooltip"; // ✅ Chakra UI v3 Tooltip wrapper
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
@@ -78,15 +77,6 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
     }
   }
 
-  // 🚀 Navigation automatique quand on choisit un linkType
-  const handleLinkChange = ({ value }: { value: string[] }) => {
-    const selected = value[0]
-    setLinkType(selected)
-    if (selected) {
-      navigate(selected)
-    }
-  }
-
   return (
     <Box maxW="lg" mx="auto" py={6}>
       <Heading size="md" mb={4}>
@@ -137,7 +127,7 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
                 })),
               })}
               value={[linkType]}
-              onValueChange={handleLinkChange}
+              onValueChange={({ value }) => setLinkType(value[0])} // ✅ sélection seule
             >
               <Select.HiddenSelect name="linkType" />
               <Select.Control>
@@ -203,47 +193,46 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
 
           {/* Bouton Save */}
           <Button type="submit" colorScheme="teal" disabled={!canSave}>
-          <Icon>
+             <Icon>
               <FaSave />
-           </Icon>
+            </Icon>
             Save
           </Button>
         </VStack>
       </form>
 
-      {/* 🚀 Section liens rapides */}
+      {/* 🚀 Section liens rapides (navigation uniquement ici) */}
       <Flex gap={4} mt={8} justify="center">
-  {linkCollection.map(({ to, label, icon }) => (
-    <Tooltip.Root key={to} openDelay={300} closeDelay={100}>
-      <Tooltip.Trigger asChild>
-        <Link to={to}>
-          <MotionIconButton
-            aria-label={label}
-            variant="ghost"
-            whileHover={{ scale: 1.2, y: -2 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-           {icon}
-          </MotionIconButton>
-        </Link>
-      </Tooltip.Trigger>
-      <Tooltip.Positioner>
-        <Tooltip.Content
-          bg="gray.800"
-          color="white"
-          px={3}
-          py={2}
-          borderRadius="md"
-          fontSize="sm"
-        >
-          {label}
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Positioner>
-    </Tooltip.Root>
-  ))}
-</Flex>
-
+        {linkCollection.map(({ to, label, icon }) => (
+          <Tooltip.Root key={to} openDelay={300} closeDelay={100}>
+            <Tooltip.Trigger asChild>
+              <Link to={to}>
+                <MotionIconButton
+                  aria-label={label}
+                  variant="ghost"
+                  whileHover={{ scale: 1.2, y: -2 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                   {icon}
+                </MotionIconButton> 
+              </Link>
+            </Tooltip.Trigger>
+            <Tooltip.Positioner>
+              <Tooltip.Content
+                bg="gray.800"
+                color="white"
+                px={3}
+                py={2}
+                borderRadius="md"
+                fontSize="sm"
+              >
+                {label}
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Positioner>
+          </Tooltip.Root>
+        ))}
+      </Flex>
     </Box>
   )
 }
