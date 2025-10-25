@@ -3,20 +3,16 @@ import {
   TableCell,
   Text,
   Button,
-  chakra,
 } from "@chakra-ui/react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons"
-import { useNavigate, Link as RouterLink } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useGetCoursesQuery, defaultGetCoursesArg } from "./coursesApiSlice"
 import { memo } from "react"
 
 interface CourseProps {
   courseId: string
 }
-
-// ✅ On crée une version Chakra du RouterLink
-const RouterChakraLink = chakra(RouterLink)
 
 /**
  * 🧠 Composant affichant une ligne de tableau pour un cours donné
@@ -57,14 +53,15 @@ const Course = ({ courseId }: CourseProps) => {
       <TableCell>{course.title}</TableCell>
       <TableCell>{course.username}</TableCell>
       <TableCell>
-        {/* ✅ Navigation interne avec RouterChakraLink */}
-        <RouterChakraLink
-          to={course.link}
-          color="teal.500"
-          fontWeight="medium"
+        {/* ✅ Lien absolu basé sur window.location.origin */}
+        <a
+          href={`${window.location.origin}${course.link}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#319795", fontWeight: 500 }}
         >
           🔗 Accéder au cours
-        </RouterChakraLink>
+        </a>
       </TableCell>
       <TableCell textAlign="end">
         <Button
