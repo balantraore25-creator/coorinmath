@@ -55,7 +55,7 @@ const Course = ({ courseId }: CourseProps) => {
       <TableCell>
         {/* ✅ Lien absolu basé sur window.location.origin */}
         <a
-          href={`${window.location.origin}${course.link}`}
+          href={`${window.location.origin}`}
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: "#319795", fontWeight: 500 }}

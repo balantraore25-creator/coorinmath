@@ -195,6 +195,7 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
           <Button type="submit" colorScheme="teal" disabled={!canSave}>
              <Icon>
               <FaSave />
+            
             </Icon>
             Save
           </Button>
