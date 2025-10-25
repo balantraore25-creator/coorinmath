@@ -11,7 +11,7 @@ import { useNavigate} from "react-router-dom"
 import { useGetCoursesQuery, defaultGetCoursesArg } from "./coursesApiSlice"
 import { memo } from "react"
 import { QuickLinksNav } from "../../components/QuickLinksNav"
-import { FaExternalLinkAlt } from "react-icons/fa"
+import { linkCollection } from "../../utils/linkPresets"
 
 interface CourseProps {
   courseId: string
@@ -52,16 +52,8 @@ const Course = ({ courseId }: CourseProps) => {
       <TableCell>{course.title}</TableCell>
       <TableCell>{course.username}</TableCell>
       <TableCell>
-  <QuickLinksNav
-  links={[
-    {
-      to: course.link,
-      label: "Accéder au cours",
-      icon: FaExternalLinkAlt,
-    },
-  ]}
-/>
-</TableCell>
+       <QuickLinksNav links={linkCollection} />
+      </TableCell>
       <TableCell textAlign="end">
         <Button
           size="sm"
