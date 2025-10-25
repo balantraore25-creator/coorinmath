@@ -48,10 +48,10 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
   // ✅ Collection des liens (sans icônes, juste label + value)
   const linkCollection = createListCollection({
     items: [
-      { value: "https://corinmath.onrender.com/dash/courses/euclidean", label: "Euclidean Division" },
-      { value: "https://corinmath.onrender.com/dash/courses/numeration", label: "Numeration" },
-      { value: "https://corinmath.onrender.com/dash/courses/pgcd", label: "GCD" },
-      { value: "https://corinmath.onrender.com/dash/courses/congruence", label: "Congruence mod n" },
+      { value: "/dash/courses/euclidean", label: "Euclidean Division" },
+      { value: "/dash/courses/numeration", label: "Numeration" },
+      { value: "/dash/courses/pgcd", label: "GCD" },
+      { value: "/dash/courses/congruence", label: "Congruence mod n" },
     ],
   })
 
