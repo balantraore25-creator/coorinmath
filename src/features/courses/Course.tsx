@@ -38,6 +38,18 @@ const Course = ({ courseId }: CourseProps) => {
 
   const handleEdit = () => navigate(`/dash/courses/${courseId}`)
 
+
+  // ✅ Nouvelle fonction générique pour naviguer vers le lien du cours
+  const handleNavigate = (link: string) => {
+    // Si le lien est absolu (http...), on ouvre dans un nouvel onglet
+    if (link.startsWith("http")) {
+      window.open(link, "_blank", "noopener,noreferrer")
+    } else {
+      // Sinon, navigation interne SPA
+      navigate(link)
+    }
+  }
+
   return (
     <TableRow>
       <TableCell>
@@ -54,14 +66,14 @@ const Course = ({ courseId }: CourseProps) => {
       <TableCell>{course.username}</TableCell>
       <TableCell>
         {/* ✅ Lien absolu basé sur window.location.origin */}
-        <a
-          href={`${window.location.origin}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "#319795", fontWeight: 500 }}
+        <Button
+          size="sm"
+          variant="solid"
+          colorScheme="teal"
+          onClick={() => handleNavigate(course.link)}
         >
           🔗 Accéder au cours
-        </a>
+        </Button>
       </TableCell>
       <TableCell textAlign="end">
         <Button
