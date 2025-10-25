@@ -10,11 +10,18 @@ import {
   Field,
   Select,
   createListCollection,
+  Flex,
 } from "@chakra-ui/react"
+import {
+  FaSave,
+  FaDivide,
+  FaSortNumericDown,
+  FaEquals,
+  FaInfinity,
+} from "react-icons/fa"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAddCourseMutation } from "./coursesApiSlice"
-import { FaSave } from "react-icons/fa"
 import type { SanitizedUser } from "../users/usersApiSlice"
 
 interface NewCourseFormProps {
@@ -30,6 +37,7 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
   const [assignedUsers, setAssignedUsers] = useState<string[]>([])
   const [linkType, setLinkType] = useState<string>("")
 
+  // ✅ Collection des utilisateurs
   const userCollection = createListCollection({
     items: users.map((user) => ({
       label: user.username,
@@ -37,14 +45,18 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
     })),
   })
 
+  // ✅ Collection des liens (sans icônes, juste label + value)
   const linkCollection = createListCollection({
     items: [
-      { label: "Euclidean Division", value: "/dash/courses/euclidean" },
-      { label: "Numeration", value: "/dash/courses/numeration" },
-      { label: "GCD", value: "/dash/courses/pgcd" },
-      { label: "Congruence mod n", value: "/dash/courses/congruence" },
+      { value: "/dash/courses/euclidean", label: "Euclidean Division" },
+      { value: "/dash/courses/numeration", label: "Numeration" },
+      { value: "/dash/courses/pgcd", label: "GCD" },
+      { value: "/dash/courses/congruence", label: "Congruence mod n" },
     ],
   })
+
+  // Tableau des icônes dans le même ordre
+  const linkIcons = [FaDivide, FaSortNumericDown, FaEquals, FaInfinity]
 
   useEffect(() => {
     if (isSuccess) {
@@ -52,9 +64,9 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
       setText("")
       setAssignedUsers([])
       setLinkType("")
-      navigate(linkType) // redirige vers le cours sélectionné
+      navigate("/dash/courses")
     }
-  }, [isSuccess, navigate, linkType])
+  }, [isSuccess, navigate])
 
   const canSave =
     Boolean(title && text && assignedUsers.length > 0 && linkType !== "") &&
@@ -82,7 +94,8 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
       )}
 
       <form onSubmit={onSaveCourseClicked}>
-        <VStack align="stretch">
+        <VStack align="stretch" gap={4}>
+          {/* Champ Titre */}
           <Field.Root required invalid={!title}>
             <Field.Label>Title</Field.Label>
             <Input
@@ -93,6 +106,7 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
             {!title && <Field.ErrorText>Title is required</Field.ErrorText>}
           </Field.Root>
 
+          {/* Champ Contenu */}
           <Field.Root required invalid={!text}>
             <Field.Label>Content</Field.Label>
             <Textarea
@@ -104,6 +118,7 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
             {!text && <Field.ErrorText>Content is required</Field.ErrorText>}
           </Field.Root>
 
+          {/* Champ Type de lien */}
           <Field.Root required invalid={!linkType}>
             <Field.Label>Link Type</Field.Label>
             <Select.Root
@@ -123,9 +138,12 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
               </Select.Control>
               <Select.Positioner>
                 <Select.Content>
-                  {linkCollection.items.map((item) => (
+                  {linkCollection.items.map((item, idx) => (
                     <Select.Item key={item.value} item={item}>
-                      {item.label}
+                      <Flex align="center" gap={2}>
+                        <Icon as={linkIcons[idx]} />
+                        <Text>{item.label}</Text>
+                      </Flex>
                       <Select.ItemIndicator />
                     </Select.Item>
                   ))}
@@ -135,6 +153,7 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
             {!linkType && <Field.ErrorText>Link type is required</Field.ErrorText>}
           </Field.Root>
 
+          {/* Champ Assignation utilisateur */}
           <Field.Root required invalid={assignedUsers.length === 0}>
             <Field.Label>Assigned to</Field.Label>
             <Select.Root
@@ -169,10 +188,11 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
             )}
           </Field.Root>
 
-          <Button type="submit" colorScheme="teal" disabled={!canSave}>
-            <Icon>
-              <FaSave />
-            </Icon>
+          {/* Bouton */}
+          <Button type="submit" colorScheme="teal" disabled={!canSave} >
+           <Icon>
+                        <FaSave />
+                      </Icon>
             Save
           </Button>
         </VStack>

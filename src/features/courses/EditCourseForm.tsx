@@ -215,6 +215,7 @@ const EditCourseForm = ({ course, users }: EditCourseFormProps) => {
             colorScheme="red"
             onClick={onDeleteCourseClicked}
           >
+            
             <Icon>
               <FaTrash />
             </Icon>
