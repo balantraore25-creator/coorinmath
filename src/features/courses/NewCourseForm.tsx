@@ -8,8 +8,10 @@ import {
   Textarea,
   Icon,
   Field,
+  Tooltip,
   Select,
   createListCollection,
+  IconButton,
   Flex,
 } from "@chakra-ui/react"
 import {
@@ -19,14 +21,25 @@ import {
   FaEquals,
   FaInfinity,
 } from "react-icons/fa"
+//import { Tooltip } from "@/components/ui/tooltip"; // ✅ Chakra UI v3 Tooltip wrapper
+import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useAddCourseMutation } from "./coursesApiSlice"
 import type { SanitizedUser } from "../users/usersApiSlice"
 
 interface NewCourseFormProps {
   users: SanitizedUser[]
 }
+
+const MotionIconButton = motion(IconButton)
+
+const linkCollection = [
+  { to: "/dash/courses/euclidean", label: "Euclidean Division", icon: <FaDivide /> },
+  { to: "/dash/courses/numeration", label: "Numeration", icon: <FaSortNumericDown /> },
+  { to: "/dash/courses/pgcd", label: "GCD", icon: <FaEquals /> },
+  { to: "/dash/courses/congruence", label: "Congruence mod n", icon: <FaInfinity /> },
+]
 
 const NewCourseForm = ({ users }: NewCourseFormProps) => {
   const [addCourse, { isLoading, isSuccess, isError, error }] = useAddCourseMutation()
@@ -37,26 +50,12 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
   const [assignedUsers, setAssignedUsers] = useState<string[]>([])
   const [linkType, setLinkType] = useState<string>("")
 
-  // ✅ Collection des utilisateurs
   const userCollection = createListCollection({
     items: users.map((user) => ({
       label: user.username,
       value: user.id,
     })),
   })
-
-  // ✅ Collection des liens (sans icônes, juste label + value)
-  const linkCollection = createListCollection({
-    items: [
-      { value: "/dash/courses/euclidean", label: "Euclidean Division" },
-      { value: "/dash/courses/numeration", label: "Numeration" },
-      { value: "/dash/courses/pgcd", label: "GCD" },
-      { value: "/dash/courses/congruence", label: "Congruence mod n" },
-    ],
-  })
-
-  // Tableau des icônes dans le même ordre
-  const linkIcons = [FaDivide, FaSortNumericDown, FaEquals, FaInfinity]
 
   useEffect(() => {
     if (isSuccess) {
@@ -76,6 +75,15 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
     e.preventDefault()
     if (canSave) {
       await addCourse({ title, text, user: assignedUsers[0], link: linkType })
+    }
+  }
+
+  // 🚀 Navigation automatique quand on choisit un linkType
+  const handleLinkChange = ({ value }: { value: string[] }) => {
+    const selected = value[0]
+    setLinkType(selected)
+    if (selected) {
+      navigate(selected)
     }
   }
 
@@ -122,9 +130,14 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
           <Field.Root required invalid={!linkType}>
             <Field.Label>Link Type</Field.Label>
             <Select.Root
-              collection={linkCollection}
+              collection={createListCollection({
+                items: linkCollection.map(({ to, label }) => ({
+                  value: to,
+                  label,
+                })),
+              })}
               value={[linkType]}
-              onValueChange={({ value }) => setLinkType(value[0])}
+              onValueChange={handleLinkChange}
             >
               <Select.HiddenSelect name="linkType" />
               <Select.Control>
@@ -138,11 +151,11 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
               </Select.Control>
               <Select.Positioner>
                 <Select.Content>
-                  {linkCollection.items.map((item, idx) => (
-                    <Select.Item key={item.value} item={item}>
+                  {linkCollection.map(({ to, label, icon }) => (
+                    <Select.Item key={to} item={{ value: to, label }}>
                       <Flex align="center" gap={2}>
-                        <Icon as={linkIcons[idx]} />
-                        <Text>{item.label}</Text>
+                        <Icon as={() => icon} />
+                        <Text>{label}</Text>
                       </Flex>
                       <Select.ItemIndicator />
                     </Select.Item>
@@ -188,15 +201,49 @@ const NewCourseForm = ({ users }: NewCourseFormProps) => {
             )}
           </Field.Root>
 
-          {/* Bouton */}
-          <Button type="submit" colorScheme="teal" disabled={!canSave} >
-           <Icon>
-                        <FaSave />
-                      </Icon>
+          {/* Bouton Save */}
+          <Button type="submit" colorScheme="teal" disabled={!canSave}>
+          <Icon>
+              <FaSave />
+           </Icon>
             Save
           </Button>
         </VStack>
       </form>
+
+      {/* 🚀 Section liens rapides */}
+      <Flex gap={4} mt={8} justify="center">
+  {linkCollection.map(({ to, label, icon }) => (
+    <Tooltip.Root key={to} openDelay={300} closeDelay={100}>
+      <Tooltip.Trigger asChild>
+        <Link to={to}>
+          <MotionIconButton
+            aria-label={label}
+            variant="ghost"
+            whileHover={{ scale: 1.2, y: -2 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+           {icon}
+          </MotionIconButton>
+        </Link>
+      </Tooltip.Trigger>
+      <Tooltip.Positioner>
+        <Tooltip.Content
+          bg="gray.800"
+          color="white"
+          px={3}
+          py={2}
+          borderRadius="md"
+          fontSize="sm"
+        >
+          {label}
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Positioner>
+    </Tooltip.Root>
+  ))}
+</Flex>
+
     </Box>
   )
 }
