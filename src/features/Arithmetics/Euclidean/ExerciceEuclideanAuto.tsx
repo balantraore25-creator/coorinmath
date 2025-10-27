@@ -45,10 +45,10 @@ type Exercice = {
 
 function getCorrectionUrl(type: ExerciceType): string {
   const map: Record<ExerciceType, string> = {
-    definition: "/dash/courses/euclidean/definition",
-    identite: "/dash/courses/euclidean/identite",
-    euclidienne: "/dash/courses/euclidean/division",
-    reste: "/dash/courses/euclidean/reste",
+    definition: "https://siramath.onrender.com/dash/courses/euclidean/definition",
+    identite: "https://siramath.onrender.com/dash/courses/euclidean/identite",
+    euclidienne: "https://siramath.onrender.com/dash/courses/euclidean/division",
+    reste: "https://siramath.onrender.com/dash/courses/euclidean/reste",
   }
   return map[type]
 }
