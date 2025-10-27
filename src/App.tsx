@@ -64,7 +64,8 @@ function App() {
                     <Route path=":id" element={<EditUser />} />
                     <Route path="new" element={<NewUserForm />} />
                   </Route>
-
+                 </Route>
+                 
                   <Route path="courses">
                     <Route index element={<CoursesList />} />
                     <Route path=":id" element={<EditCourse />} />
@@ -104,7 +105,7 @@ function App() {
                     
                    
                   </Route>
-                </Route>
+               
               </Route>
             </Route>
           </Route>
