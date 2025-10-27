@@ -18,22 +18,22 @@ export interface LinkItem {
 // ✅ Collection centralisée des liens pédagogiques
 export const linkCollection: LinkItem[] = [
   {
-    to: "/dash/courses/euclidean",
-    label: "Euclidean Division",
+    to: "https://siramath.onrender.com/dash/courses/euclidean",
+    label: "Division Euclidienne",
     icon: FaDivide,
   },
   {
-    to: "/dash/courses/numeration",
+    to: "https://siramath.onrender.com/dash/courses/numeration",
     label: "Numeration",
     icon: FaSortNumericDown,
   },
   {
-    to: "/dash/courses/pgcd",
-    label: "GCD",
+    to: "https://siramath.onrender.com/dash/courses/pgcd",
+    label: "PGCD",
     icon: FaEquals,
   },
   {
-    to: "/dash/courses/congruence",
+    to: "https://siramath.onrender.com/dash/courses/congruence",
     label: "Congruence mod n",
     icon: FaInfinity,
   },

@@ -76,7 +76,7 @@ function App() {
                     <Route path="euclidean/identite" element={<EuclideanDivisionPanelUnified />} />
                      <Route path="euclidean/nonconforme" element={<DivisionReajustementMixte />} />
                     <Route path="euclidean/resolution" element={<DifferenceSquaresChakraV3Tutor />} />
-                    <Route path="euclidean/disjonctiondecas" element={<DisjonctionDeCasTutor />} />
+                    <Route path="/euclidean/disjonctiondecas" element={<DisjonctionDeCasTutor />} />
                     
                      {/* Numeration */}
                     <Route path="numeration" element={<NumerationPage />} />
