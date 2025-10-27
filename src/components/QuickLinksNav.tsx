@@ -35,6 +35,7 @@ export const QuickLinksNav: React.FC<QuickLinksNavProps> = ({ links }) => (
         variant="ghost"
         whileHover={{ scale: 1.2, y: -2 }}
         transition={{ type: "spring", stiffness: 300 }}
+        size="sm"
       >
         <IconComponent />
       </MotionIconButton>
