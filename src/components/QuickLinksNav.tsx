@@ -25,7 +25,7 @@ interface QuickLinksNavProps {
 const MotionIconButton = motion(IconButton)
 
 export const QuickLinksNav: React.FC<QuickLinksNavProps> = ({ links }) => (
-  <Flex gap={4} mt={8} justify="center">
+  <Flex gap={4} mt={4} justify="center">
     {links.map(({ to, label, icon: IconComponent }) => (
       <TooltipRoot key={to} openDelay={300} closeDelay={100}>
   <TooltipTrigger asChild>
