@@ -1,6 +1,6 @@
 import { useGetCoursesQuery, defaultGetCoursesArg } from './coursesApiSlice'
 import { useValidUsers } from '../../hooks/useValidUsers'
-import  NewCourseForm  from "./NewCourseForm" // ✅ correct
+import { NewCourseForm } from "./NewCourseForm" // ✅ correct
 import PulseLoader from 'react-spinners/PulseLoader'
 //import useTitle from '../../hooks/useTitle'
 import { restoreUser } from '../../utils/usersUtils'
