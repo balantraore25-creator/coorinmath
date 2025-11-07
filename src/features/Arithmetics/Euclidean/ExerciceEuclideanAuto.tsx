@@ -7,10 +7,10 @@ import {
   Icon,
   Stack,
   Text,
-  Link,
   HStack,
   Button,
   Tag,
+
 } from "@chakra-ui/react"
 import {
   FaBookOpen,
@@ -22,13 +22,10 @@ import {
 } from "react-icons/fa"
 import { LuTags } from "react-icons/lu"
 import React, { useState } from "react"
+import { Link } from "react-router-dom"
+import { getCorrectionLink } from "./lib/correctionLinks"
 
-type ExerciceType =
-  | "definition"
-  | "identite"
-  | "euclidienne"
-  | "reste"
-
+type ExerciceType = "definition" | "identite" | "euclidienne" | "reste"
 type ExerciceStatus = "à faire" | "corrigé" | "à revoir"
 
 type Exercice = {
@@ -41,16 +38,6 @@ type Exercice = {
   correction: string
   type: ExerciceType
   status: ExerciceStatus
-}
-
-function getCorrectionUrl(type: ExerciceType): string {
-  const map: Record<ExerciceType, string> = {
-    definition: "https://siramath.onrender.com/dash/courses/euclidean/definition",
-    identite: "https://siramath.onrender.com/dash/courses/euclidean/identite",
-    euclidienne: "https://siramath.onrender.com/dash/courses/euclidean/division",
-    reste: "https://siramath.onrender.com/dash/courses/euclidean/reste",
-  }
-  return map[type]
 }
 
 function generateEuclideanExercices(): Exercice[] {
@@ -134,77 +121,79 @@ export const ExerciceEuclideanAuto = () => {
       </Button>
 
       <Accordion.Root collapsible defaultValue={[items[0]?.value]}>
-        {items.map((item) => (
-          <Accordion.Item key={item.value} value={item.value}>
-            <Accordion.ItemTrigger>
-              <Icon fontSize="lg" color="fg.subtle">
-                {item.icon}
-              </Icon>
-              <Text fontWeight="semibold" ms={2}>
-                {item.title}{" "}
-                <Tag.Root
-                  size="sm"
-                  colorPalette={
-                    item.status === "corrigé"
-                      ? "green"
-                      : item.status === "à revoir"
-                      ? "orange"
-                      : "gray"
-                  }
-                  variant="subtle"
-                >
-                  <Tag.Label>{item.status}</Tag.Label>
-                </Tag.Root>
-              </Text>
-            </Accordion.ItemTrigger>
+        {items.map((item) => {
+          const link = getCorrectionLink(item.type)
+          return (
+            <Accordion.Item key={item.value} value={item.value}>
+              <Accordion.ItemTrigger>
+                <Icon fontSize="lg" color="fg.subtle">
+                  {item.icon}
+                </Icon>
+                <Text fontWeight="semibold" ms={2}>
+                  {item.title}{" "}
+                  <Tag.Root
+                    size="sm"
+                    colorPalette={
+                      item.status === "corrigé"
+                        ? "green"
+                        : item.status === "à revoir"
+                        ? "orange"
+                        : "gray"
+                    }
+                    variant="subtle"
+                  >
+                    <Tag.Label>{item.status}</Tag.Label>
+                  </Tag.Root>
+                </Text>
+              </Accordion.ItemTrigger>
 
-            <Accordion.ItemContent>
-              <Accordion.ItemBody>
-                <Tabs.Root defaultValue="enonce">
-                  <Tabs.List gap="2" mb="4">
-                    <Tabs.Trigger value="enonce"><HStack><Icon as={FaBookOpen} /><Text>Énoncé</Text></HStack></Tabs.Trigger>
-                    <Tabs.Trigger value="indication"><HStack><Icon as={FaLightbulb} /><Text>Indication</Text></HStack></Tabs.Trigger>
-                    <Tabs.Trigger value="methode"><HStack><Icon as={FaTools} /><Text>Méthode</Text></HStack></Tabs.Trigger>
-                    <Tabs.Trigger value="correction"><HStack><Icon as={FaCheckCircle} /><Text>Correction</Text></HStack></Tabs.Trigger>
-                  </Tabs.List>
+              <Accordion.ItemContent>
+                <Accordion.ItemBody>
+                  <Tabs.Root defaultValue="enonce">
+                    <Tabs.List gap="2" mb="4">
+                      <Tabs.Trigger value="enonce"><HStack><Icon as={FaBookOpen} /><Text>Énoncé</Text></HStack></Tabs.Trigger>
+                      <Tabs.Trigger value="indication"><HStack><Icon as={FaLightbulb} /><Text>Indication</Text></HStack></Tabs.Trigger>
+                      <Tabs.Trigger value="methode"><HStack><Icon as={FaTools} /><Text>Méthode</Text></HStack></Tabs.Trigger>
+                      <Tabs.Trigger value="correction"><HStack><Icon as={FaCheckCircle} /><Text>Correction</Text></HStack></Tabs.Trigger>
+                    </Tabs.List>
 
-                  <Tabs.Content value="enonce"><Text>{item.enonce}</Text></Tabs.Content>
-                  <Tabs.Content value="indication"><Text>{item.indication}</Text></Tabs.Content>
-                  <Tabs.Content value="methode"><Text>{item.methode}</Text></Tabs.Content>
-                  <Tabs.Content value="correction">
-                    <Text mb={2}>{item.correction}</Text>
-                    <Link
-                      href={getCorrectionUrl(item.type)}
-                      color="blue.600"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Voir la correction complète sur Siram@th{" "}
-                      <Icon as={FaExternalLinkAlt} ms={1} />
-                    </Link>
-
-                    <HStack mt={4}>
-                      <Button
-                        size="sm"
-                        colorScheme="green"
-                        onClick={() => updateStatus(item.value, "corrigé")}
+                    <Tabs.Content value="enonce"><Text>{item.enonce}</Text></Tabs.Content>
+                    <Tabs.Content value="indication"><Text>{item.indication}</Text></Tabs.Content>
+                    <Tabs.Content value="methode"><Text>{item.methode}</Text></Tabs.Content>
+                    <Tabs.Content value="correction">
+                      <Text mb={2}>{item.correction}</Text>
+                      <Link
+                        
+                        to={link.to}
+                       
                       >
-                        Marquer comme corrigé
-                      </Button>
-                      <Button
-                        size="sm"
-                        colorScheme="orange"
-                        onClick={() => updateStatus(item.value, "à revoir")}
-                      >
-                        À revoir
-                      </Button>
-                    </HStack>
-                  </Tabs.Content>
-                </Tabs.Root>
-              </Accordion.ItemBody>
-            </Accordion.ItemContent>
-          </Accordion.Item>
-        ))}
+                        Voir la correction complète sur Siram@th{" "}
+                        <FaExternalLinkAlt/>
+                      </Link>
+
+                      <HStack mt={4}>
+                        <Button
+                          size="sm"
+                          colorScheme="green"
+                          onClick={() => updateStatus(item.value, "corrigé")}
+                        >
+                          Marquer comme corrigé
+                        </Button>
+                        <Button
+                          size="sm"
+                          colorScheme="orange"
+                          onClick={() => updateStatus(item.value, "à revoir")}
+                        >
+                          À revoir
+                        </Button>
+                      </HStack>
+                    </Tabs.Content>
+                  </Tabs.Root>
+                </Accordion.ItemBody>
+              </Accordion.ItemContent>
+            </Accordion.Item>
+          )
+        })}
       </Accordion.Root>
     </Stack>
   )
