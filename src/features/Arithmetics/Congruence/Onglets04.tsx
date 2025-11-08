@@ -1,6 +1,10 @@
+
+
+
+
 "use client"
 
-import { Tabs } from "@chakra-ui/react"
+import { Tabs, Flex } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import  DefinitionPanel  from "./DefinitionPanel"
 import  CongruencePropertiesList  from "./CongruencePropertiesList"
@@ -12,6 +16,12 @@ const Onglets04 = () => {
   return (
     <Tabs.Root lazyMount unmountOnExit defaultValue="tab-1">
       <TickValue />
+      <Flex
+        wrap="wrap"
+        gap={2}
+        justify={{ base: "center", md: "flex-start" }}
+        px={2}
+      >
       <Tabs.List>
         <Tabs.Trigger value="tab-1">📘 Définition</Tabs.Trigger>
         <Tabs.Trigger value="tab-2"> 🧩 Propriétés</Tabs.Trigger>
@@ -19,6 +29,7 @@ const Onglets04 = () => {
         <Tabs.Trigger value="tab-4">🧱 Théorèmes</Tabs.Trigger>
         <Tabs.Trigger value="tab-5">🛠️ Applications</Tabs.Trigger>
       </Tabs.List>
+      </Flex>
       <Tabs.Content value="tab-1">
          <DefinitionPanel />
       </Tabs.Content>
