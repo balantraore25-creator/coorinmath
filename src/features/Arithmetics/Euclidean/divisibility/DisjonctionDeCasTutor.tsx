@@ -9,8 +9,8 @@ import {
   Progress,
   Dialog,
   Flex,
-  Link
 } from "@chakra-ui/react";
+import { Link } from "react-router-dom"
 import { useState, useEffect } from "react";
 import { toaster } from "@/components/ui/toaster";
 
@@ -123,14 +123,11 @@ export default function DisjonctionDeCasTutor() {
     <Box p={6}>
        <Flex> 
                        <Link
-                              href="/dash/courses/euclidean"
-                              color="teal.500"
-                              fontWeight="medium"
-                              mb={4}
-                              display="inline-block"
-                            >
-                              ← Retour à la page précédente
-                        </Link>
+                                               to="/dash/courses/euclidean"
+                                               color="teal.500"
+                                             >
+                                               ← Retour à la page précédente
+                                         </Link>
                 </Flex> 
       <Heading size="lg" mb={6}>
         Justification par disjonction de cas

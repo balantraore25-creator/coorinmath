@@ -173,7 +173,7 @@ export const ExerciceEuclideanAuto = () => {
                       <Link
                         
                         to={link.to}
-                       
+                        color="teal.500"
                       >
                         Voir la correction complète sur Siram@th{" "}
                         <FaExternalLinkAlt/>

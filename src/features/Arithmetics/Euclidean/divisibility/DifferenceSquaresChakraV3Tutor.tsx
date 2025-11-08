@@ -14,9 +14,8 @@ import {
   Card,
   List,
   Flex,
-  Link
 } from "@chakra-ui/react";
-
+import { Link } from "react-router-dom"
 // Génère les couples (p, q) tels que p·q = d
 function generateDivisorPairs(n: number): [number, number][] {
   const abs = Math.abs(n);
@@ -91,11 +90,8 @@ export default function DifferenceSquaresChakraV3Tutor() {
       <VStack align="stretch" gap={6}>
          <Flex> 
                  <Link
-                        href="/dash/courses/euclidean"
+                        to="/dash/courses/euclidean"
                         color="teal.500"
-                        fontWeight="medium"
-                        mb={4}
-                        display="inline-block"
                       >
                         ← Retour à la page précédente
                   </Link>
