@@ -71,16 +71,23 @@ function generateCongruenceExercices(): Exercice[] {
 
   return [
     {
-      value: "simple",
-      icon: <FaBookOpen />,
-      title: "Définition de la congruence",
-      enonce: `Déterminer si ${a} ≡ ${r} mod ${n}`,
-      indication: `Calcule le reste de ${a} modulo ${n}`,
-      methode: `${a} mod ${n} = ${r}`,
-      correction: `${a} ≡ ${r} mod ${n} ⇒ congruence vérifiée`,
-      type: "simple",
-      status: "à faire",
-    },
+  value: "simple",
+  icon: <FaBookOpen />,
+  title: "Définition de la congruence",
+  enonce: `Déterminer si ${a} ≡ ${r} mod ${n}`,
+  indication: `Utilise l’une des trois méthodes : soustraction, division euclidienne ou égalité des restes`,
+  methode: [
+    `➖ Soustraction : ${a} − ${r} = ${a - r}, et ${a - r} est${(a - r) % n === 0 ? "" : " non"} divisible par ${n}`,
+    `➗ Division euclidienne : ${a} = ${Math.floor(a / n)} × ${n} + ${a % n}`,
+    `🟰 Égalité des restes : ${a} mod ${n} = ${a % n} ⇒ ${a % n === r ? "égal à" : "différent de"} ${r}`,
+  ].join("\n"),
+  correction:
+    (a - r) % n === 0 && a % n === r
+      ? `${a} ≡ ${r} mod ${n} ⇒ congruence vérifiée par les trois méthodes`
+      : `${a} ≡ ${r} mod ${n} ⇒ non vérifiée (au moins une méthode échoue)`,
+  type: "simple",
+  status: "à faire",
+},
     {
       value: "equationmod",
       icon: <LuChartBarStacked />,
