@@ -14,10 +14,9 @@ import {
   AlertTitle,
   AlertDescription,
   Button,
-  Link,
   Flex
 } from '@chakra-ui/react';
-
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 
 type Step = {
   dividend: number | null;
@@ -112,15 +111,9 @@ export const EuclideMethode: React.FC = () => {
   return (
     <VStack align="start" gap={6}>
       <Flex justify="space-between" w="full">
-        <Link
-        href="/dash/courses/pgcd"
-        color="teal.500"
-        fontWeight="medium"
-        mb={4}
-        display="inline-block"
-      >
-        ← Retour à la page précédente
-      </Link>
+        <RouterChakraLink to="/dash/courses/euclidean" color="teal.500">
+           ← Retour à la page précédente
+        </RouterChakraLink>
         <Button onClick={resetAll} colorScheme="red" variant="solid">
           🔄 Initialiser
         </Button>

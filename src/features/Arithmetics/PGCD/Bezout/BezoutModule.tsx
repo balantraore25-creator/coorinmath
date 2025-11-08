@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { VStack, HStack, Button,Link, Flex } from '@chakra-ui/react';
+import { VStack, HStack, Button, Flex } from '@chakra-ui/react';
 import { EuclideEtendu } from './EuclideEtendu';
 import { RemonteeManuelle } from './RemonteeManuelle';
 import { Matricielle } from './Matricielle';
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 
 export const BezoutModule: React.FC = () => {
   const [method, setMethod] = useState<'euclide' | 'remontee' | 'matricielle' | null>(null);
@@ -10,15 +11,9 @@ export const BezoutModule: React.FC = () => {
   return (
     <VStack align="start" gap={6}>
           <Flex justify="space-between" w="full">
-              <Link
-              href="/dash/courses/pgcd"
-              color="teal.500"
-              fontWeight="medium"
-              mb={4}
-              display="inline-block"
-            >
-              ← Retour à la page précédente
-            </Link>
+               <RouterChakraLink to="/dash/courses/euclidean" color="teal.500">
+                  ← Retour à la page précédente
+                </RouterChakraLink>
         </Flex>
       <HStack>
         <Button colorScheme="teal" onClick={() => setMethod('euclide')}>

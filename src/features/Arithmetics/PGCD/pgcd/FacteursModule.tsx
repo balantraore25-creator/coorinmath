@@ -21,10 +21,9 @@ import {
   TooltipContent,
   TooltipArrow,
   Field,
-  Link,
   Flex
 } from '@chakra-ui/react';
-
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 type OptionItem = {
   id: string;
   value: number;
@@ -202,16 +201,9 @@ export const FacteursModule: React.FC = () => {
 
 
 <Flex justify="space-between" align="center" w="full" mb={4}>
- <Link
-         href="/dash/courses/pgcd"
-         color="teal.500"
-         fontWeight="medium"
-         mb={4}
-         display="inline-block"
-       >
-         ← Retour à la page précédente
-       </Link>
-
+ <RouterChakraLink to="/dash/courses/euclidean" color="teal.500">
+     ← Retour à la page précédente
+  </RouterChakraLink>
   <Button
     onClick={() => {
       setA(36);

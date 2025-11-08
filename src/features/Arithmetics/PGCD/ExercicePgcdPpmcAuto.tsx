@@ -25,8 +25,6 @@ import {
 } from "react-icons/lu"
 import React, { useState } from "react"
 import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
-
-
 import { getCorrectionLink } from "./lib/correctionLinks"
 
 export type ExerciceType =
@@ -255,13 +253,10 @@ export const ExercicePgcdPpmcAuto = () => {
                     <Tabs.Content value="indication"><Text>{item.indication}</Text></Tabs.Content>
                     <Tabs.Content value="methode"><Text>{item.methode}</Text></Tabs.Content>
                     <Tabs.Content value="correction">
-                      <Text mb={2}>{item.correction}</Text>
-                       <RouterChakraLink to={link.to} color="blue.500">
-  Voir la correction complète sur Siram@th <FaExternalLinkAlt />
-</RouterChakraLink>
-
-
-
+                    <Text mb={2}>{item.correction}</Text>
+                    <RouterChakraLink to={link.to} color="blue.500">
+                      Voir la correction complète sur Siram@th <FaExternalLinkAlt />
+                    </RouterChakraLink>
                       <HStack mt={4}>
                         <Button
                           size="sm"

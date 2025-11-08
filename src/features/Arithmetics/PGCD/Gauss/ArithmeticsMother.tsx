@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Box, Heading, Input, Link, Flex } from "@chakra-ui/react";
+import { Box, Heading, Input, Flex } from "@chakra-ui/react";
 import { Accordion, Tooltip } from "@chakra-ui/react";
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 
 // Import des enfants
 import GaussTheorem from "./GaussTheorem";
@@ -16,15 +17,9 @@ export default function ArithmeticsMother() {
   return (
     <Box p={6}>
         <Flex justify="space-between" w="full">
-          <Link
-            href="/dash/courses/pgcd"
-            color="teal.500"
-            fontWeight="medium"
-            mb={4}
-            display="inline-block"
-          >
+          <RouterChakraLink to="/dash/courses/euclidean" color="teal.500">
             ← Retour à la page précédente
-          </Link>
+          </RouterChakraLink>
         </Flex>
       <Heading size="lg" mb={4}>
         📚 Théorèmes fondamentaux d’arithmétique
