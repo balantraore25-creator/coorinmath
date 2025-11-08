@@ -25,7 +25,12 @@ import React, { useState } from "react"
 import { Link } from "react-router-dom"
 import { getCorrectionLink } from "./lib/correctionLinks"
 
-type ExerciceType = "definition" | "identite" | "euclidienne" | "reste"
+type ExerciceType =
+  | "division-relatifs"         // Division euclidienne avec encadrement
+  | "reste-negatif"             // Cas avec reste négatif
+  | "identite-remarquable"      // Identité remarquable x² - y² = c
+  | "disjonction-cas"           // Analyse par cas
+
 type ExerciceStatus = "à faire" | "corrigé" | "à revoir"
 
 type Exercice = {
@@ -41,58 +46,61 @@ type Exercice = {
 }
 
 function generateEuclideanExercices(): Exercice[] {
-  const n = Math.floor(Math.random() * 20) + 5
-  const q = Math.floor(Math.random() * 10) + 1
-  const r = Math.floor(Math.random() * n)
+  const n = Math.floor(Math.random() * 10) + 2
+  const q = Math.floor(Math.random() * 5) - 2 // quotient relatif
+  const r = Math.floor(Math.random() * n) - Math.floor(n / 2) // reste potentiellement négatif
   const a = n * q + r
+  const x = Math.floor(Math.random() * 10) + 1
+  const y = Math.floor(Math.random() * 10) + 1
 
   return [
     {
       value: "euc1",
-      icon: <FaTools />,
-      title: "Identité remarquable",
-      enonce: `Montrer que n + 1 divise n² - 1`,
-      indication: `Utilise n² - 1 = (n + 1)(n - 1)`,
-      methode: `Factorise n² - 1`,
-      correction: `n² - 1 = (n + 1)(n - 1) ⇒ n + 1 divise n² - 1`,
-      type: "identite",
+      icon: <LuTags />,
+      title: "Division euclidienne des relatifs",
+      enonce: `Déterminer la division euclidienne de ${a} par ${n} avec la méthode des encadrements`,
+      indication: `Trouve q tel que ${n}q ≤ ${a} < ${n}(q + 1)`,
+      methode: `Encadre ${a} entre deux multiples consécutifs de ${n}`,
+      correction: `${a} = ${n} × ${q} + ${r} avec ${r} = ${a} - ${n} × ${q}`,
+      type: "division-relatifs" ,
       status: "à faire",
     },
     {
       value: "euc2",
-      icon: <LuTags />,
-      title: "Division euclidienne",
-      enonce: `Écrire la division euclidienne de ${a} par ${n}`,
-      indication: `Trouve q et r tels que ${a} = ${n}q + r avec 0 ≤ r < ${n}`,
-      methode: `Calcule q = ⌊${a} ÷ ${n}⌋, r = ${a} - ${n}q`,
+      icon: <FaTools />,
+      title: "Cas avec reste négatif",
+      enonce: `Écrire la division euclidienne de ${a} par ${n} avec un reste négatif`,
+      indication: `Choisis q et r tels que ${a} = ${n}q + r avec r < 0`,
+      methode: `Ajuste q pour que r soit négatif mais respecte la définition`,
       correction: `${a} = ${n} × ${q} + ${r}`,
-      type: "euclidienne",
+      type:  "reste-negatif" ,
       status: "à faire",
     },
     {
       value: "euc3",
       icon: <FaLightbulb />,
-      title: "Définition de la divisibilité",
-      enonce: `Montrer que ${n} divise ${n * q}`,
-      indication: `Utilise ${n * q} = ${n} × ${q}`,
-      methode: `Exprime ${n * q} comme un multiple de ${n}`,
-      correction: `${n * q} = ${n} × ${q} ⇒ ${n} divise ${n * q}`,
-      type: "definition",
+      title: "Identité remarquable",
+      enonce: `Montrer que ${x}² - ${y}² est divisible par ${x - y}`,
+      indication: `Utilise ${x}² - ${y}² = (${x} - ${y})(${x} + ${y})`,
+      methode: `Factorise ${x}² - ${y}²`,
+      correction: `${x}² - ${y}² = (${x} - ${y})(${x} + ${y}) ⇒ divisible par ${x - y}`,
+      type:  "identite-remarquable",
       status: "à faire",
     },
     {
       value: "euc4",
       icon: <FaCheckCircle />,
-      title: "Reste selon n",
-      enonce: `Déterminer le reste de n² + 3n + 2 dans sa division par n + 1`,
-      indication: `Utilise la factorisation : n² + 3n + 2 = (n + 1)(n + 2)`,
-      methode: `Reste = 0 car le polynôme est divisible`,
-      correction: `n² + 3n + 2 = (n + 1)(n + 2) ⇒ reste = 0`,
-      type: "reste",
+      title: "Disjonction de cas",
+      enonce: `Déterminer le reste de ${x}² - ${y}² selon les valeurs de x et y`,
+      indication: `Considère les cas x = y, x > y, x < y`,
+      methode: `Analyse chaque cas séparément`,
+      correction: `Si x = y ⇒ reste = 0 ; si x ≠ y ⇒ reste = (${x} - ${y})(${x} + ${y})`,
+      type: "disjonction-cas" ,
       status: "à faire",
     },
   ]
 }
+
 
 export const ExerciceEuclideanAuto = () => {
   const [items, setItems] = useState<Exercice[]>(generateEuclideanExercices())

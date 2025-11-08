@@ -74,10 +74,10 @@ function App() {
                     {/* Arithmetics */}
                      {/* Euclidean */}
                     <Route path="euclidean" element={<EuclideanPage />} />
-                    <Route path="euclidean/identite" element={<EuclideanDivisionPanelUnified />} />
-                     <Route path="euclidean/nonconforme" element={<DivisionReajustementMixte />} />
-                    <Route path="euclidean/resolution" element={<DifferenceSquaresChakraV3Tutor />} />
-                    <Route path="euclidean/disjonctiondecas" element={<DisjonctionDeCasTutor />} />
+                    <Route path="euclidean/division-relatifs" element={<EuclideanDivisionPanelUnified />} />
+                     <Route path="euclidean/reste-negatif" element={<DivisionReajustementMixte />} />
+                    <Route path="euclidean/identite-remarquable" element={<DifferenceSquaresChakraV3Tutor />} />
+                    <Route path="euclidean/disjonction-cas" element={<DisjonctionDeCasTutor />} />
                     
                      {/* Numeration */}
                     <Route path="numeration" element={<NumerationPage />} />
