@@ -6,10 +6,10 @@ import {
   Input,
   Stack,
   Text,
-  Link,
   Steps,
+  Flex
 } from "@chakra-ui/react"
-
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 type StepItem = {
   title: string
   description: string
@@ -52,15 +52,11 @@ export default function PasAPasCongruence(): React.ReactNode {
 
   return (
     <Box maxW="lg" mx="auto" mt={10}>
-      <Link
-        href="/dash/courses/congruence"
-        color="teal.500"
-        fontWeight="medium"
-        mb={4}
-        display="inline-block"
-      >
-        ← Retour à la page précédente
-      </Link>
+      <Flex justify="space-between" w="full">
+              <RouterChakraLink to="/dash/courses/congruence" color="teal.500">
+                 ← Retour à la page précédente
+              </RouterChakraLink>
+            </Flex>
 
       <Steps.Root defaultStep={0} count={steps.length}>
         <Steps.List>

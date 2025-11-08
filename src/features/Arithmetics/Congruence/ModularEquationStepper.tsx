@@ -6,8 +6,9 @@ import {
   Text,
   VStack,
   RadioGroup,
+  Flex
 } from "@chakra-ui/react"
-import { Link } from "@chakra-ui/react"
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 import { useState, useMemo } from "react"
 import { NumberField } from "../../../components/fields/NumberField"
 import { solveModular } from "./math/solve-modular"
@@ -65,15 +66,12 @@ export const ModularEquationStepper = () => {
   return (
     <Stack gap={6}>
       {/* Lien retour */}
-      <Link
-        href="/dash/courses/congruence"
-        color="teal.500"
-        fontWeight="medium"
-        mb={4}
-        display="inline-block"
-      >
-        ← Retour à la page précédente
-      </Link>
+      <Flex justify="space-between" w="full">
+              <RouterChakraLink to="/dash/courses/congruence" color="teal.500">
+                 ← Retour à la page précédente
+              </RouterChakraLink>
+            </Flex>
+      
 
       {/* Paramètres */}
       <Box p={4} borderWidth="1px" borderRadius="md">

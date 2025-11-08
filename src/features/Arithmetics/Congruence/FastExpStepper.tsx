@@ -5,8 +5,9 @@ import {
   Progress,
   Stack,
   Text,
-  Link,
+  Flex
 } from "@chakra-ui/react"
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 import { useEffect, useMemo, useState } from "react"
 import { FastExpIntroStep } from "./exponentiation/FastExpIntroStep"
 import { FastExpStep } from "./exponentiation/FastExpStep"
@@ -132,15 +133,11 @@ export default function StepperFastExp() {
 
   return (
     <Stack gap={6}>
-      <Link
-        href="/dash/courses/congruence"
-        color="teal.500"
-        fontWeight="medium"
-        mb={4}
-        display="inline-block"
-      >
-        ← Retour à la page précédente
-      </Link>
+      <Flex justify="space-between" w="full">
+        <RouterChakraLink to="/dash/courses/congruence" color="teal.500">
+           ← Retour à la page précédente
+        </RouterChakraLink>
+      </Flex>
 
       <Card.Root size="lg" variant="elevated">
         <Card.Header>
