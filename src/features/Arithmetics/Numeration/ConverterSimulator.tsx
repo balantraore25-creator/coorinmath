@@ -10,8 +10,9 @@ import {
   Separator,
   Text,
   Collapsible,
-  Link
+  Flex,
 } from "@chakra-ui/react";
+import { Link } from "react-router-dom"
 import type { Base } from "./logic/baseConversion";
 import { convertWithSteps } from "./logic/conversionSteps";
 import type { ConversionMethod } from "./logic/conversionSteps";
@@ -49,15 +50,15 @@ export default function ConverterSimulator() {
 
   return (
     <Box p={6} borderWidth={1} borderRadius="lg" shadow="md">
-       <Link
-              href="/dash/courses/numeration"
-              color="teal.500"
-              fontWeight="medium"
-              mb={4}
-              display="inline-block"
-            >
-              ← Retour à la page précédente
-            </Link>
+      
+       <Flex>
+        <Link
+          to="/dash/courses/euclidean"
+          color="blue.500"
+        >
+         ← Retour à la page précédente
+        </Link>
+      </Flex>
       <VStack align="stretch" gap={6}>
         {/* Input */}
         <Field.Root orientation="vertical">

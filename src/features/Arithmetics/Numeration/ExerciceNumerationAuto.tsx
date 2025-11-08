@@ -261,7 +261,7 @@ export const ExerciceNumerationAuto = () => {
                       <Link
                                               
                                               to={link.to}
-                                              color="teal.500"
+                                              color="blue.500"
                                             >
                                               Voir la correction complète sur Siram@th{" "}
                                               <FaExternalLinkAlt/>

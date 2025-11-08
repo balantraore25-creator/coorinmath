@@ -5,8 +5,8 @@ import {
   Separator,
   HStack,
   RadioGroup,
-  Link
 } from "@chakra-ui/react";
+import { Link } from "react-router-dom"
 import { BaseSelector } from "./components/BaseSelector";
 import { OperandInput } from "./components/OperandInput";
 import { OperationPicker } from "./components/OperationPicker";
@@ -49,14 +49,11 @@ export const MultiBaseOperationSimulator: React.FC = () => {
   return (
     <Box p={6} borderWidth={1} borderRadius="lg" shadow="md">
        <Link
-              href="/dash/courses/numeration"
-              color="teal.500"
-              fontWeight="medium"
-              mb={4}
-              display="inline-block"
-            >
-              ← Retour à la page précédente
-            </Link>
+                               to="/dash/courses/euclidean"
+                               color="teal.500"
+                             >
+                               ← Retour à la page précédente
+                         </Link>
       <VStack align="stretch" gap={6}>
         <RadioGroup.Root value={mode} onValueChange={(details) => setMode(details.value as Mode)}>
           <HStack>
