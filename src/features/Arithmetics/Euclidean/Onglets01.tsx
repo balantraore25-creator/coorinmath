@@ -18,16 +18,16 @@ const Onglets01 = () => {
         <Tabs.Trigger value="tab-4">Application</Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content value="tab-1">
-        Tab 1: Content <DivisionPanel />
+        <DivisionPanel />
       </Tabs.Content>
       <Tabs.Content value="tab-2">
-        Tab 2: Content <MethodesDivisibilitePanel />
+        <MethodesDivisibilitePanel />
       </Tabs.Content>
       <Tabs.Content value="tab-3">
-        Tab 3: Content <EcritureModulairePanel />
+        <EcritureModulairePanel />
       </Tabs.Content>
       <Tabs.Content value="tab-4">
-        Tab 4: Content <ExerciceEuclideanAuto />
+        <ExerciceEuclideanAuto />
       </Tabs.Content>
     </Tabs.Root>
   )

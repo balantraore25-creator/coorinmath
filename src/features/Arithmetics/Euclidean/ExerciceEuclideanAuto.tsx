@@ -88,16 +88,17 @@ function generateEuclideanExercices(): Exercice[] {
       status: "à faire",
     },
     {
-      value: "euc4",
-      icon: <FaCheckCircle />,
-      title: "Disjonction de cas",
-      enonce: `Déterminer le reste de ${x}² - ${y}² selon les valeurs de x et y`,
-      indication: `Considère les cas x = y, x > y, x < y`,
-      methode: `Analyse chaque cas séparément`,
-      correction: `Si x = y ⇒ reste = 0 ; si x ≠ y ⇒ reste = (${x} - ${y})(${x} + ${y})`,
-      type: "disjonction-cas" ,
-      status: "à faire",
-    },
+  value: "euc4",
+  icon: <FaCheckCircle />,
+  title: "Divisibilité par 3",
+  enonce: `Montrer que l'expression ${n}(${n} + 1)(${n} + 2) est divisible par 3`,
+  indication: `Parmi trois entiers consécutifs, l’un est toujours divisible par 3`,
+  methode: `Considère les cas possibles pour ${n} modulo 3 : 0, 1 ou 2`,
+  correction: `Quel que soit ${n}, parmi ${n}, ${n + 1}, ${n + 2}, il y a toujours un multiple de 3 ⇒ ${n}(${n + 1})(${n + 2}) est divisible par 3`,
+  type: "disjonction-cas",
+  status: "à faire",
+},
+
   ]
 }
 

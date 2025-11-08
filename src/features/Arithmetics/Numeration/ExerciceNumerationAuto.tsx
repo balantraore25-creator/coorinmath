@@ -7,7 +7,6 @@ import {
   Icon,
   Stack,
   Text,
-  Link,
   HStack,
   Button,
   Tag,
@@ -20,11 +19,15 @@ import {
   FaExternalLinkAlt,
   FaRandom,
 } from "react-icons/fa"
-import { LuTags, LuChartBarStacked } from "react-icons/lu"
+import {
+  LuTags,
+  LuChartBarStacked,
+} from "react-icons/lu"
 import React, { useState } from "react"
+import { Link } from "react-router-dom"
+import { getCorrectionLink } from "./lib/correctionLinks"
 
-// Types
-type ExerciceType =
+export type ExerciceType =
   | "bcd"
   | "8421"
   | "complement2"
@@ -35,9 +38,9 @@ type ExerciceType =
   | "debordement"
   | "division"
 
-type ExerciceStatus = "à faire" | "corrigé" | "à revoir"
+export type ExerciceStatus = "à faire" | "corrigé" | "à revoir"
 
-type Exercice = {
+export type Exercice = {
   value: string
   icon: React.ReactNode
   title: string
@@ -49,40 +52,25 @@ type Exercice = {
   status: ExerciceStatus
 }
 
-// Correction URL
-function getCorrectionUrl(type: ExerciceType): string {
-  const map: Record<ExerciceType, string> = {
-    bcd: "/dash/courses/numeration/conversiondebase",
-   "8421":"/dash/courses/numeration/conversiondebase",
-    complement2: "/dash/courses/numeration/conversiondebase",
-    ieee754: "/dash/courses/numeration/conversiondebase",
-    addition: "/dash/courses/numeration/operations",
-    soustraction: "/dash/courses/numeration/operations",
-    multiplication: "/dash/courses/numeration/operations",
-    debordement: "/dash/courses/numeration/#debordement",
-    division: "/dash/courses/numeration/#division",
-  }
-  return map[type]
-}
-
-// Générateur
 function generateNumerationExercices(): Exercice[] {
-  const a = Math.floor(Math.random() * 100)
-  const b = Math.floor(Math.random() * 32)
-  const float = (Math.random() * 10 + 1).toFixed(2)
+  const a = Math.floor(Math.random() * 90) + 10
+  const b = Math.floor(Math.random() * 10) + 1
   const sum = a + b
   const diff = a - b
   const prod = a * b
-  const div = b === 0 ? 0 : Math.floor(a / b)
-  const rem = b === 0 ? 0 : a % b
+  const div = Math.floor(a / b)
+  const rem = a % b
+  const float = (Math.random() * 10).toFixed(3)
+  const ieeeExp = Math.floor(Math.log2(Number(float)))
+  const biasedExp = (127 + ieeeExp).toString(2).padStart(8, "0")
+  const mantisse = (Number(float) / Math.pow(2, ieeeExp) - 1)
+    .toString(2)
+    .split(".")[1] || "0"
   const bcd = a
     .toString()
     .split("")
-    .map((d) => parseInt(d).toString(2).padStart(4, "0"))
+    .map((digit) => parseInt(digit).toString(2).padStart(4, "0"))
     .join(" ")
-  const ieeeExp = Math.floor(Math.log2(parseFloat(float)))
-  const mantisse = (parseFloat(float) / Math.pow(2, ieeeExp)).toString(2).split(".")[1] || "0"
-  const biasedExp = (127 + ieeeExp).toString(2).padStart(8, "0")
 
   return [
     {
@@ -191,6 +179,7 @@ function generateNumerationExercices(): Exercice[] {
     },
   ]
 }
+
 export const ExerciceNumerationAuto = () => {
   const [items, setItems] = useState<Exercice[]>(generateNumerationExercices())
 
@@ -208,7 +197,9 @@ export const ExerciceNumerationAuto = () => {
 
   return (
     <Stack width="full" maxW="720px">
-      <Heading size="md">Exercices interactifs – Systèmes de numération</Heading>
+      <Heading size="md">
+        Exercices interactifs – Numération et calculs binaires
+      </Heading>
 
       <Button onClick={refreshExercices} mb={4}>
         <HStack>
@@ -218,103 +209,87 @@ export const ExerciceNumerationAuto = () => {
       </Button>
 
       <Accordion.Root collapsible defaultValue={[items[0]?.value]}>
-        {items.map((item) => (
-          <Accordion.Item key={item.value} value={item.value}>
-            <Accordion.ItemTrigger>
-              <Icon fontSize="lg" color="fg.subtle">
-                {item.icon}
-              </Icon>
-              <Text fontWeight="semibold" ms={2}>
-                {item.title}{" "}
-                <Tag.Root
-                  size="sm"
-                  colorPalette={
-                    item.status === "corrigé"
-                      ? "green"
-                      : item.status === "à revoir"
-                      ? "orange"
-                      : "gray"
-                  }
-                  variant="subtle"
-                >
-                  <Tag.Label>{item.status}</Tag.Label>
-                </Tag.Root>
-              </Text>
-            </Accordion.ItemTrigger>
+                {items.map((item) => {
+          const link = getCorrectionLink(item.type)
+          return (
+            <Accordion.Item key={item.value} value={item.value}>
+              <Accordion.ItemTrigger>
+                <Icon fontSize="lg" color="fg.subtle">
+                  {item.icon}
+                </Icon>
+                <Text fontWeight="semibold" ms={2}>
+                  {item.title}{" "}
+                  <Tag.Root
+                    size="sm"
+                    colorPalette={
+                      item.status === "corrigé"
+                        ? "green"
+                        : item.status === "à revoir"
+                        ? "orange"
+                        : "gray"
+                    }
+                    variant="subtle"
+                  >
+                    <Tag.Label>{item.status}</Tag.Label>
+                  </Tag.Root>
+                </Text>
+              </Accordion.ItemTrigger>
 
-            <Accordion.ItemContent>
-              <Accordion.ItemBody>
-                <Tabs.Root defaultValue="enonce">
-                  <Tabs.List gap="2" mb="4">
-                    <Tabs.Trigger value="enonce">
-                      <HStack>
-                        <Icon as={FaBookOpen} />
-                        <Text>Énoncé</Text>
-                      </HStack>
-                    </Tabs.Trigger>
-                    <Tabs.Trigger value="indication">
-                      <HStack>
-                        <Icon as={FaLightbulb} />
-                        <Text>Indication</Text>
-                      </HStack>
-                    </Tabs.Trigger>
-                    <Tabs.Trigger value="methode">
-                      <HStack>
-                        <Icon as={FaTools} />
-                        <Text>Méthode</Text>
-                      </HStack>
-                    </Tabs.Trigger>
-                    <Tabs.Trigger value="correction">
-                      <HStack>
-                        <Icon as={FaCheckCircle} />
-                        <Text>Correction</Text>
-                      </HStack>
-                    </Tabs.Trigger>
-                  </Tabs.List>
+              <Accordion.ItemContent>
+                <Accordion.ItemBody>
+                  <Tabs.Root defaultValue="enonce">
+                    <Tabs.List gap="2" mb="4">
+                      <Tabs.Trigger value="enonce">
+                        <HStack><Icon as={FaBookOpen} /><Text>Énoncé</Text></HStack>
+                      </Tabs.Trigger>
+                      <Tabs.Trigger value="indication">
+                        <HStack><Icon as={FaLightbulb} /><Text>Indication</Text></HStack>
+                      </Tabs.Trigger>
+                      <Tabs.Trigger value="methode">
+                        <HStack><Icon as={FaTools} /><Text>Méthode</Text></HStack>
+                      </Tabs.Trigger>
+                      <Tabs.Trigger value="correction">
+                        <HStack><Icon as={FaCheckCircle} /><Text>Correction</Text></HStack>
+                      </Tabs.Trigger>
+                    </Tabs.List>
 
-                  <Tabs.Content value="enonce">
-                    <Text>{item.enonce}</Text>
-                  </Tabs.Content>
-                  <Tabs.Content value="indication">
-                    <Text>{item.indication}</Text>
-                  </Tabs.Content>
-                  <Tabs.Content value="methode">
-                    <Text>{item.methode}</Text>
-                  </Tabs.Content>
-                  <Tabs.Content value="correction">
-                    <Text mb={2}>{item.correction}</Text>
-                    <Link
-                      href={getCorrectionUrl(item.type)}
-                      color="blue.600"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Voir la correction complète sur Siram@th{" "}
-                      <Icon as={FaExternalLinkAlt} ms={1} />
-                    </Link>
+                    <Tabs.Content value="enonce"><Text>{item.enonce}</Text></Tabs.Content>
+                    <Tabs.Content value="indication"><Text>{item.indication}</Text></Tabs.Content>
+                    <Tabs.Content value="methode"><Text>{item.methode}</Text></Tabs.Content>
+                    <Tabs.Content value="correction">
+                      <Text mb={2}>{item.correction}</Text>
+                      <Link
+                                              
+                                              to={link.to}
+                                              color="teal.500"
+                                            >
+                                              Voir la correction complète sur Siram@th{" "}
+                                              <FaExternalLinkAlt/>
+                                            </Link>
 
-                    <HStack mt={4}>
-                      <Button
-                        size="sm"
-                        colorScheme="green"
-                        onClick={() => updateStatus(item.value, "corrigé")}
-                      >
-                        Marquer comme corrigé
-                      </Button>
-                      <Button
-                        size="sm"
-                        colorScheme="orange"
-                        onClick={() => updateStatus(item.value, "à revoir")}
-                      >
-                        À revoir
-                      </Button>
-                    </HStack>
-                  </Tabs.Content>
-                </Tabs.Root>
-              </Accordion.ItemBody>
-            </Accordion.ItemContent>
-          </Accordion.Item>
-        ))}
+                      <HStack mt={4}>
+                        <Button
+                          size="sm"
+                          colorScheme="green"
+                          onClick={() => updateStatus(item.value, "corrigé")}
+                        >
+                          Marquer comme corrigé
+                        </Button>
+                        <Button
+                          size="sm"
+                          colorScheme="orange"
+                          onClick={() => updateStatus(item.value, "à revoir")}
+                        >
+                          À revoir
+                        </Button>
+                      </HStack>
+                    </Tabs.Content>
+                  </Tabs.Root>
+                </Accordion.ItemBody>
+              </Accordion.ItemContent>
+            </Accordion.Item>
+          )
+        })}
       </Accordion.Root>
     </Stack>
   )
