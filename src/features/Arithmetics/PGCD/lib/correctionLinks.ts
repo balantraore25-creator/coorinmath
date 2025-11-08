@@ -36,7 +36,7 @@ export const correctionLinks: Record<ExerciceType, LinkItem> = {
     icon: FaCalculator,
   },
   relation: {
-    to: "/dash/courses/pgcd/proprietes",
+    to: "/dash/courses/pgcd/gcdcalculate",
     label: "Relation entre PGCD et PPMC",
     icon: FaLightbulb,
   },

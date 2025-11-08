@@ -10,7 +10,7 @@ import {
   Dialog,
   Flex,
 } from "@chakra-ui/react";
-import { Link } from "react-router-dom"
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 import { useState, useEffect } from "react";
 import { toaster } from "@/components/ui/toaster";
 
@@ -122,12 +122,9 @@ export default function DisjonctionDeCasTutor() {
   return (
     <Box p={6}>
        <Flex> 
-                       <Link
-                                               to="/dash/courses/euclidean"
-                                               color="teal.500"
-                                             >
-                                               ← Retour à la page précédente
-                                         </Link>
+          <RouterChakraLink to="/dash/courses/euclidean" color="teal.500">
+             ← Retour à la page précédente
+          </RouterChakraLink>
                 </Flex> 
       <Heading size="lg" mb={6}>
         Justification par disjonction de cas

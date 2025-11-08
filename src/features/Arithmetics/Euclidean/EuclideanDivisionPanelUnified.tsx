@@ -11,7 +11,7 @@ import {
   Field,
   Input,
 } from "@chakra-ui/react";
-import { Link } from "react-router-dom"
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 import EuclideanDivisionPanelDirect from "./EuclideanDivisionPanelDirect";
 import EuclideanDivisionPanelProgressive from "./EuclideanDivisionPanelProgressive";
 
@@ -23,12 +23,9 @@ export default function EuclideanDivisionPanelUnified() {
   return (
     <Box p={6} borderWidth={1} borderRadius="lg" shadow="md">
       <VStack align="stretch" gap={6}>
-         <Link
-                        to="/dash/courses/euclidean"
-                        color="teal.500"
-                      >
-                        ← Retour à la page précédente
-                  </Link>
+         <RouterChakraLink to="/dash/courses/euclidean" color="teal.500">
+              ← Retour à la page précédente
+           </RouterChakraLink>
         {/* En-tête + Toggle */}
         <HStack justify="space-between">
           <Text fontWeight="bold" fontSize="lg">

@@ -19,12 +19,13 @@ import {
   FaExternalLinkAlt,
   FaRandom,
 } from "react-icons/fa"
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 import {
   LuTags,
   LuChartBarStacked,
 } from "react-icons/lu"
 import React, { useState } from "react"
-import { Link } from "react-router-dom"
+
 import { getCorrectionLink } from "./lib/correctionLinks"
 
 export type ExerciceType =
@@ -258,14 +259,9 @@ export const ExerciceNumerationAuto = () => {
                     <Tabs.Content value="methode"><Text>{item.methode}</Text></Tabs.Content>
                     <Tabs.Content value="correction">
                       <Text mb={2}>{item.correction}</Text>
-                      <Link
-                                              
-                                              to={link.to}
-                                              color="blue.500"
-                                            >
-                                              Voir la correction complète sur Siram@th{" "}
-                                              <FaExternalLinkAlt/>
-                                            </Link>
+                      <RouterChakraLink to={link.to} color="blue.500">
+                        Voir la correction complète sur Siram@th <FaExternalLinkAlt />
+                      </RouterChakraLink>
 
                       <HStack mt={4}>
                         <Button

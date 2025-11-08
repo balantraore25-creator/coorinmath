@@ -4,7 +4,7 @@ import {
   Button, Input, Alert, Card,
   Flex
 } from "@chakra-ui/react";
-import { Link } from "react-router-dom"
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 
 function generateNonConformingDivision() {
   const b = Math.floor(Math.random() * 9) + 2; // b entre 2 et 10
@@ -78,12 +78,9 @@ export default function DivisionReajustementMixte() {
     <Box maxW="700px" mx="auto" p={6}>
       <VStack gap={6} align="stretch">
         <Flex> 
-          <Link
-                        to="/dash/courses/euclidean"
-                        color="teal.500"
-                      >
-                        ← Retour à la page précédente
-                  </Link>
+          <RouterChakraLink to="/dash/courses/euclidean" color="teal.500">
+               ← Retour à la page précédente
+            </RouterChakraLink>
         </Flex>
         <Heading size="lg">Réajustement mixte d’une division non conforme</Heading>
 

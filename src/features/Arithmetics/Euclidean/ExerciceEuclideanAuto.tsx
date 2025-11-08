@@ -22,7 +22,7 @@ import {
 } from "react-icons/fa"
 import { LuTags } from "react-icons/lu"
 import React, { useState } from "react"
-import { Link } from "react-router-dom"
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 import { getCorrectionLink } from "./lib/correctionLinks"
 
 type ExerciceType =
@@ -171,14 +171,9 @@ export const ExerciceEuclideanAuto = () => {
                     <Tabs.Content value="methode"><Text>{item.methode}</Text></Tabs.Content>
                     <Tabs.Content value="correction">
                       <Text mb={2}>{item.correction}</Text>
-                      <Link
-                        
-                        to={link.to}
-                        color="teal.500"
-                      >
-                        Voir la correction complète sur Siram@th{" "}
-                        <FaExternalLinkAlt/>
-                      </Link>
+                      <RouterChakraLink to={link.to} color="blue.500">
+                          Voir la correction complète sur Siram@th <FaExternalLinkAlt />
+                      </RouterChakraLink>
 
                       <HStack mt={4}>
                         <Button

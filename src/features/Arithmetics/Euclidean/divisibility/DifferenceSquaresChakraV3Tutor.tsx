@@ -15,7 +15,7 @@ import {
   List,
   Flex,
 } from "@chakra-ui/react";
-import { Link } from "react-router-dom"
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 // Génère les couples (p, q) tels que p·q = d
 function generateDivisorPairs(n: number): [number, number][] {
   const abs = Math.abs(n);
@@ -89,12 +89,9 @@ export default function DifferenceSquaresChakraV3Tutor() {
     <Box maxW="900px" mx="auto" p={6}>
       <VStack align="stretch" gap={6}>
          <Flex> 
-                 <Link
-                        to="/dash/courses/euclidean"
-                        color="teal.500"
-                      >
-                        ← Retour à la page précédente
-                  </Link>
+          <RouterChakraLink to="/dash/courses/euclidean" color="teal.500">
+              ← Retour à la page précédente
+           </RouterChakraLink>
           </Flex> 
         <Heading size="lg">Résolution interactive de u² − v² = d</Heading>
 
