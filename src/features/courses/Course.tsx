@@ -6,11 +6,13 @@ import {
   Button,
 } from '@chakra-ui/react'
 import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from 'react-router-dom'
 import { useGetCoursesQuery, defaultGetCoursesArg } from './coursesApiSlice'
 import { memo } from 'react'
+//import { link } from 'fs'
 
 interface CourseProps {
   courseId: string
