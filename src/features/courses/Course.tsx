@@ -1,22 +1,25 @@
 import {
+
   TableRow,
   TableCell,
   Text,
   Button,
- 
-} from "@chakra-ui/react"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPenToSquare } from "@fortawesome/free-solid-svg-icons"
-import { useNavigate} from "react-router-dom"
-import { useGetCoursesQuery, defaultGetCoursesArg } from "./coursesApiSlice"
-import { memo } from "react"
-import { QuickLinksNav } from "../../components/QuickLinksNav"
-import { linkCollection } from "../../utils/linkPresets"
+} from '@chakra-ui/react'
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { useNavigate } from 'react-router-dom'
+import { useGetCoursesQuery, defaultGetCoursesArg } from './coursesApiSlice'
+import { memo } from 'react'
 
 interface CourseProps {
   courseId: string
 }
 
+/**
+ * 🧠 Composant affichant une ligne de tableau pour un cours donné
+ * Utilise RTK Query + entity adapter pour accéder aux données normalisées
+ */
 const Course = ({ courseId }: CourseProps) => {
   const navigate = useNavigate()
 
@@ -29,11 +32,15 @@ const Course = ({ courseId }: CourseProps) => {
 
   if (!course) return null
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("fr-FR", {
-      day: "numeric",
-      month: "long",
-    })
+  const created = new Date(course.createdAt).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+  })
+
+  const updated = new Date(course.updatedAt).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+  })
 
   const handleEdit = () => navigate(`/dash/courses/${courseId}`)
 
@@ -42,17 +49,23 @@ const Course = ({ courseId }: CourseProps) => {
       <TableCell>
         <Text
           fontWeight="medium"
-          color={course.completed ? "green.600" : "orange.500"}
+          color={course.completed ? 'green.600' : 'orange.500'}
         >
-          {course.completed ? "Terminé" : "Ouvert"}
+          {course.completed ? 'Terminé' : 'Ouvert'}
         </Text>
       </TableCell>
-      <TableCell>{formatDate(course.createdAt)}</TableCell>
-      <TableCell>{formatDate(course.updatedAt)}</TableCell>
+      <TableCell>{created}</TableCell>
+      <TableCell>{updated}</TableCell>
       <TableCell>{course.title}</TableCell>
       <TableCell>{course.username}</TableCell>
       <TableCell>
-       <QuickLinksNav links={linkCollection}/>
+        <RouterChakraLink
+          variant="underline"
+          to={course.link} 
+          colorPalette="teal" 
+        >
+          🔗 Accéder au cours
+        </RouterChakraLink>
       </TableCell>
       <TableCell textAlign="end">
         <Button
@@ -71,4 +84,8 @@ const Course = ({ courseId }: CourseProps) => {
   )
 }
 
-export default memo<CourseProps>(Course)
+const memoizedCourse = memo(Course)
+
+export default memoizedCourse
+
+
