@@ -38,6 +38,7 @@ import EuclideanDivisionPanelUnified from './features/Arithmetics/Euclidean/Eucl
 import DifferenceSquaresChakraV3Tutor from './features/Arithmetics/Euclidean/divisibility/DifferenceSquaresChakraV3Tutor'
 import DivisionReajustementMixte from './features/Arithmetics/Euclidean/DivisionReajustementMixte'
 import DisjonctionDeCasTutor from './features/Arithmetics/Euclidean/divisibility/DisjonctionDeCasTutor'
+import ComplexNumbersPage from './features/Algebra/Complex numbers/ComplexNumbersPage'
 
 
 function App() {
@@ -103,6 +104,9 @@ function App() {
                     <Route path="pgcd/divisibility" element={<ArithmeticsMother />} />
                     <Route path="pgcd/diophantienne" element={<DiophantienneEquation />} />
                     
+                    {/* Algebra */}
+                    {/* Complex numbers */}
+                    <Route path="complexnumbers" element={<ComplexNumbersPage />} />
                    
                   </Route>
                
