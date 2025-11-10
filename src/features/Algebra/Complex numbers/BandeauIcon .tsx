@@ -1,6 +1,6 @@
 import { Grid, IconButton, Text, Center } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { RouterChakraLink } from "@/components/ui/RouterChakraLink"
 import { Tooltip } from "@/components/ui/tooltip";
 import type { ComponentPropsWithoutRef } from "react";
 
@@ -36,7 +36,7 @@ const BandeauIcon = () => {
           }}
           positioning={{ placement: "top", offset: { mainAxis: 8 } }}
         >
-          <Link to={`/unite/${unit}`}>
+          <RouterChakraLink to={`/unite/${unit}`}>
             <MotionIconButton
               aria-label={`Unité ${unit}`}
               whileHover={{ scale: 1.2, y: -2 }}
@@ -48,7 +48,7 @@ const BandeauIcon = () => {
                 </Text>
               </Center>
             </MotionIconButton>
-          </Link>
+          </RouterChakraLink>
         </Tooltip>
       ))}
     </Grid>
