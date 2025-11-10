@@ -1,6 +1,6 @@
 import { PiStudentBold } from "react-icons/pi"; // 🎓 Icône d'étudiant
 import { chakra, Flex, Heading } from "@chakra-ui/react";
-import   Onglets05   from './Onglets05'
+import   BandeauIcon    from './BandeauIcon '
 
 
 const ComplexNumbersPage = () => {
@@ -12,7 +12,7 @@ const ComplexNumbersPage = () => {
          Complex Numbers 101 : du chaos au contrôle
         </Heading>
       </Flex>
-      <Onglets05 />
+      <BandeauIcon />
     </chakra.main>
   );
 };
