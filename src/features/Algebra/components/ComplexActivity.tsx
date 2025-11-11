@@ -23,7 +23,7 @@ export const ComplexActivity: React.FC = () => {
   // Transition automatique entre les étapes
   useEffect(() => {
     if (step < 3) {
-      const timer = setTimeout(() => setStep(step + 1), 7000);
+      const timer = setTimeout(() => setStep(step + 1), 10000);
       return () => clearTimeout(timer);
     }
   }, [step]);
