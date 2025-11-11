@@ -39,6 +39,7 @@ import DifferenceSquaresChakraV3Tutor from './features/Arithmetics/Euclidean/div
 import DivisionReajustementMixte from './features/Arithmetics/Euclidean/DivisionReajustementMixte'
 import DisjonctionDeCasTutor from './features/Arithmetics/Euclidean/divisibility/DisjonctionDeCasTutor'
 import ComplexNumbersPage from './features/Algebra/Complex numbers/ComplexNumbersPage'
+import { ComplexActivity } from './features/Algebra/components/ComplexActivity'
 
 
 function App() {
@@ -107,6 +108,7 @@ function App() {
                     {/* Algebra */}
                     {/* Complex numbers */}
                     <Route path="complexnumbers" element={<ComplexNumbersPage />} />
+                    <Route path="complexnumbers/unite1" element={<ComplexActivity />} />
                    
                   </Route>
                
