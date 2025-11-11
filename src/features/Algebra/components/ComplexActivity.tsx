@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Box } from "@chakra-ui/react";
 import { ComplexIntro } from "./ComplexIntro";
 import { ComplexPlacement } from "./ComplexPlacement";
-import type { Point } from "./ComplexPlacement";
-
 import { ComplexCoordinates } from "./ComplexCoordinates";
+import type { Point } from "./ComplexCanvas"; // import type-only
 
 function randomPoint(): Point {
-  return { x: Math.floor(Math.random() * 11 - 5), y: Math.floor(Math.random() * 11 - 5) };
+  return {
+    x: Math.floor(Math.random() * 11 - 5),
+    y: Math.floor(Math.random() * 11 - 5),
+  };
 }
 
 export const ComplexActivity: React.FC = () => {
@@ -18,6 +20,7 @@ export const ComplexActivity: React.FC = () => {
     C: randomPoint(),
   });
 
+  // Transition automatique entre les étapes
   useEffect(() => {
     if (step < 3) {
       const timer = setTimeout(() => setStep(step + 1), 7000);
