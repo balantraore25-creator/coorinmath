@@ -1,5 +1,5 @@
 import React from "react";
-import { Point } from "../types";   // ✅ import propre
+import type { Point } from "../types";   // ✅ import propre
 import { ComplexPlacement } from "./ComplexPlacement";
 
 export const ComplexCoordinates: React.FC = () => {
