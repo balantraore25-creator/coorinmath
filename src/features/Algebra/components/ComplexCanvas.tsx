@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Stage, Layer, Line, Text, Circle } from "react-konva";
+import { Stage, Layer, Line, Text as KonvaText, Circle } from "react-konva";
 import { Box, Button } from "@chakra-ui/react";
 import type Konva from "konva";
 
@@ -53,15 +53,22 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
           <Line points={[260, 0, 260, 520]} stroke="black" strokeWidth={2} /> {/* Axe Im(z) */}
 
           {/* Labels des axes */}
-          <Text text="Re(z)" x={480} y={245} fontSize={16} fontStyle="bold" />
-          <Text text="Im(z)" x={270} y={20} fontSize={16} fontStyle="bold" />
+          <KonvaText text="Re(z)" x={480} y={245} fontSize={16} fontStyle="bold" />
+          <KonvaText text="Im(z)" x={270} y={20} fontSize={16} fontStyle="bold" />
 
           {/* Graduations horizontales */}
           {[...Array(13)].map((_, i) => {
             const x = i * 40;
             const value = i - 6;
             return (
-              <Text key={`vx${i}`} text={`${value}`} x={x} y={275} fontSize={12} fill="black" />
+              <KonvaText
+                key={`vx${i}`}
+                text={`${value}`}
+                x={x}
+                y={275}
+                fontSize={12}
+                fill="black"
+              />
             );
           })}
 
@@ -70,7 +77,14 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             const y = i * 40;
             const value = 6 - i;
             return (
-              <Text key={`vy${i}`} text={`${value}`} x={270} y={y} fontSize={12} fill="black" />
+              <KonvaText
+                key={`vy${i}`}
+                text={`${value}`}
+                x={270}
+                y={y}
+                fontSize={12}
+                fill="black"
+              />
             );
           })}
 
