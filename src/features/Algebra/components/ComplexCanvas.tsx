@@ -33,49 +33,71 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   return (
     <Box>
       {/* Stage couvrant -6 à +6 → 13 cases × 40px = 520px */}
-      <Stage width={520} height={520}>
+      <Stage width={520} height={520} style={{ backgroundColor: "#fafafa" }}>
         <Layer>
+          {/* Grille verticale */}
+          {[...Array(13)].map((_, i) => {
+            const x = i * 40;
+            return (
+              <Line
+                key={`v${i}`}
+                points={[x, 0, x, 520]}
+                stroke="#ccc"
+                strokeWidth={1}
+              />
+            );
+          })}
+
+          {/* Grille horizontale */}
+          {[...Array(13)].map((_, i) => {
+            const y = i * 40;
+            return (
+              <Line
+                key={`h${i}`}
+                points={[0, y, 520, y]}
+                stroke="#ccc"
+                strokeWidth={1}
+              />
+            );
+          })}
+
           {/* Axes orthonormés centrés en O(0;0) */}
           <Line points={[0, 260, 520, 260]} stroke="black" strokeWidth={2} /> {/* Axe Re(z) */}
           <Line points={[260, 0, 260, 520]} stroke="black" strokeWidth={2} /> {/* Axe Im(z) */}
 
           {/* Labels des axes */}
-          <Text text="Re(z)" x={500 - 40} y={260 - 20} fontSize={16} fontStyle="bold" />
-          <Text text="Im(z)" x={260 + 10} y={20} fontSize={16} fontStyle="bold" />
+          <Text text="Re(z)" x={480} y={245} fontSize={16} fontStyle="bold" />
+          <Text text="Im(z)" x={270} y={10} fontSize={16} fontStyle="bold" />
 
-          {/* Grille + graduations de -6 à +6 */}
+          {/* Graduations sur l’axe horizontal */}
           {[...Array(13)].map((_, i) => {
             const x = i * 40;
             const value = i - 6;
             return (
-              <>
-                <Line key={`v${i}`} points={[x, 0, x, 520]} stroke="#ddd" />
-                <Text
-                  key={`vx${i}`}
-                  text={`${value}`}
-                  x={x}
-                  y={260 + 5}
-                  fontSize={12}
-                  fill="black"
-                />
-              </>
+              <Text
+                key={`vx${i}`}
+                text={`${value}`}
+                x={x}
+                y={265}
+                fontSize={12}
+                fill="black"
+              />
             );
           })}
+
+          {/* Graduations sur l’axe vertical */}
           {[...Array(13)].map((_, i) => {
             const y = i * 40;
             const value = 6 - i;
             return (
-              <>
-                <Line key={`h${i}`} points={[0, y, 520, y]} stroke="#ddd" />
-                <Text
-                  key={`vy${i}`}
-                  text={`${value}`}
-                  x={260 + 5}
-                  y={y}
-                  fontSize={12}
-                  fill="black"
-                />
-              </>
+              <Text
+                key={`vy${i}`}
+                text={`${value}`}
+                x={265}
+                y={y}
+                fontSize={12}
+                fill="black"
+              />
             );
           })}
 
