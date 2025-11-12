@@ -1,18 +1,18 @@
 import React from "react";
-import { ComplexCanvas } from "./ComplexCanvas";
-import type { Point } from "../types";   // ✅ import propre
-import { Box } from "@chakra-ui/react";
+import type { Point } from "../types";
 
-export const ComplexPlacement: React.FC = () => {
-  const points: { A: Point; B: Point; C: Point } = {
-    A: { x: 3, y: -5 },
-    B: { x: -2, y: 4 },
-    C: { x: 1, y: 2 },
-  };
+interface ComplexPlacementProps {
+  points: { A: Point; B: Point; C: Point };
+}
 
+export const ComplexPlacement: React.FC<ComplexPlacementProps> = ({ points }) => {
   return (
-    <Box>
-      <ComplexCanvas points={points} phase={2} />
-    </Box>
+    <div>
+      {Object.entries(points).map(([label, { x, y }]) => (
+        <div key={label}>
+          {label} = ({x}, {y})
+        </div>
+      ))}
+    </div>
   );
 };

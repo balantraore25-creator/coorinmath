@@ -9,5 +9,6 @@ export const ComplexCoordinates: React.FC = () => {
     C: { x: 1, y: 2 },
   };
 
-  return <ComplexPlacement />;
+  // Pass points down as a prop
+  return <ComplexPlacement points={points} />;
 };
