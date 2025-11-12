@@ -1,9 +1,15 @@
 import React, { useState } from "react";
-import { Stage, Layer, Line, Text, Circle } from "react-konva";
+import { Stage, Layer, Line, Circle } from "react-konva";
 import { Box, Button } from "@chakra-ui/react";
+import { motion } from "framer-motion";
 import type Konva from "konva";
+import { Text as KonvaText } from "react-konva";
 
 export type Point = { x: number; y: number };
+
+const MotionLine = motion(Line);
+const MotionText = motion(KonvaText);
+const MotionCircle = motion(Circle);
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
@@ -32,54 +38,112 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
 
   return (
     <Box>
-      {/* Stage couvrant -6 à +6 → 13 cases × 40px = 520px */}
-      <Stage width={520} height={520}>
+      <Stage width={520} height={520} style={{ backgroundColor: "#fff" }}>
         <Layer>
-          {/* Axes orthonormés centrés en O(0;0) */}
-          <Line points={[0, 260, 520, 260]} stroke="black" strokeWidth={2} /> {/* Axe Re(z) */}
-          <Line points={[260, 0, 260, 520]} stroke="black" strokeWidth={2} /> {/* Axe Im(z) */}
+          {/* Grille animée */}
+          {[...Array(13)].map((_, i) => {
+            const pos = i * 40;
+            return (
+              <>
+                <MotionLine
+                  key={`v${i}`}
+                  points={[pos, 0, pos, 520]}
+                  stroke="#ddd"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                />
+                <MotionLine
+                  key={`h${i}`}
+                  points={[0, pos, 520, pos]}
+                  stroke="#ddd"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                />
+              </>
+            );
+          })}
+
+          {/* Axes animés */}
+          <MotionLine
+            points={[0, 260, 520, 260]}
+            stroke="black"
+            strokeWidth={2}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          />
+          <MotionLine
+            points={[260, 0, 260, 520]}
+            stroke="black"
+            strokeWidth={2}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+          />
 
           {/* Labels des axes */}
-          <Text text="Re(z)" x={500 - 40} y={260 - 20} fontSize={16} fontStyle="bold" />
-          <Text text="Im(z)" x={260 + 10} y={20} fontSize={16} fontStyle="bold" />
+          <MotionText
+            text="Re(z)"
+            x={480}
+            y={245}
+            fontSize={16}
+            fontStyle="bold"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          />
+          <MotionText
+            text="Im(z)"
+            x={270}
+            y={20}
+            fontSize={16}
+            fontStyle="bold"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          />
 
-          {/* Grille + graduations de -6 à +6 */}
+          {/* Graduations horizontales */}
           {[...Array(13)].map((_, i) => {
             const x = i * 40;
             const value = i - 6;
             return (
-              <>
-                <Line key={`v${i}`} points={[x, 0, x, 520]} stroke="#ddd" />
-                <Text
-                  key={`vx${i}`}
-                  text={`${value}`}
-                  x={x}
-                  y={260 + 5}
-                  fontSize={12}
-                  fill="black"
-                />
-              </>
+              <MotionText
+                key={`vx${i}`}
+                text={`${value}`}
+                x={x}
+                y={275}
+                fontSize={12}
+                fill="black"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: i * 0.05 }}
+              />
             );
           })}
+
+          {/* Graduations verticales */}
           {[...Array(13)].map((_, i) => {
             const y = i * 40;
             const value = 6 - i;
             return (
-              <>
-                <Line key={`h${i}`} points={[0, y, 520, y]} stroke="#ddd" />
-                <Text
-                  key={`vy${i}`}
-                  text={`${value}`}
-                  x={260 + 5}
-                  y={y}
-                  fontSize={12}
-                  fill="black"
-                />
-              </>
+              <MotionText
+                key={`vy${i}`}
+                text={`${value}`}
+                x={270}
+                y={y}
+                fontSize={12}
+                fill="black"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: i * 0.05 }}
+              />
             );
           })}
 
-          {/* Boules A, B, C visibles dès le départ */}
+          {/* Boules A, B, C animées et draggables */}
           {(["A", "B", "C"] as const).map((label, idx) => {
             const color = ["red", "blue", "green"][idx];
             const student = studentPoints[label] ?? points[label];
@@ -87,25 +151,23 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             const y = 260 - student.y * 40;
 
             return (
-              <Circle
+              <MotionCircle
                 key={label}
                 x={x}
                 y={y}
                 radius={10}
                 fill={color}
                 draggable
-                onDragEnd={(e) => handleDragEnd(e, label)}
+                onDragEnd={(e: Konva.KonvaEventObject<DragEvent>) => handleDragEnd(e, label)}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 10 }}
               />
             );
           })}
-
-          {/* Instructions */}
-          <Text text={`A : z = ${points.A.x} + i${points.A.y}`} x={10} y={10} fill="red" />
-          <Text text={`B : z = ${points.B.x} + i${points.B.y}`} x={10} y={30} fill="blue" />
-          <Text text={`C : z = ${points.C.x} + i${points.C.y}`} x={10} y={50} fill="green" />
-          <Text text="Glisse chaque boule pour placer le point" x={10} y={70} />
         </Layer>
       </Stage>
+
       <Button mt={4} colorScheme="blue" onClick={validate}>
         Valider
       </Button>
