@@ -33,7 +33,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   return (
     <Box>
       {/* Stage couvrant -6 à +6 → 13 cases × 40px = 520px */}
-      <Stage width={520} height={520} style={{ backgroundColor: "#fafafa" }}>
+      <Stage width={520} height={520} style={{ backgroundColor: "#fdfdfd" }}>
         <Layer>
           {/* Grille verticale */}
           {[...Array(13)].map((_, i) => {
@@ -67,7 +67,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
 
           {/* Labels des axes */}
           <Text text="Re(z)" x={480} y={245} fontSize={16} fontStyle="bold" />
-          <Text text="Im(z)" x={270} y={10} fontSize={16} fontStyle="bold" />
+          <Text text="Im(z)" x={270} y={20} fontSize={16} fontStyle="bold" />
 
           {/* Graduations sur l’axe horizontal */}
           {[...Array(13)].map((_, i) => {
@@ -78,7 +78,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                 key={`vx${i}`}
                 text={`${value}`}
                 x={x}
-                y={265}
+                y={275}
                 fontSize={12}
                 fill="black"
               />
@@ -93,7 +93,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
               <Text
                 key={`vy${i}`}
                 text={`${value}`}
-                x={265}
+                x={270}
                 y={y}
                 fontSize={12}
                 fill="black"
@@ -120,14 +120,10 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
               />
             );
           })}
-
-          {/* Instructions */}
-          <Text text={`A : z = ${points.A.x} + i${points.A.y}`} x={10} y={10} fill="red" />
-          <Text text={`B : z = ${points.B.x} + i${points.B.y}`} x={10} y={30} fill="blue" />
-          <Text text={`C : z = ${points.C.x} + i${points.C.y}`} x={10} y={50} fill="green" />
-          <Text text="Glisse chaque boule pour placer le point" x={10} y={70} />
         </Layer>
       </Stage>
+
+      {/* Bouton de validation */}
       <Button mt={4} colorScheme="blue" onClick={validate}>
         Valider
       </Button>
