@@ -1,21 +1,20 @@
 import React from "react";
-import { Box, Text } from "@chakra-ui/react";
 import { ComplexCanvas } from "./ComplexCanvas";
+import type { Point } from "../types";
+import { Box } from "@chakra-ui/react";
 
-export type Point = { x: number; y: number }; // ✅ export ajouté
+export const ComplexPlacement: React.FC = () => {
+  // Points attendus
+  const points: { A: Point; B: Point; C: Point } = {
+    A: { x: 3, y: -5 },
+    B: { x: -2, y: 4 },
+    C: { x: 1, y: 2 },
+  };
 
-interface Props {
-  points: { A: Point; B: Point; C: Point };
-}
-
-export const ComplexPlacement: React.FC<Props> = ({ points }) => (
-  <Box p={6}>
-    <Text fontSize="xl" fontWeight="bold" mb={4}>
-      Placement sur le plan complexe
-    </Text>
-    <Text mb={4}>
-      Clique sur les cercles colorés pour placer les points A (rouge), B (bleu) et C (vert).
-    </Text>
-    <ComplexCanvas points={points} />
-  </Box>
-);
+  return (
+    <Box>
+      {/* Phase fixée à 2 → Placement */}
+      <ComplexCanvas points={points} phase={2} />
+    </Box>
+  );
+};
