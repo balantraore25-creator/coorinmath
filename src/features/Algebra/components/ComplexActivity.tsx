@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box } from "@chakra-ui/react";
+import { Box, Button } from "@chakra-ui/react";
 import { ComplexIntro } from "./ComplexIntro";
 import { ComplexPlacement } from "./ComplexPlacement";
 import { ComplexCoordinates } from "./ComplexCoordinates";
@@ -21,10 +21,10 @@ export const ComplexActivity: React.FC = () => {
     C: randomPoint(),
   });
 
-  // Transition automatique entre les étapes
+  // ⏱ Intro auto → passe à l’étape 2 après 5s
   useEffect(() => {
-    if (step < 3) {
-      const timer = setTimeout(() => setStep(step + 1), 7000); // délai de 7s
+    if (step === 1) {
+      const timer = setTimeout(() => setStep(2), 5000);
       return () => clearTimeout(timer);
     }
   }, [step]);
@@ -53,6 +53,10 @@ export const ComplexActivity: React.FC = () => {
             transition={{ duration: 0.8 }}
           >
             <ComplexPlacement points={points} />
+            {/* Bouton manuel pour passer à l’étape 3 */}
+            <Button mt={4} colorScheme="blue" onClick={() => setStep(3)}>
+              Valider et passer aux coordonnées
+            </Button>
           </motion.div>
         )}
 
