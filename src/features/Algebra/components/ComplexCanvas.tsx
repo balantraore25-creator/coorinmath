@@ -11,6 +11,7 @@ interface Props {
 
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
+  const [halo, setHalo] = useState<{ [key: string]: boolean }>({});
 
   const unit = 40; // longueur d'une division
   const size = 13 * unit; // -6 à +6 → 13 divisions
@@ -21,6 +22,12 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     const newX = Math.round((node.x() - center) / unit);
     const newY = Math.round(-(node.y() - center) / unit);
     setStudentPoints({ ...studentPoints, [label]: { x: newX, y: newY } });
+
+    // Active le halo pour ce point
+    setHalo({ ...halo, [label]: true });
+    setTimeout(() => {
+      setHalo((prev) => ({ ...prev, [label]: false }));
+    }, 600); // halo disparaît après 600ms
   };
 
   const validate = () => {
@@ -34,10 +41,9 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     alert(results.join("\n"));
   };
 
-  // Fonction utilitaire pour récupérer les coordonnées actuelles
   const getCoords = (label: string, defaultPoint: Point) => {
     const p = studentPoints[label] ?? defaultPoint;
-    return `(${p.x}, ${p.y})`;
+    return { x: p.x, y: p.y };
   };
 
   return (
@@ -102,7 +108,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             );
           })}
 
-          {/* Boules A, B, C */}
+          {/* Boules A, B, C avec halo animé */}
           {(["A", "B", "C"] as const).map((label, idx) => {
             const color = ["red", "blue", "green"][idx];
             const student = studentPoints[label] ?? points[label];
@@ -110,40 +116,64 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             const y = center - student.y * unit;
 
             return (
-              <Circle
-                key={label}
-                x={x}
-                y={y}
-                radius={10}
-                fill={color}
-                draggable
-                onDragEnd={(e) => handleDragEnd(e, label)}
-              />
+              <>
+                {/* Halo animé */}
+                {halo[label] && (
+                  <Circle
+                    x={x}
+                    y={y}
+                    radius={20}
+                    stroke={color}
+                    strokeWidth={3}
+                    opacity={0.5}
+                  />
+                )}
+                {/* Boule principale */}
+                <Circle
+                  key={label}
+                  x={x}
+                  y={y}
+                  radius={10}
+                  fill={color}
+                  draggable
+                  onDragEnd={(e) => handleDragEnd(e, label)}
+                />
+              </>
             );
           })}
 
-          {/* Instructions dynamiques avec coordonnées liées aux déplacements */}
-          <KonvaText
-            text={`A : Coordonnées ${getCoords("A", points.A)}`}
-            x={10}
-            y={10}
-            fill="red"
-            fontSize={14}
-          />
-          <KonvaText
-            text={`B : Coordonnées ${getCoords("B", points.B)}`}
-            x={10}
-            y={30}
-            fill="blue"
-            fontSize={14}
-          />
-          <KonvaText
-            text={`C : Coordonnées ${getCoords("C", points.C)}`}
-            x={10}
-            y={50}
-            fill="green"
-            fontSize={14}
-          />
+          {/* Instructions dynamiques */}
+          {(() => {
+            const A = getCoords("A", points.A);
+            const B = getCoords("B", points.B);
+            const C = getCoords("C", points.C);
+            return (
+              <>
+                <KonvaText
+                  text={`A : z = ${A.x} + i${A.y}  → Coordonnées (${A.x}, ${A.y})`}
+                  x={10}
+                  y={10}
+                  fill="red"
+                  fontSize={14}
+                />
+                <KonvaText
+                  text={`B : z = ${B.x} + i${B.y}  → Coordonnées (${B.x}, ${B.y})`}
+                  x={10}
+                  y={30}
+                  fill="blue"
+                  fontSize={14}
+                />
+                <KonvaText
+                  text={`C : z = ${C.x} + i${C.y}  → Coordonnées (${C.x}, ${C.y})`}
+                  x={10}
+                  y={50}
+                  fill="green"
+                  fontSize={14}
+                />
+              </>
+            );
+          })()}
+
           <KonvaText
             text="Glisse chaque boule pour placer le point"
             x={10}
