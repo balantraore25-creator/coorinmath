@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { Stage, Layer, Line, Circle, Text } from "react-konva";
+import { Stage, Layer, Line, Text, Circle } from "react-konva";
 import { Box, Button } from "@chakra-ui/react";
 import { motion } from "framer-motion";
+import type Konva from "konva";
 
 export type Point = { x: number; y: number };
+
+const MotionCircle = motion(Circle);
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
@@ -12,9 +15,11 @@ interface Props {
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
 
-  const handleDragEnd = (e: any, label: string) => {
-    const newX = Math.round((e.target.x() - 250) / 40);
-    const newY = Math.round(-(e.target.y() - 250) / 40);
+  // Typage explicite
+  const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
+    const node = e.target;
+    const newX = Math.round((node.x() - 250) / 40);
+    const newY = Math.round(-(node.y() - 250) / 40);
     setStudentPoints({ ...studentPoints, [label]: { x: newX, y: newY } });
   };
 
@@ -43,14 +48,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             return (
               <>
                 <Line key={`v${i}`} points={[x, 0, x, 500]} stroke="#ddd" />
-                <Text
-                  key={`vx${i}`}
-                  text={`${i - 6}`}
-                  x={x}
-                  y={255}
-                  fontSize={12}
-                  fill="black"
-                />
+                <Text key={`vx${i}`} text={`${i - 6}`} x={x} y={255} fontSize={12} fill="black" />
               </>
             );
           })}
@@ -59,41 +57,31 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             return (
               <>
                 <Line key={`h${i}`} points={[0, y, 500, y]} stroke="#ddd" />
-                <Text
-                  key={`vy${i}`}
-                  text={`${6 - i}`}
-                  x={255}
-                  y={y}
-                  fontSize={12}
-                  fill="black"
-                />
+                <Text key={`vy${i}`} text={`${6 - i}`} x={255} y={y} fontSize={12} fill="black" />
               </>
             );
           })}
 
           {/* Points A, B, C avec animation */}
-          {["A", "B", "C"].map((label, idx) => {
+          {(["A", "B", "C"] as const).map((label, idx) => {
             const color = ["red", "blue", "green"][idx];
             const student = studentPoints[label];
             const x = student ? 250 + student.x * 40 : 250;
             const y = student ? 250 - student.y * 40 : 250;
 
             return (
-              <motion.g
+              <MotionCircle
                 key={label}
+                x={x}
+                y={y}
+                radius={10}
+                fill={color}
+                draggable
+                onDragEnd={(e: Konva.KonvaEventObject<DragEvent>) => handleDragEnd(e, label)}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 10 }}
-              >
-                <Circle
-                  x={x}
-                  y={y}
-                  radius={10}
-                  fill={color}
-                  draggable
-                  onDragEnd={(e) => handleDragEnd(e, label)}
-                />
-              </motion.g>
+              />
             );
           })}
 
