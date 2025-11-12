@@ -4,7 +4,6 @@ import { ComplexIntro } from "./ComplexIntro";
 import { ComplexPlacement } from "./ComplexPlacement";
 import { ComplexCoordinates } from "./ComplexCoordinates";
 import type { Point } from "./ComplexCanvas";
-import { motion, AnimatePresence } from "framer-motion";
 
 function randomPoint(): Point {
   return {
@@ -21,7 +20,7 @@ export const ComplexActivity: React.FC = () => {
     C: randomPoint(),
   });
 
-  // ⏱ Intro auto → passe à l’étape 2 après 5s
+  // Étape 1 → passe automatiquement à l’étape 2 après 5s
   useEffect(() => {
     if (step === 1) {
       const timer = setTimeout(() => setStep(2), 5000);
@@ -31,47 +30,18 @@ export const ComplexActivity: React.FC = () => {
 
   return (
     <Box>
-      <AnimatePresence mode="wait">
-        {step === 1 && (
-          <motion.div
-            key="intro"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 50 }}
-            transition={{ duration: 0.8 }}
-          >
-            <ComplexIntro />
-          </motion.div>
-        )}
+      {step === 1 && <ComplexIntro />}
 
-        {step === 2 && (
-          <motion.div
-            key="placement"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            transition={{ duration: 0.8 }}
-          >
-            <ComplexPlacement points={points} />
-            {/* Bouton manuel pour passer à l’étape 3 */}
-            <Button mt={4} colorScheme="blue" onClick={() => setStep(3)}>
-              Valider et passer aux coordonnées
-            </Button>
-          </motion.div>
-        )}
+      {step === 2 && (
+        <Box>
+          <ComplexPlacement points={points} />
+          <Button mt={4} colorScheme="blue" onClick={() => setStep(3)}>
+            Suivant
+          </Button>
+        </Box>
+      )}
 
-        {step === 3 && (
-          <motion.div
-            key="coordinates"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <ComplexCoordinates points={points} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {step === 3 && <ComplexCoordinates points={points} />}
     </Box>
   );
 };
