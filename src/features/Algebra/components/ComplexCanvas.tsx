@@ -6,8 +6,9 @@ import type Konva from "konva";
 
 export type Point = { x: number; y: number };
 
-// On rend Circle animable avec Framer Motion
 const MotionCircle = motion(Circle);
+const MotionText = motion(Text);
+const MotionLine = motion(Line);
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
@@ -16,11 +17,10 @@ interface Props {
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
 
-  // ✅ Typage explicite de l’événement
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
     const node = e.target;
-    const newX = Math.round((node.x() - 250) / 40);
-    const newY = Math.round(-(node.y() - 250) / 40);
+    const newX = Math.round((node.x() - 260) / 40);
+    const newY = Math.round(-(node.y() - 260) / 40);
     setStudentPoints({ ...studentPoints, [label]: { x: newX, y: newY } });
   };
 
@@ -37,52 +37,87 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
 
   return (
     <Box>
-      <Stage width={500} height={500}>
+      {/* Stage dimension : -6 à +6 → 13 cases × 40px = 520px */}
+      <Stage width={520} height={520}>
         <Layer>
           {/* Axes */}
-          <Line points={[0, 250, 500, 250]} stroke="black" />
-          <Line points={[250, 0, 250, 500]} stroke="black" />
+          <MotionLine
+            points={[0, 260, 520, 260]}
+            stroke="black"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          />
+          <MotionLine
+            points={[260, 0, 260, 520]}
+            stroke="black"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+          />
 
-          {/* Grille + graduations */}
-          {[...Array(11)].map((_, i) => {
+          {/* Grille + graduations animées */}
+          {[...Array(13)].map((_, i) => {
             const x = i * 40;
+            const value = i - 6;
             return (
               <>
-                <Line key={`v${i}`} points={[x, 0, x, 500]} stroke="#ddd" />
-                <Text
+                <MotionLine
+                  key={`v${i}`}
+                  points={[x, 0, x, 520]}
+                  stroke="#ddd"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                />
+                <MotionText
                   key={`vx${i}`}
-                  text={`${i - 6}`}
+                  text={`${value}`}
                   x={x}
-                  y={250 + 5} // ✅ aligné avec l’axe horizontal
+                  y={265}
                   fontSize={12}
                   fill="black"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
                 />
               </>
             );
           })}
-          {[...Array(11)].map((_, i) => {
+          {[...Array(13)].map((_, i) => {
             const y = i * 40;
+            const value = 6 - i;
             return (
               <>
-                <Line key={`h${i}`} points={[0, y, 500, y]} stroke="#ddd" />
-                <Text
+                <MotionLine
+                  key={`h${i}`}
+                  points={[0, y, 520, y]}
+                  stroke="#ddd"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                />
+                <MotionText
                   key={`vy${i}`}
-                  text={`${6 - i}`}
-                  x={250 + 5} // ✅ aligné avec l’axe vertical
+                  text={`${value}`}
+                  x={265}
                   y={y}
                   fontSize={12}
                   fill="black"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
                 />
               </>
             );
           })}
 
-          {/* Points A, B, C visibles dès le départ */}
+          {/* Boules A, B, C visibles dès le départ */}
           {(["A", "B", "C"] as const).map((label, idx) => {
             const color = ["red", "blue", "green"][idx];
-            const student = studentPoints[label] ?? points[label]; // ✅ utilise points si pas encore déplacé
-            const x = 250 + student.x * 40;
-            const y = 250 - student.y * 40;
+            const student = studentPoints[label] ?? points[label];
+            const x = 260 + student.x * 40;
+            const y = 260 - student.y * 40;
 
             return (
               <MotionCircle
@@ -100,7 +135,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             );
           })}
 
-          {/* Instructions avec couleurs correspondantes */}
+          {/* Instructions */}
           <Text text={`A : z = ${points.A.x} + i${points.A.y}`} x={10} y={10} fill="red" />
           <Text text={`B : z = ${points.B.x} + i${points.B.y}`} x={10} y={30} fill="blue" />
           <Text text={`C : z = ${points.C.x} + i${points.C.y}`} x={10} y={50} fill="green" />
