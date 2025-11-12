@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Text as KonvaText } from "react-konva";
 import { Box, Button } from "@chakra-ui/react";
 import type Konva from "konva";
@@ -11,11 +11,25 @@ interface Props {
 
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
-  const [halo, setHalo] = useState<{ [key: string]: boolean }>({});
+  const [visibleLines, setVisibleLines] = useState(0); // compteur pour la grille
+  const [progress, setProgress] = useState<{ [key: string]: number }>({});
 
-  const unit = 40; // longueur d'une division
-  const size = 13 * unit; // -6 à +6 → 13 divisions
+  const unit = 40; // 1 unité = 40px
+  const size = 17 * unit; // de -8 à +8 → 17 divisions
   const center = size / 2; // centre O(0,0)
+
+  // Animation progressive de la grille
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setVisibleLines(i);
+      if (i >= 17) {
+        clearInterval(interval);
+      }
+    }, 100); // une ligne toutes les 100ms
+    return () => clearInterval(interval);
+  }, []);
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
     const node = e.target;
@@ -23,11 +37,17 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     const newY = Math.round(-(node.y() - center) / unit);
     setStudentPoints({ ...studentPoints, [label]: { x: newX, y: newY } });
 
-    // Active le halo pour ce point
-    setHalo({ ...halo, [label]: true });
-    setTimeout(() => {
-      setHalo((prev) => ({ ...prev, [label]: false }));
-    }, 600); // halo disparaît après 600ms
+    // Lance l'animation des segments
+    setProgress({ ...progress, [label]: 0 });
+    let t = 0;
+    const interval = setInterval(() => {
+      t += 0.1;
+      if (t >= 1) {
+        t = 1;
+        clearInterval(interval);
+      }
+      setProgress((prev) => ({ ...prev, [label]: t }));
+    }, 50);
   };
 
   const validate = () => {
@@ -50,10 +70,10 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     <Box>
       <Stage width={size} height={size} style={{ backgroundColor: "#fff" }}>
         <Layer>
-          {/* Grille avec axes confondus aux lignes centrales */}
-          {[...Array(13)].map((_, i) => {
+          {/* Grille progressive avec axes confondus */}
+          {[...Array(visibleLines)].map((_, i) => {
             const pos = i * unit;
-            const isCentral = i === 6;
+            const isCentral = i === 8;
             return (
               <>
                 <Line
@@ -73,77 +93,95 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
           })}
 
           {/* Labels des axes */}
-          <KonvaText text="Re(z)" x={size - 40} y={center - 15} fontSize={16} fontStyle="bold" />
-          <KonvaText text="Im(z)" x={center + 10} y={20} fontSize={16} fontStyle="bold" />
+          {visibleLines >= 17 && (
+            <>
+              <KonvaText text="axe des réels" x={size - 120} y={center + 5} fontSize={16} />
+              <KonvaText text="axe des imaginaires purs" x={center + 10} y={20} fontSize={16} />
+            </>
+          )}
 
           {/* Graduations horizontales */}
-          {[...Array(13)].map((_, i) => {
-            const x = i * unit;
-            const value = i - 6;
-            return (
-              <KonvaText
-                key={`vx${i}`}
-                text={`${value}`}
-                x={x}
-                y={center + 15}
-                fontSize={12}
-                fill="black"
-              />
-            );
-          })}
+          {visibleLines >= 17 &&
+            [...Array(17)].map((_, i) => {
+              const x = i * unit;
+              const value = i - 8;
+              if (value !== 0) {
+                return (
+                  <KonvaText
+                    key={`vx${i}`}
+                    text={`${value}`}
+                    x={x}
+                    y={center + 15}
+                    fontSize={12}
+                    fill="black"
+                  />
+                );
+              }
+              return null;
+            })}
 
           {/* Graduations verticales */}
-          {[...Array(13)].map((_, i) => {
-            const y = i * unit;
-            const value = 6 - i;
-            return (
-              <KonvaText
-                key={`vy${i}`}
-                text={`${value}`}
-                x={center + 10}
-                y={y}
-                fontSize={12}
-                fill="black"
-              />
-            );
-          })}
+          {visibleLines >= 17 &&
+            [...Array(17)].map((_, i) => {
+              const y = i * unit;
+              const value = 8 - i;
+              if (value !== 0) {
+                return (
+                  <KonvaText
+                    key={`vy${i}`}
+                    text={`${value}`}
+                    x={center + 10}
+                    y={y}
+                    fontSize={12}
+                    fill="black"
+                  />
+                );
+              }
+              return null;
+            })}
 
-          {/* Boules A, B, C avec halo animé */}
-          {(["A", "B", "C"] as const).map((label, idx) => {
-            const color = ["red", "blue", "green"][idx];
-            const student = studentPoints[label] ?? points[label];
-            const x = center + student.x * unit;
-            const y = center - student.y * unit;
+          {/* Boules A, B, C avec segments pointillés animés */}
+          {visibleLines >= 17 &&
+            (["A", "B", "C"] as const).map((label, idx) => {
+              const color = ["red", "blue", "green"][idx];
+              const p = getCoords(label, points[label]);
+              const x = center + p.x * unit;
+              const y = center - p.y * unit;
+              const prog = progress[label] ?? 1; // 1 = segment complet
 
-            return (
-              <>
-                {/* Halo animé */}
-                {halo[label] && (
+              return (
+                <>
+                  {/* Segment vertical animé */}
+                  <Line
+                    points={[x, center, x, center + (y - center) * prog]}
+                    stroke={color}
+                    dash={[6, 6]}
+                    strokeWidth={2}
+                  />
+                  {/* Segment horizontal animé */}
+                  <Line
+                    points={[center, y, center + (x - center) * prog, y]}
+                    stroke={color}
+                    dash={[6, 6]}
+                    strokeWidth={2}
+                  />
+
+                  {/* Boule draggable */}
                   <Circle
+                    key={label}
                     x={x}
                     y={y}
-                    radius={20}
-                    stroke={color}
-                    strokeWidth={3}
-                    opacity={0.5}
+                    radius={10}
+                    fill={color}
+                    draggable
+                    onDragEnd={(e) => handleDragEnd(e, label)}
                   />
-                )}
-                {/* Boule principale */}
-                <Circle
-                  key={label}
-                  x={x}
-                  y={y}
-                  radius={10}
-                  fill={color}
-                  draggable
-                  onDragEnd={(e) => handleDragEnd(e, label)}
-                />
-              </>
-            );
-          })}
+                </>
+              );
+            })}
 
           {/* Instructions dynamiques */}
-          {(() => {
+          {visibleLines >= 17 && (() => {
             const A = getCoords("A", points.A);
             const B = getCoords("B", points.B);
             const C = getCoords("C", points.C);
@@ -173,14 +211,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
               </>
             );
           })()}
-
-          <KonvaText
-            text="Glisse chaque boule pour placer le point"
-            x={10}
-            y={70}
-            fill="black"
-            fontSize={14}
-          />
         </Layer>
       </Stage>
 
@@ -190,3 +220,4 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     </Box>
   );
 };
+
