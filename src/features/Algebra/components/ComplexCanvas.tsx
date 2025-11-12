@@ -1,12 +1,9 @@
 import React, { useState } from "react";
 import { Stage, Layer, Line, Text, Circle } from "react-konva";
 import { Box, Button } from "@chakra-ui/react";
-import { motion } from "framer-motion";
 import type Konva from "konva";
 
 export type Point = { x: number; y: number };
-
-const MotionCircle = motion(Circle);
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
@@ -15,6 +12,7 @@ interface Props {
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
 
+  // Gestion du drag & drop
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
     const node = e.target;
     const newX = Math.round((node.x() - 260) / 40);
@@ -22,6 +20,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     setStudentPoints({ ...studentPoints, [label]: { x: newX, y: newY } });
   };
 
+  // Validation
   const validate = () => {
     const results = Object.entries(points).map(([label, p]) => {
       const student = studentPoints[label];
@@ -43,8 +42,8 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             const pos = i * 40;
             return (
               <>
-                <Line key={`v${i}`} points={[pos, 0, pos, 520]} stroke="#ccc" />
-                <Line key={`h${i}`} points={[0, pos, 520, pos]} stroke="#ccc" />
+                <Line key={`v${i}`} points={[pos, 0, pos, 520]} stroke="#ddd" />
+                <Line key={`h${i}`} points={[0, pos, 520, pos]} stroke="#ddd" />
               </>
             );
           })}
@@ -75,7 +74,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             );
           })}
 
-          {/* Boules A, B, C visibles dès le départ */}
+          {/* Boules A, B, C visibles et draggables */}
           {(["A", "B", "C"] as const).map((label, idx) => {
             const color = ["red", "blue", "green"][idx];
             const student = studentPoints[label] ?? points[label];
@@ -83,17 +82,14 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             const y = 260 - student.y * 40;
 
             return (
-              <MotionCircle
+              <Circle
                 key={label}
                 x={x}
                 y={y}
                 radius={10}
                 fill={color}
                 draggable
-                onDragEnd={(e: Konva.KonvaEventObject<DragEvent>) => handleDragEnd(e, label)}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                onDragEnd={(e) => handleDragEnd(e, label)}
               />
             );
           })}
