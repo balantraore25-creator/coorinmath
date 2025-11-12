@@ -11,13 +11,11 @@ interface Props {
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
 
-  const handleClick = (e: any, label: string) => {
-    const stage = e.target.getStage();
-    const pointer = stage.getPointerPosition();
+  const handleDragEnd = (e: any, label: string) => {
     // Conversion : chaque unité = 40px
-    const x = Math.round((pointer.x - 200) / 40);
-    const y = Math.round(-(pointer.y - 200) / 40);
-    setStudentPoints({ ...studentPoints, [label]: { x, y } });
+    const newX = Math.round((e.target.x() - 200) / 40);
+    const newY = Math.round(-(e.target.y() - 200) / 40);
+    setStudentPoints({ ...studentPoints, [label]: { x: newX, y: newY } });
   };
 
   const validate = () => {
@@ -47,23 +45,31 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             <Line key={i + "h"} points={[0, i * 40, 400, i * 40]} stroke="#ddd" />
           ))}
 
-          {/* Points cliquables */}
-          {["A", "B", "C"].map((label, idx) => (
-            <Circle
-              key={label}
-              x={200}
-              y={200}
-              radius={10}
-              fill={["red", "blue", "green"][idx]}
-              onClick={(e) => handleClick(e, label)}
-            />
-          ))}
+          {/* Points A, B, C */}
+          {["A", "B", "C"].map((label, idx) => {
+            const color = ["red", "blue", "green"][idx];
+            const student = studentPoints[label];
+            const x = student ? 200 + student.x * 40 : 200;
+            const y = student ? 200 - student.y * 40 : 200;
+
+            return (
+              <Circle
+                key={label}
+                x={x}
+                y={y}
+                radius={10}
+                fill={color}
+                draggable
+                onDragEnd={(e) => handleDragEnd(e, label)}
+              />
+            );
+          })}
 
           {/* Instructions */}
           <Text text={`A : z = ${points.A.x} + i${points.A.y}`} x={10} y={10} />
           <Text text={`B : z = ${points.B.x} + i${points.B.y}`} x={10} y={30} />
           <Text text={`C : z = ${points.C.x} + i${points.C.y}`} x={10} y={50} />
-          <Text text="Clique sur le cercle pour placer le point" x={10} y={70} />
+          <Text text="Glisse chaque boule pour placer le point" x={10} y={70} />
         </Layer>
       </Stage>
       <Button mt={4} colorScheme="blue" onClick={validate}>
