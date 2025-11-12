@@ -6,6 +6,7 @@ import type Konva from "konva";
 
 export type Point = { x: number; y: number };
 
+// On rend Circle animable avec Framer Motion
 const MotionCircle = motion(Circle);
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
 
-  // Typage explicite
+  // ✅ Typage explicite de l’événement
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
     const node = e.target;
     const newX = Math.round((node.x() - 250) / 40);
@@ -48,7 +49,14 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             return (
               <>
                 <Line key={`v${i}`} points={[x, 0, x, 500]} stroke="#ddd" />
-                <Text key={`vx${i}`} text={`${i - 6}`} x={x} y={255} fontSize={12} fill="black" />
+                <Text
+                  key={`vx${i}`}
+                  text={`${i - 6}`}
+                  x={x}
+                  y={250 + 5} // ✅ aligné avec l’axe horizontal
+                  fontSize={12}
+                  fill="black"
+                />
               </>
             );
           })}
@@ -57,17 +65,24 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             return (
               <>
                 <Line key={`h${i}`} points={[0, y, 500, y]} stroke="#ddd" />
-                <Text key={`vy${i}`} text={`${6 - i}`} x={255} y={y} fontSize={12} fill="black" />
+                <Text
+                  key={`vy${i}`}
+                  text={`${6 - i}`}
+                  x={250 + 5} // ✅ aligné avec l’axe vertical
+                  y={y}
+                  fontSize={12}
+                  fill="black"
+                />
               </>
             );
           })}
 
-          {/* Points A, B, C avec animation */}
+          {/* Points A, B, C visibles dès le départ */}
           {(["A", "B", "C"] as const).map((label, idx) => {
             const color = ["red", "blue", "green"][idx];
-            const student = studentPoints[label];
-            const x = student ? 250 + student.x * 40 : 250;
-            const y = student ? 250 - student.y * 40 : 250;
+            const student = studentPoints[label] ?? points[label]; // ✅ utilise points si pas encore déplacé
+            const x = 250 + student.x * 40;
+            const y = 250 - student.y * 40;
 
             return (
               <MotionCircle
