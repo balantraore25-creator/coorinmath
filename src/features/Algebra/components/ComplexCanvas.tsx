@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Stage, Layer, Line, Circle, Text as KonvaText } from "react-konva";
 import { Box, Button } from "@chakra-ui/react";
 import type Konva from "konva";
@@ -11,42 +11,6 @@ interface Props {
 
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
-  const [visibleLines, setVisibleLines] = useState(0); // compteur pour la grille
-  const [visibleAxes, setVisibleAxes] = useState(false);
-  const [visibleCircles, setVisibleCircles] = useState(false);
-  const [scale, setScale] = useState(0.5);
-
-  // Animation progressive de la grille
-  useEffect(() => {
-    let i = 0;
-    const interval = setInterval(() => {
-      i++;
-      setVisibleLines(i);
-      if (i >= 13) {
-        clearInterval(interval);
-        setVisibleAxes(true);
-        // après les axes, on lance les boules
-        setTimeout(() => {
-          setVisibleCircles(true);
-          // rebond simple
-          let step = 0.1;
-          const bounce = setInterval(() => {
-            setScale((s) => {
-              const next = s + step;
-              if (next >= 1.2) step = -0.1;
-              if (next <= 1) {
-                clearInterval(bounce);
-                return 1;
-              }
-              return next;
-            });
-              return 1;
-          }, 100);
-        }, 500);
-      }
-    }, 100);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
     const node = e.target;
@@ -70,80 +34,113 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     <Box>
       <Stage width={520} height={520} style={{ backgroundColor: "#fff" }}>
         <Layer>
-          {/* Grille progressive */}
-          {[...Array(visibleLines)].map((_, i) => {
+          {/* Grille avec ligne centrale épaissie pour les axes */}
+          {[...Array(13)].map((_, i) => {
             const pos = i * 40;
+            const isCentral = i === 6; // ligne centrale
             return (
               <>
-                <Line key={`v${i}`} points={[pos, 0, pos, 520]} stroke="#ddd" />
-                <Line key={`h${i}`} points={[0, pos, 520, pos]} stroke="#ddd" />
+                <Line
+                  key={`v${i}`}
+                  points={[pos, 0, pos, 520]}
+                  stroke={isCentral ? "black" : "#ddd"}
+                  strokeWidth={isCentral ? 2 : 1}
+                />
+                <Line
+                  key={`h${i}`}
+                  points={[0, pos, 520, pos]}
+                  stroke={isCentral ? "black" : "#ddd"}
+                  strokeWidth={isCentral ? 2 : 1}
+                />
               </>
             );
           })}
 
-          {/* Axes et labels */}
-          {visibleAxes && (
-            <>
-              <Line points={[0, 260, 520, 260]} stroke="black" strokeWidth={2} />
-              <Line points={[260, 0, 260, 520]} stroke="black" strokeWidth={2} />
-              <KonvaText text="Re(z)" x={480} y={245} fontSize={16} fontStyle="bold" />
-              <KonvaText text="Im(z)" x={270} y={20} fontSize={16} fontStyle="bold" />
-              {/* Graduations horizontales */}
-              {[...Array(13)].map((_, i) => {
-                const x = i * 40;
-                const value = i - 6;
-                return (
-                  <KonvaText
-                    key={`vx${i}`}
-                    text={`${value}`}
-                    x={x}
-                    y={275}
-                    fontSize={12}
-                    fill="black"
-                  />
-                );
-              })}
-              {/* Graduations verticales */}
-              {[...Array(13)].map((_, i) => {
-                const y = i * 40;
-                const value = 6 - i;
-                return (
-                  <KonvaText
-                    key={`vy${i}`}
-                    text={`${value}`}
-                    x={270}
-                    y={y}
-                    fontSize={12}
-                    fill="black"
-                  />
-                );
-              })}
-            </>
-          )}
+          {/* Labels des axes */}
+          <KonvaText text="Re(z)" x={480} y={245} fontSize={16} fontStyle="bold" />
+          <KonvaText text="Im(z)" x={270} y={20} fontSize={16} fontStyle="bold" />
 
-          {/* Boules A, B, C avec fondu + rebond */}
-          {visibleCircles &&
-            (["A", "B", "C"] as const).map((label, idx) => {
-              const color = ["red", "blue", "green"][idx];
-              const student = studentPoints[label] ?? points[label];
-              const x = 260 + student.x * 40;
-              const y = 260 - student.y * 40;
+          {/* Graduations horizontales */}
+          {[...Array(13)].map((_, i) => {
+            const x = i * 40;
+            const value = i - 6;
+            return (
+              <KonvaText
+                key={`vx${i}`}
+                text={`${value}`}
+                x={x}
+                y={275}
+                fontSize={12}
+                fill="black"
+              />
+            );
+          })}
 
-              return (
-                <Circle
-                  key={label}
-                  x={x}
-                  y={y}
-                  radius={10}
-                  fill={color}
-                  draggable
-                  onDragEnd={(e) => handleDragEnd(e, label)}
-                  opacity={1}
-                  scaleX={scale}
-                  scaleY={scale}
-                />
-              );
-            })}
+          {/* Graduations verticales */}
+          {[...Array(13)].map((_, i) => {
+            const y = i * 40;
+            const value = 6 - i;
+            return (
+              <KonvaText
+                key={`vy${i}`}
+                text={`${value}`}
+                x={270}
+                y={y}
+                fontSize={12}
+                fill="black"
+              />
+            );
+          })}
+
+          {/* Boules A, B, C */}
+          {(["A", "B", "C"] as const).map((label, idx) => {
+            const color = ["red", "blue", "green"][idx];
+            const student = studentPoints[label] ?? points[label];
+            const x = 260 + student.x * 40;
+            const y = 260 - student.y * 40;
+
+            return (
+              <Circle
+                key={label}
+                x={x}
+                y={y}
+                radius={10}
+                fill={color}
+                draggable
+                onDragEnd={(e) => handleDragEnd(e, label)}
+              />
+            );
+          })}
+
+          {/* Instructions avec couleurs correspondantes */}
+          <KonvaText
+            text={`A : z = ${points.A.x} + i${points.A.y}`}
+            x={10}
+            y={10}
+            fill="red"
+            fontSize={14}
+          />
+          <KonvaText
+            text={`B : z = ${points.B.x} + i${points.B.y}`}
+            x={10}
+            y={30}
+            fill="blue"
+            fontSize={14}
+          />
+          <KonvaText
+            text={`C : z = ${points.C.x} + i${points.C.y}`}
+            x={10}
+            y={50}
+            fill="green"
+            fontSize={14}
+          />
+          <KonvaText
+            text="Glisse chaque boule pour placer le point"
+            x={10}
+            y={70}
+            fill="black"
+            fontSize={14}
+          />
         </Layer>
       </Stage>
 
