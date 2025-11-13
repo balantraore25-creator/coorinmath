@@ -1,3 +1,4 @@
+// ComplexCanvas.tsx
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Text as KonvaText } from "react-konva";
 import { Box, Text, Slider } from "@chakra-ui/react";
@@ -14,7 +15,7 @@ type ProgressMap = Record<string, number>;
 
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const { ref, size } = useContainerSize();
-  const [studentPoints, setStudentPoints] = useState<StudentPoints>({});
+  const [studentPoints, setStudentPoints] = useState<StudentPoints>(points);
   const [visibleLines, setVisibleLines] = useState(0);
   const [axisProgress, setAxisProgress] = useState(0);
   const [graduationProgress, setGraduationProgress] = useState(0);
@@ -24,17 +25,16 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const unit = size.width / 17;
   const center = size.width / 2;
 
-  // Génération aléatoire des points au montage
+  // Reset states and re-initialize from props whenever points change (relaunch)
   useEffect(() => {
-    const randomPoints: { A: Point; B: Point; C: Point } = {
-      A: { x: Math.floor(Math.random() * 9 - 4), y: Math.floor(Math.random() * 9 - 4) },
-      B: { x: Math.floor(Math.random() * 9 - 4), y: Math.floor(Math.random() * 9 - 4) },
-      C: { x: Math.floor(Math.random() * 9 - 4), y: Math.floor(Math.random() * 9 - 4) },
-    };
-    setStudentPoints(randomPoints);
-  }, []);
+    setStudentPoints(points);
+    setVisibleLines(0);
+    setAxisProgress(0);
+    setGraduationProgress(0);
+    setPointProgress({});
+  }, [points]);
 
-  // Timeline automatique (phase 1 puis phase 2)
+  // Timeline auto (intro -> show points)
   useEffect(() => {
     let frameId: number;
 
@@ -79,29 +79,28 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
           setPointProgress((prev) => ({ ...prev, [label]: Math.min(p, 1) }));
           if (p < 1) requestAnimationFrame(step);
         };
-        setTimeout(step, idx * 300 / speed);
+        setTimeout(step, (idx * 300) / speed);
       });
     };
 
     animateGrid();
     return () => cancelAnimationFrame(frameId);
-  }, [speed]);
+  }, [speed, points]); // depend on points to replay intro on relaunch
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
     const node = e.target;
     const newX = Math.round((node.x() - center) / unit);
     const newY = Math.round(-(node.y() - center) / unit);
-    setStudentPoints({ ...studentPoints, [label]: { x: newX, y: newY } });
+    setStudentPoints((prev) => ({ ...prev, [label]: { x: newX, y: newY } }));
   };
 
-  const getCoords = (label: string, defaultPoint: Point) => {
-    const p = studentPoints[label] ?? defaultPoint;
+  const getCoords = (label: string) => {
+    const p = studentPoints[label];
     return { x: p.x, y: p.y };
   };
 
   return (
     <Box ref={ref} width="100%" maxW="100%" mx="auto">
-      {/* Panel question */}
       <Box mb={4} p={3} bg="gray.100" borderRadius="md">
         <Text fontSize={["sm", "md", "lg"]} fontWeight="bold">
           Déplace une boule sur le plan pour obtenir ses coordonnées.
@@ -110,7 +109,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
 
       <Stage width={size.width} height={size.height} style={{ backgroundColor: "#fff" }}>
         <Layer>
-          {/* Grille progressive */}
           {[...Array(visibleLines)].map((_, i) => {
             const pos = i * unit;
             return (
@@ -121,7 +119,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             );
           })}
 
-          {/* Axes animés */}
           {axisProgress > 0 && (
             <>
               <Line points={[0, center, size.width, center]} stroke="black" strokeWidth={2} />
@@ -137,7 +134,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             </>
           )}
 
-          {/* Graduations animées */}
           {graduationProgress > 0 && (
             <>
               {[...Array(graduationProgress)].map((_, i) => {
@@ -171,10 +167,9 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             </>
           )}
 
-          {/* Points aléatoires */}
           {(["A", "B", "C"] as const).map((label, idx) => {
             const color = ["red", "blue", "green"][idx];
-            const p = getCoords(label, points[label]);
+            const p = getCoords(label);
             const x = center + p.x * unit;
             const y = center - p.y * unit;
             const prog = pointProgress[label] ?? 0;
@@ -195,7 +190,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                   key={label}
                   x={x}
                   y={y}
-                  radius={10 * prog}
+                  radius={10 * Math.max(prog, 0.0001)} // avoid radius=0
                   fill={color}
                   draggable
                   onDragEnd={(e) => handleDragEnd(e, label)}
@@ -213,7 +208,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
         </Layer>
       </Stage>
 
-      {/* Slider vitesse */}
       <Box mt={4} px={[2, 4, 6]}>
         <Text mb={2} fontSize={["sm", "md"]}>
           Vitesse de l’animation : {speed.toFixed(1)}x
