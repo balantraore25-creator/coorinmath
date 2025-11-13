@@ -132,22 +132,36 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
             </>
           )}
 
-          {/* Graduations animées */}
+          {/* Graduations animées avec zéro visible */}
           {graduationProgress > 0 && (
             <>
               {[...Array(graduationProgress)].map((_, i) => {
                 const x = i * unit;
                 const value = i - 8;
-                return value !== 0 ? (
-                  <KonvaText key={`vx${i}`} text={`${value}`} x={x} y={center + 15} fontSize={12} />
-                ) : null;
+                return (
+                  <KonvaText
+                    key={`vx${i}`}
+                    text={`${value}`}
+                    x={x}
+                    y={center + 15}
+                    fontSize={12}
+                    fill={value === 0 ? "black" : "#444"}
+                  />
+                );
               })}
               {[...Array(graduationProgress)].map((_, i) => {
                 const y = i * unit;
                 const value = 8 - i;
-                return value !== 0 ? (
-                  <KonvaText key={`vy${i}`} text={`${value}`} x={center + 10} y={y} fontSize={12} />
-                ) : null;
+                return (
+                  <KonvaText
+                    key={`vy${i}`}
+                    text={`${value}`}
+                    x={center + 10}
+                    y={y}
+                    fontSize={12}
+                    fill={value === 0 ? "black" : "#444"}
+                  />
+                );
               })}
             </>
           )}
@@ -182,6 +196,13 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
                     draggable
                     onDragEnd={(e) => handleDragEnd(e, label)}
                   />
+                  <KonvaText
+                    text={`${label} : z = ${p.x} + i${p.y} → Coordonnées (${p.x}, ${p.y})`}
+                    x={10}
+                    y={10 + idx * 20}
+                    fill={color}
+                    fontSize={14}
+                  />
                 </>
               );
             })}
@@ -201,7 +222,9 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
           <Slider.Track>
             <Slider.Range />
           </Slider.Track>
-          <Slider.Thumb index={0} />
+          <Slider.Thumb index={0}>
+            <Slider.ValueText />
+          </Slider.Thumb>
         </Slider.Root>
       </Box>
 
