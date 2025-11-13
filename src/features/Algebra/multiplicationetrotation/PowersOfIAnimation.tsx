@@ -14,16 +14,14 @@ export const PowersOfIAnimation = () => {
       {/* Cercle unité */}
       <circle cx={cx} cy={cy} r={scale} stroke="gray" fill="none" />
 
-      {/* Point animé qui tourne en boucle */}
-      <motion.circle
-        cx={cx}
-        cy={cy - scale}
-        r={8}
-        fill="purple"
+      {/* Groupe animé qui tourne autour du centre */}
+      <motion.g
+        style={{ transformOrigin: `${cx}px ${cy}px` }}
         animate={{ rotate: 360 }}
-        transform={`rotate(0 ${cx} ${cy})`}
         transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-      />
+      >
+        <circle cx={cx} cy={cy - scale} r={8} fill="purple" />
+      </motion.g>
 
       {/* Labels fixes */}
       <text x={cx + 10} y={cy - scale} fontSize="12" fill="purple">i</text>
