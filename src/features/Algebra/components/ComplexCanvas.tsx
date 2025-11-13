@@ -1,4 +1,3 @@
-// ComplexCanvas.tsx
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Text as KonvaText } from "react-konva";
 import { Box, Text, Slider } from "@chakra-ui/react";
@@ -20,6 +19,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [axisProgress, setAxisProgress] = useState(0);
   const [graduationProgress, setGraduationProgress] = useState(0);
   const [pointProgress, setPointProgress] = useState<ProgressMap>({});
+  const [labelProgress, setLabelProgress] = useState<ProgressMap>({});
   const [speed, setSpeed] = useState(1);
 
   const unit = size.width / 17;
@@ -32,6 +32,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     setAxisProgress(0);
     setGraduationProgress(0);
     setPointProgress({});
+    setLabelProgress({});
   }, [points]);
 
   // Timeline auto (intro -> show points)
@@ -78,9 +79,20 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
           p += 0.05;
           setPointProgress((prev) => ({ ...prev, [label]: Math.min(p, 1) }));
           if (p < 1) requestAnimationFrame(step);
+          else animateLabels(label);
         };
         setTimeout(step, (idx * 300) / speed);
       });
+    };
+
+    const animateLabels = (label: string) => {
+      let l = 0;
+      const step = () => {
+        l += 0.05;
+        setLabelProgress((prev) => ({ ...prev, [label]: Math.min(l, 1) }));
+        if (l < 1) requestAnimationFrame(step);
+      };
+      step();
     };
 
     animateGrid();
@@ -109,6 +121,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
 
       <Stage width={size.width} height={size.height} style={{ backgroundColor: "#fff" }}>
         <Layer>
+          {/* Grille */}
           {[...Array(visibleLines)].map((_, i) => {
             const pos = i * unit;
             return (
@@ -119,6 +132,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             );
           })}
 
+          {/* Axes */}
           {axisProgress > 0 && (
             <>
               <Line points={[0, center, size.width, center]} stroke="black" strokeWidth={2} />
@@ -134,6 +148,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             </>
           )}
 
+          {/* Graduations */}
           {graduationProgress > 0 && (
             <>
               {[...Array(graduationProgress)].map((_, i) => {
@@ -167,15 +182,18 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             </>
           )}
 
+          {/* Points + projections */}
           {(["A", "B", "C"] as const).map((label, idx) => {
             const color = ["red", "blue", "green"][idx];
             const p = getCoords(label);
             const x = center + p.x * unit;
             const y = center - p.y * unit;
             const prog = pointProgress[label] ?? 0;
+            const lprog = labelProgress[label] ?? 0;
 
             return (
               <>
+                {/* Cercle animé */}
                 {prog > 0 && (
                   <Circle
                     x={x}
@@ -190,11 +208,13 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                   key={label}
                   x={x}
                   y={y}
-                  radius={10 * Math.max(prog, 0.0001)} // avoid radius=0
+                  radius={10 * Math.max(prog, 0.0001)}
                   fill={color}
                   draggable
                   onDragEnd={(e) => handleDragEnd(e, label)}
                 />
+
+                {/* Texte global des coordonnées */}
                 <KonvaText
                   text={`${label} : z = ${p.x} + i${p.y} → (${p.x}, ${p.y})`}
                   x={10}
@@ -202,6 +222,59 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                   fill={color}
                   fontSize={14}
                 />
+
+                {/* Projections en pointillé + labels avec halo */}
+                {prog > 0 && (
+                  <>
+                    {/* Projection verticale */}
+                    <Line
+                      points={[x, y, x, center]}
+                      stroke={color}
+                      strokeWidth={1}
+                      dash={[4, 4]}
+                      opacity={0.6}
+                    />
+                    <Circle
+                      x={x - 5}
+                      y={center + 10}
+                      radius={15 * lprog}
+                      fill={color}
+                      opacity={0.2 * (1 - lprog)}
+                    />
+                    <KonvaText
+                      text={`${p.x}`}
+                      x={x - 10}
+                                            y={center + 5 + (1 - lprog) * 20}
+                      fontSize={12}
+                      fill={color}
+                      opacity={lprog}
+                    />
+
+                    {/* Projection horizontale */}
+                    <Line
+                      points={[x, y, center, y]}
+                      stroke={color}
+                      strokeWidth={1}
+                      dash={[4, 4]}
+                      opacity={0.6}
+                    />
+                    <Circle
+                      x={center + 10}
+                      y={y - 5}
+                      radius={15 * lprog}
+                      fill={color}
+                      opacity={0.2 * (1 - lprog)}
+                    />
+                    <KonvaText
+                      text={`${p.y}`}
+                      x={center + 5 + (1 - lprog) * 20}
+                      y={y - 10}
+                      fontSize={12}
+                      fill={color}
+                      opacity={lprog}
+                    />
+                  </>
+                )}
               </>
             );
           })}
