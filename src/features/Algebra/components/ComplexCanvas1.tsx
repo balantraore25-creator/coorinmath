@@ -2,85 +2,81 @@ import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Text as KonvaText } from "react-konva";
 import {
   Box,
+  Button,
   Text,
   Slider,
 } from "@chakra-ui/react";
 import type Konva from "konva";
 import type { Point } from "../types";
-import { useContainerSize } from "./useContainerSize";
+import { useContainerSize } from "./useContainerSize"; // adapte le chemin selon ton projet
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
-  phase: number; // 1 = intro auto, 2 = placement
+  phase: number; // 1 = intro, 2 = placement, 3 = validation
+  onValidate?: () => void;
 }
 
-type StudentPoints = Record<string, Point>;
-type ProgressMap = Record<string, number>;
-
-export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
+export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) => {
   const { ref, size } = useContainerSize();
-  const [studentPoints, setStudentPoints] = useState<StudentPoints>({});
+  const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
   const [visibleLines, setVisibleLines] = useState(0);
   const [axisProgress, setAxisProgress] = useState(0);
   const [graduationProgress, setGraduationProgress] = useState(0);
-  const [pointProgress, setPointProgress] = useState<ProgressMap>({});
+  const [pointProgress, setPointProgress] = useState<{ [key: string]: number }>({});
+  const [progress, setProgress] = useState<{ [key: string]: number }>({});
   const [speed, setSpeed] = useState(1);
 
   const unit = size.width / 17;
   const center = size.width / 2;
 
-  // Timeline orchestrée avec requestAnimationFrame
+  // Timeline orchestrée
   useEffect(() => {
-    if (phase !== 1) return;
-    let frameId: number;
-
-    const animateGrid = () => {
+    if (phase === 1) {
       let i = 0;
-      const step = () => {
+      const gridInterval = setInterval(() => {
         i++;
         setVisibleLines(i);
-        if (i < 17) frameId = requestAnimationFrame(step);
-        else animateAxes();
-      };
-      step();
-    };
+        if (i >= 17) {
+          clearInterval(gridInterval);
 
-    const animateAxes = () => {
-      let t = 0;
-      const step = () => {
-        t += 0.05;
-        setAxisProgress(Math.min(t, 1));
-        if (t < 1) frameId = requestAnimationFrame(step);
-        else animateGraduations();
-      };
-      step();
-    };
+          // Axes animés
+          let t = 0;
+          const axisInterval = setInterval(() => {
+            t += 0.05;
+            if (t >= 1) {
+              t = 1;
+              clearInterval(axisInterval);
 
-    const animateGraduations = () => {
-      let g = 0;
-      const step = () => {
-        g++;
-        setGraduationProgress(g);
-        if (g < 17) frameId = requestAnimationFrame(step);
-        else animatePoints();
-      };
-      step();
-    };
+              // Graduations
+              let g = 0;
+              const gradInterval = setInterval(() => {
+                g++;
+                setGraduationProgress(g);
+                if (g >= 17) {
+                  clearInterval(gradInterval);
 
-    const animatePoints = () => {
-      (["A", "B", "C"] as const).forEach((label, idx) => {
-        let p = 0;
-        const step = () => {
-          p += 0.05;
-          setPointProgress((prev) => ({ ...prev, [label]: Math.min(p, 1) }));
-          if (p < 1) requestAnimationFrame(step);
-        };
-        setTimeout(step, idx * 300 / speed);
-      });
-    };
+                  // Points séquentiels
+                  (["A", "B", "C"] as const).forEach((label, idx) => {
+                    let p = 0;
+                    const pointInterval = setInterval(() => {
+                      p += 0.1;
+                      if (p >= 1) {
+                        p = 1;
+                        clearInterval(pointInterval);
+                      }
+                      setPointProgress((prev) => ({ ...prev, [label]: p }));
+                    }, (80 + idx * 150) / speed);
+                  });
+                }
+              }, 150 / speed);
+            }
+            setAxisProgress(t);
+          }, 50 / speed);
+        }
+      }, 100 / speed);
 
-    animateGrid();
-    return () => cancelAnimationFrame(frameId);
+      return () => clearInterval(gridInterval);
+    }
   }, [phase, speed]);
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
@@ -88,6 +84,17 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
     const newX = Math.round((node.x() - center) / unit);
     const newY = Math.round(-(node.y() - center) / unit);
     setStudentPoints({ ...studentPoints, [label]: { x: newX, y: newY } });
+
+    setProgress({ ...progress, [label]: 0 });
+    let t = 0;
+    const interval = setInterval(() => {
+      t += 0.1;
+      if (t >= 1) {
+        t = 1;
+        clearInterval(interval);
+      }
+      setProgress((prev) => ({ ...prev, [label]: t }));
+    }, 50);
   };
 
   const getCoords = (label: string, defaultPoint: Point) => {
@@ -96,14 +103,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
   };
 
   return (
-    <Box ref={ref} width="100%" maxW="100%" mx="auto">
-      {/* Panel question au-dessus */}
-      <Box mb={4} p={3} bg="gray.100" borderRadius="md">
-        <Text fontSize={["sm", "md", "lg"]} fontWeight="bold">
-          Déplace une boule sur le plan pour obtenir ses coordonnées.
-        </Text>
-      </Box>
-
+    <Box ref={ref} width="100%" maxW="680px" mx="auto">
       <Stage width={size.width} height={size.height} style={{ backgroundColor: "#fff" }}>
         <Layer>
           {/* Grille progressive */}
@@ -133,7 +133,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
             </>
           )}
 
-          {/* Graduations animées */}
+          {/* Graduations animées avec zéro visible */}
           {graduationProgress > 0 && (
             <>
               {[...Array(graduationProgress)].map((_, i) => {
@@ -167,7 +167,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
             </>
           )}
 
-          {/* Points */}
+          {/* Points avec halo et zoom progressif */}
           {phase >= 2 &&
             (["A", "B", "C"] as const).map((label, idx) => {
               const color = ["red", "blue", "green"][idx];
@@ -198,7 +198,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
                     onDragEnd={(e) => handleDragEnd(e, label)}
                   />
                   <KonvaText
-                    text={`${label} : z = ${p.x} + i${p.y} → (${p.x}, ${p.y})`}
+                    text={`${label} : z = ${p.x} + i${p.y} → Coordonnées (${p.x}, ${p.y})`}
                     x={10}
                     y={10 + idx * 20}
                     fill={color}
@@ -210,7 +210,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
         </Layer>
       </Stage>
 
-      {/* Slider vitesse (Chakra v3 / Zag) */}
+      {/* Slider interactif pour la vitesse */}
       <Box mt={4} px={[2, 4, 6]}>
         <Text mb={2} fontSize={["sm", "md"]}>
           Vitesse de l’animation : {speed.toFixed(1)}x
@@ -220,7 +220,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
           max={2}
           step={0.1}
           value={[speed]}
-          onValueChange={(details: { value: number[] }) => setSpeed(details.value[0])}
+          onValueChange={(details) => setSpeed(details.value[0])}
         >
           <Slider.Track>
             <Slider.Range />
@@ -228,8 +228,22 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
           <Slider.Thumb index={0}>
             <Slider.ValueText />
           </Slider.Thumb>
-        </Slider.Root>
+                </Slider.Root>
       </Box>
+
+      {/* Bouton de validation en phase 3 */}
+      {phase === 3 && (
+        <Button
+          mt={4}
+          colorScheme="blue"
+          width="100%"
+          maxW="300px"
+          mx="auto"
+          onClick={onValidate}
+        >
+          Valider
+        </Button>
+      )}
     </Box>
   );
 };

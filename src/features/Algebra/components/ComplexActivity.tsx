@@ -12,13 +12,10 @@ export const ComplexActivity: React.FC = () => {
     C: { x: 1, y: 2 },
   };
 
-  const handleValidate = () => {
-    alert("Validation effectuée ✅");
-  };
-
   return (
     <Box>
-      <ComplexCanvas points={points} phase={phase} onValidate={handleValidate} />
+      {/* Canvas avec phases 1 et 2 */}
+      <ComplexCanvas points={points} phase={phase} />
 
       {/* Contrôles pour passer d’une phase à l’autre */}
       <Box mt={4} display="flex" gap={2}>
@@ -27,9 +24,6 @@ export const ComplexActivity: React.FC = () => {
         </Button>
         <Button onClick={() => setPhase(2)} colorScheme="orange">
           Phase 2 : Placement
-        </Button>
-        <Button onClick={() => setPhase(3)} colorScheme="green">
-          Phase 3 : Validation
         </Button>
       </Box>
     </Box>
