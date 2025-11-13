@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Text as KonvaText } from "react-konva";
-import { Box, Button, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Text,
+  Slider,
+} from "@chakra-ui/react";
 import type Konva from "konva";
 import type { Point } from "../types";
 
@@ -180,39 +185,24 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
                 </>
               );
             })}
-
-          {/* Instructions dynamiques */}
-          {phase >= 2 && (() => {
-            const A = getCoords("A", points.A);
-            const B = getCoords("B", points.B);
-            const C = getCoords("C", points.C);
-            return (
-              <>
-                <KonvaText text={`A : z = ${A.x} + i${A.y}`} x={10} y={10} fill="red" fontSize={14} />
-                <KonvaText text={`B : z = ${B.x} + i${B.y}`} x={10} y={30} fill="blue" fontSize={14} />
-                <KonvaText text={`C : z = ${C.x} + i${C.y}`} x={10} y={50} fill="green" fontSize={14} />
-              </>
-            );
-          })()}
         </Layer>
       </Stage>
 
       {/* Slider interactif pour la vitesse */}
       <Box mt={4}>
         <Text mb={2}>Vitesse de l’animation : {speed.toFixed(1)}x</Text>
-        <Slider
-          aria-label="slider-speed"
+        <Slider.Root
           min={0.5}
           max={2}
           step={0.1}
-          value={speed}
-          onChange={(val) => setSpeed(val)}
+          value={[speed]}
+          onValueChange={(details) => setSpeed(details.value[0])}
         >
-          <SliderTrack>
-            <SliderFilledTrack />
-          </SliderTrack>
-          <SliderThumb />
-        </Slider>
+          <Slider.Track>
+            <Slider.Range />
+          </Slider.Track>
+          <Slider.Thumb index={0} />
+        </Slider.Root>
       </Box>
 
       {/* Bouton de validation en phase 3 */}
