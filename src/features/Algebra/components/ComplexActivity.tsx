@@ -4,26 +4,24 @@ import type { Point } from "./../types";
 import { Box, Button } from "@chakra-ui/react";
 
 export const ComplexActivity: React.FC = () => {
-  const [phase, setPhase] = useState(1);
+  // Génération aléatoire des points initiaux
+  const generateRandomPoints = (): { A: Point; B: Point; C: Point } => ({
+    A: { x: Math.floor(Math.random() * 9 - 4), y: Math.floor(Math.random() * 9 - 4) },
+    B: { x: Math.floor(Math.random() * 9 - 4), y: Math.floor(Math.random() * 9 - 4) },
+    C: { x: Math.floor(Math.random() * 9 - 4), y: Math.floor(Math.random() * 9 - 4) },
+  });
 
-  const points: { A: Point; B: Point; C: Point } = {
-    A: { x: 3, y: -5 },
-    B: { x: -2, y: 4 },
-    C: { x: 1, y: 2 },
-  };
+  const [points, setPoints] = useState<{ A: Point; B: Point; C: Point }>(generateRandomPoints);
 
   return (
     <Box>
-      {/* Canvas avec phases 1 et 2 */}
-      <ComplexCanvas points={points} phase={phase} />
+      {/* Canvas avec phases automatiques */}
+      <ComplexCanvas points={points} />
 
-      {/* Contrôles pour passer d’une phase à l’autre */}
-      <Box mt={4} display="flex" gap={2}>
-        <Button onClick={() => setPhase(1)} colorScheme="gray">
-          Phase 1 : Introduction
-        </Button>
-        <Button onClick={() => setPhase(2)} colorScheme="orange">
-          Phase 2 : Placement
+      {/* Bouton pour relancer l’activité avec de nouveaux points aléatoires */}
+      <Box mt={4} display="flex" justifyContent="center">
+        <Button colorScheme="blue" onClick={() => setPoints(generateRandomPoints())}>
+          Relancer avec de nouveaux points
         </Button>
       </Box>
     </Box>

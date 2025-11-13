@@ -1,23 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Text as KonvaText } from "react-konva";
-import {
-  Box,
-  Text,
-  Slider,
-} from "@chakra-ui/react";
+import { Box, Text, Slider } from "@chakra-ui/react";
 import type Konva from "konva";
 import type { Point } from "../types";
 import { useContainerSize } from "./useContainerSize";
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
-  phase: number; // 1 = intro auto, 2 = placement
 }
 
 type StudentPoints = Record<string, Point>;
 type ProgressMap = Record<string, number>;
 
-export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
+export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const { ref, size } = useContainerSize();
   const [studentPoints, setStudentPoints] = useState<StudentPoints>({});
   const [visibleLines, setVisibleLines] = useState(0);
@@ -29,9 +24,18 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
   const unit = size.width / 17;
   const center = size.width / 2;
 
-  // Timeline orchestrée avec requestAnimationFrame
+  // Génération aléatoire des points au montage
   useEffect(() => {
-    if (phase !== 1) return;
+    const randomPoints: { A: Point; B: Point; C: Point } = {
+      A: { x: Math.floor(Math.random() * 9 - 4), y: Math.floor(Math.random() * 9 - 4) },
+      B: { x: Math.floor(Math.random() * 9 - 4), y: Math.floor(Math.random() * 9 - 4) },
+      C: { x: Math.floor(Math.random() * 9 - 4), y: Math.floor(Math.random() * 9 - 4) },
+    };
+    setStudentPoints(randomPoints);
+  }, []);
+
+  // Timeline automatique (phase 1 puis phase 2)
+  useEffect(() => {
     let frameId: number;
 
     const animateGrid = () => {
@@ -81,7 +85,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
 
     animateGrid();
     return () => cancelAnimationFrame(frameId);
-  }, [phase, speed]);
+  }, [speed]);
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
     const node = e.target;
@@ -97,7 +101,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
 
   return (
     <Box ref={ref} width="100%" maxW="100%" mx="auto">
-      {/* Panel question au-dessus */}
+      {/* Panel question */}
       <Box mb={4} p={3} bg="gray.100" borderRadius="md">
         <Text fontSize={["sm", "md", "lg"]} fontWeight="bold">
           Déplace une boule sur le plan pour obtenir ses coordonnées.
@@ -167,50 +171,49 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase }) => {
             </>
           )}
 
-          {/* Points */}
-          {phase >= 2 &&
-            (["A", "B", "C"] as const).map((label, idx) => {
-              const color = ["red", "blue", "green"][idx];
-              const p = getCoords(label, points[label]);
-              const x = center + p.x * unit;
-              const y = center - p.y * unit;
-              const prog = pointProgress[label] ?? 0;
+          {/* Points aléatoires */}
+          {(["A", "B", "C"] as const).map((label, idx) => {
+            const color = ["red", "blue", "green"][idx];
+            const p = getCoords(label, points[label]);
+            const x = center + p.x * unit;
+            const y = center - p.y * unit;
+            const prog = pointProgress[label] ?? 0;
 
-              return (
-                <>
-                  {prog > 0 && (
-                    <Circle
-                      x={x}
-                      y={y}
-                      radius={15 * prog}
-                      stroke={color}
-                      strokeWidth={2}
-                      opacity={0.4 * (1 - prog)}
-                    />
-                  )}
+            return (
+              <>
+                {prog > 0 && (
                   <Circle
-                    key={label}
                     x={x}
                     y={y}
-                    radius={10 * prog}
-                    fill={color}
-                    draggable
-                    onDragEnd={(e) => handleDragEnd(e, label)}
+                    radius={15 * prog}
+                    stroke={color}
+                    strokeWidth={2}
+                    opacity={0.4 * (1 - prog)}
                   />
-                  <KonvaText
-                    text={`${label} : z = ${p.x} + i${p.y} → (${p.x}, ${p.y})`}
-                    x={10}
-                    y={10 + idx * 20}
-                    fill={color}
-                    fontSize={14}
-                  />
-                </>
-              );
-            })}
+                )}
+                <Circle
+                  key={label}
+                  x={x}
+                  y={y}
+                  radius={10 * prog}
+                  fill={color}
+                  draggable
+                  onDragEnd={(e) => handleDragEnd(e, label)}
+                />
+                <KonvaText
+                  text={`${label} : z = ${p.x} + i${p.y} → (${p.x}, ${p.y})`}
+                  x={10}
+                  y={10 + idx * 20}
+                  fill={color}
+                  fontSize={14}
+                />
+              </>
+            );
+          })}
         </Layer>
       </Stage>
 
-      {/* Slider vitesse (Chakra v3 / Zag) */}
+      {/* Slider vitesse */}
       <Box mt={4} px={[2, 4, 6]}>
         <Text mb={2} fontSize={["sm", "md"]}>
           Vitesse de l’animation : {speed.toFixed(1)}x
