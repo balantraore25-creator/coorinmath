@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Text as KonvaText } from "react-konva";
-import { Box, Button } from "@chakra-ui/react";
+import { Box, Button, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text } from "@chakra-ui/react";
 import type Konva from "konva";
 import type { Point } from "../types";
 
@@ -13,24 +13,65 @@ interface Props {
 export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) => {
   const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
   const [visibleLines, setVisibleLines] = useState(0);
+  const [axisProgress, setAxisProgress] = useState(0);
+  const [graduationProgress, setGraduationProgress] = useState(0);
+  const [pointProgress, setPointProgress] = useState<{ [key: string]: number }>({});
   const [progress, setProgress] = useState<{ [key: string]: number }>({});
+  const [speed, setSpeed] = useState(1); // vitesse contrôlée par le slider
 
   const unit = 40;
   const size = 17 * unit;
   const center = size / 2;
 
-  // Animation progressive de la grille (phase 1)
+  // Timeline orchestrée
   useEffect(() => {
     if (phase === 1) {
       let i = 0;
-      const interval = setInterval(() => {
+      const gridInterval = setInterval(() => {
         i++;
         setVisibleLines(i);
-        if (i >= 17) clearInterval(interval);
-      }, 100);
-      return () => clearInterval(interval);
+        if (i >= 17) {
+          clearInterval(gridInterval);
+
+          // Axes animés
+          let t = 0;
+          const axisInterval = setInterval(() => {
+            t += 0.05;
+            if (t >= 1) {
+              t = 1;
+              clearInterval(axisInterval);
+
+              // Graduations
+              let g = 0;
+              const gradInterval = setInterval(() => {
+                g++;
+                setGraduationProgress(g);
+                if (g >= 17) {
+                  clearInterval(gradInterval);
+
+                  // Points séquentiels
+                  (["A", "B", "C"] as const).forEach((label, idx) => {
+                    let p = 0;
+                    const pointInterval = setInterval(() => {
+                      p += 0.1;
+                      if (p >= 1) {
+                        p = 1;
+                        clearInterval(pointInterval);
+                      }
+                      setPointProgress((prev) => ({ ...prev, [label]: p }));
+                    }, (80 + idx * 150) / speed);
+                  });
+                }
+              }, 150 / speed);
+            }
+            setAxisProgress(t);
+          }, 50 / speed);
+        }
+      }, 100 / speed);
+
+      return () => clearInterval(gridInterval);
     }
-  }, [phase]);
+  }, [phase, speed]);
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
     const node = e.target;
@@ -38,7 +79,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
     const newY = Math.round(-(node.y() - center) / unit);
     setStudentPoints({ ...studentPoints, [label]: { x: newX, y: newY } });
 
-    // Animation des segments
     setProgress({ ...progress, [label]: 0 });
     let t = 0;
     const interval = setInterval(() => {
@@ -63,38 +103,41 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
           {/* Grille progressive */}
           {[...Array(visibleLines)].map((_, i) => {
             const pos = i * unit;
-            const isCentral = i === 8;
             return (
               <>
-                <Line
-                  key={`v${i}`}
-                  points={[pos, 0, pos, size]}
-                  stroke={isCentral ? "black" : "#ddd"}
-                  strokeWidth={isCentral ? 2 : 1}
-                />
-                <Line
-                  key={`h${i}`}
-                  points={[0, pos, size, pos]}
-                  stroke={isCentral ? "black" : "#ddd"}
-                  strokeWidth={isCentral ? 2 : 1}
-                />
+                <Line key={`v${i}`} points={[pos, 0, pos, size]} stroke="#ddd" strokeWidth={1} />
+                <Line key={`h${i}`} points={[0, pos, size, pos]} stroke="#ddd" strokeWidth={1} />
               </>
             );
           })}
 
-          {/* Axes et graduations visibles après la grille */}
-          {visibleLines >= 17 && (
+          {/* Axes animés */}
+          {axisProgress > 0 && (
             <>
-              <KonvaText text="axe des réels" x={size - 120} y={center + 5} fontSize={16} />
-              <KonvaText text="axe des imaginaires purs" x={center + 10} y={20} fontSize={16} />
-              {[...Array(17)].map((_, i) => {
+              <Line points={[0, center, axisProgress * size, center]} stroke="black" strokeWidth={2} />
+              <Line points={[center, 0, center, axisProgress * size]} stroke="black" strokeWidth={2} />
+              {axisProgress === 1 && (
+                <>
+                  <Circle x={center} y={center} radius={5} fill="black" />
+                  <KonvaText text="(0,0)" x={center + 8} y={center + 8} fontSize={12} />
+                  <KonvaText text="axe des réels" x={size - 120} y={center + 5} fontSize={16} />
+                  <KonvaText text="axe des imaginaires purs" x={center + 10} y={20} fontSize={16} />
+                </>
+              )}
+            </>
+          )}
+
+          {/* Graduations animées */}
+          {graduationProgress > 0 && (
+            <>
+              {[...Array(graduationProgress)].map((_, i) => {
                 const x = i * unit;
                 const value = i - 8;
                 return value !== 0 ? (
                   <KonvaText key={`vx${i}`} text={`${value}`} x={x} y={center + 15} fontSize={12} />
                 ) : null;
               })}
-              {[...Array(17)].map((_, i) => {
+              {[...Array(graduationProgress)].map((_, i) => {
                 const y = i * unit;
                 const value = 8 - i;
                 return value !== 0 ? (
@@ -104,34 +147,32 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
             </>
           )}
 
-          {/* Boules et segments visibles en phase 2 */}
+          {/* Points avec halo et zoom progressif */}
           {phase >= 2 &&
             (["A", "B", "C"] as const).map((label, idx) => {
               const color = ["red", "blue", "green"][idx];
               const p = getCoords(label, points[label]);
               const x = center + p.x * unit;
               const y = center - p.y * unit;
-              const prog = progress[label] ?? 1;
+              const prog = pointProgress[label] ?? 0;
 
               return (
                 <>
-                  <Line
-                    points={[x, center, x, center + (y - center) * prog]}
-                    stroke={color}
-                    dash={[6, 6]}
-                    strokeWidth={2}
-                  />
-                  <Line
-                    points={[center, y, center + (x - center) * prog, y]}
-                    stroke={color}
-                    dash={[6, 6]}
-                    strokeWidth={2}
-                  />
+                  {prog > 0 && (
+                    <Circle
+                      x={x}
+                      y={y}
+                      radius={15 * prog}
+                      stroke={color}
+                      strokeWidth={2}
+                      opacity={0.4 * (1 - prog)}
+                    />
+                  )}
                   <Circle
                     key={label}
                     x={x}
                     y={y}
-                    radius={10}
+                    radius={10 * prog}
                     fill={color}
                     draggable
                     onDragEnd={(e) => handleDragEnd(e, label)}
@@ -147,32 +188,32 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
             const C = getCoords("C", points.C);
             return (
               <>
-                <KonvaText
-                  text={`A : z = ${A.x} + i${A.y} → Coordonnées (${A.x}, ${A.y})`}
-                  x={10}
-                  y={10}
-                  fill="red"
-                  fontSize={14}
-                />
-                <KonvaText
-                  text={`B : z = ${B.x} + i${B.y} → Coordonnées (${B.x}, ${B.y})`}
-                  x={10}
-                  y={30}
-                  fill="blue"
-                  fontSize={14}
-                />
-                <KonvaText
-                  text={`C : z = ${C.x} + i${C.y} → Coordonnées (${C.x}, ${C.y})`}
-                  x={10}
-                  y={50}
-                  fill="green"
-                  fontSize={14}
-                />
+                <KonvaText text={`A : z = ${A.x} + i${A.y}`} x={10} y={10} fill="red" fontSize={14} />
+                <KonvaText text={`B : z = ${B.x} + i${B.y}`} x={10} y={30} fill="blue" fontSize={14} />
+                <KonvaText text={`C : z = ${C.x} + i${C.y}`} x={10} y={50} fill="green" fontSize={14} />
               </>
             );
           })()}
         </Layer>
       </Stage>
+
+      {/* Slider interactif pour la vitesse */}
+      <Box mt={4}>
+        <Text mb={2}>Vitesse de l’animation : {speed.toFixed(1)}x</Text>
+        <Slider
+          aria-label="slider-speed"
+          min={0.5}
+          max={2}
+          step={0.1}
+          value={speed}
+          onChange={(val) => setSpeed(val)}
+        >
+          <SliderTrack>
+            <SliderFilledTrack />
+          </SliderTrack>
+          <SliderThumb />
+        </Slider>
+      </Box>
 
       {/* Bouton de validation en phase 3 */}
       {phase === 3 && (
