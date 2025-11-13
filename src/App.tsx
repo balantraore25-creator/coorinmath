@@ -40,6 +40,7 @@ import DivisionReajustementMixte from './features/Arithmetics/Euclidean/Division
 import DisjonctionDeCasTutor from './features/Arithmetics/Euclidean/divisibility/DisjonctionDeCasTutor'
 import ComplexNumbersPage from './features/Algebra/Complex numbers/ComplexNumbersPage'
 import { ComplexActivity } from './features/Algebra/components/ComplexActivity'
+import { ComplexRotationActivity } from './features/Algebra/ComplexRotationActivity'
 
 
 function App() {
@@ -109,6 +110,7 @@ function App() {
                     {/* Complex numbers */}
                     <Route path="complexnumbers" element={<ComplexNumbersPage />} />
                     <Route path="complexnumbers/unite1" element={<ComplexActivity />} />
+                    <Route path="complexnumbers/unite2" element={<ComplexRotationActivity />} />
                    
                   </Route>
                

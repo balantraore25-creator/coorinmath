@@ -8,3 +8,9 @@ export type ComplexNumber = {
   re: number; // partie réelle
   im: number; // partie imaginaire
 };
+
+
+export type Complex = {
+  re: number;
+  im: number;
+};
