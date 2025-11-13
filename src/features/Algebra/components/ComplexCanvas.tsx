@@ -8,27 +8,27 @@ import {
 } from "@chakra-ui/react";
 import type Konva from "konva";
 import type { Point } from "../types";
+import { useContainerSize } from "./useContainerSize"; // à adapter selon ton arborescence
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
-  phase: number; // 1 = intro, 2 = placement, 3 = validation
+  phase: number;
   onValidate?: () => void;
 }
 
 export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) => {
+  const { ref, size } = useContainerSize();
   const [studentPoints, setStudentPoints] = useState<{ [key: string]: Point }>({});
   const [visibleLines, setVisibleLines] = useState(0);
   const [axisProgress, setAxisProgress] = useState(0);
   const [graduationProgress, setGraduationProgress] = useState(0);
   const [pointProgress, setPointProgress] = useState<{ [key: string]: number }>({});
   const [progress, setProgress] = useState<{ [key: string]: number }>({});
-  const [speed, setSpeed] = useState(1); // vitesse contrôlée par le slider
+  const [speed, setSpeed] = useState(1);
 
-  const unit = 40;
-  const size = 17 * unit;
-  const center = size / 2;
+  const unit = size.width / 17;
+  const center = size.width / 2;
 
-  // Timeline orchestrée
   useEffect(() => {
     if (phase === 1) {
       let i = 0;
@@ -37,24 +37,18 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
         setVisibleLines(i);
         if (i >= 17) {
           clearInterval(gridInterval);
-
-          // Axes animés
           let t = 0;
           const axisInterval = setInterval(() => {
             t += 0.05;
             if (t >= 1) {
               t = 1;
               clearInterval(axisInterval);
-
-              // Graduations
               let g = 0;
               const gradInterval = setInterval(() => {
                 g++;
                 setGraduationProgress(g);
                 if (g >= 17) {
                   clearInterval(gradInterval);
-
-                  // Points séquentiels
                   (["A", "B", "C"] as const).forEach((label, idx) => {
                     let p = 0;
                     const pointInterval = setInterval(() => {
@@ -102,37 +96,34 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
   };
 
   return (
-    <Box>
-      <Stage width={size} height={size} style={{ backgroundColor: "#fff" }}>
+    <Box ref={ref} width="100%" maxW="680px" mx="auto">
+      <Stage width={size.width} height={size.height} style={{ backgroundColor: "#fff" }}>
         <Layer>
-          {/* Grille progressive */}
           {[...Array(visibleLines)].map((_, i) => {
             const pos = i * unit;
             return (
               <>
-                <Line key={`v${i}`} points={[pos, 0, pos, size]} stroke="#ddd" strokeWidth={1} />
-                <Line key={`h${i}`} points={[0, pos, size, pos]} stroke="#ddd" strokeWidth={1} />
+                <Line key={`v${i}`} points={[pos, 0, pos, size.height]} stroke="#ddd" strokeWidth={1} />
+                <Line key={`h${i}`} points={[0, pos, size.width, pos]} stroke="#ddd" strokeWidth={1} />
               </>
             );
           })}
 
-          {/* Axes animés */}
           {axisProgress > 0 && (
             <>
-              <Line points={[0, center, axisProgress * size, center]} stroke="black" strokeWidth={2} />
-              <Line points={[center, 0, center, axisProgress * size]} stroke="black" strokeWidth={2} />
+              <Line points={[0, center, axisProgress * size.width, center]} stroke="black" strokeWidth={2} />
+              <Line points={[center, 0, center, axisProgress * size.height]} stroke="black" strokeWidth={2} />
               {axisProgress === 1 && (
                 <>
                   <Circle x={center} y={center} radius={5} fill="black" />
                   <KonvaText text="(0,0)" x={center + 8} y={center + 8} fontSize={12} />
-                  <KonvaText text="axe des réels" x={size - 120} y={center + 5} fontSize={16} />
+                  <KonvaText text="axe des réels" x={size.width - 120} y={center + 5} fontSize={16} />
                   <KonvaText text="axe des imaginaires purs" x={center + 10} y={20} fontSize={16} />
                 </>
               )}
             </>
           )}
 
-          {/* Graduations animées avec zéro visible */}
           {graduationProgress > 0 && (
             <>
               {[...Array(graduationProgress)].map((_, i) => {
@@ -166,7 +157,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
             </>
           )}
 
-          {/* Points avec halo et zoom progressif */}
           {phase >= 2 &&
             (["A", "B", "C"] as const).map((label, idx) => {
               const color = ["red", "blue", "green"][idx];
@@ -209,9 +199,10 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
         </Layer>
       </Stage>
 
-      {/* Slider interactif pour la vitesse */}
-      <Box mt={4}>
-        <Text mb={2}>Vitesse de l’animation : {speed.toFixed(1)}x</Text>
+      <Box mt={4} px={[2, 4, 6]}>
+        <Text mb={2} fontSize={["sm", "md"]}>
+          Vitesse de l’animation : {speed.toFixed(1)}x
+        </Text>
         <Slider.Root
           min={0.5}
           max={2}
@@ -219,21 +210,20 @@ export const ComplexCanvas: React.FC<Props> = ({ points, phase, onValidate }) =>
           value={[speed]}
           onValueChange={(details) => setSpeed(details.value[0])}
         >
-          <Slider.Track>
-            <Slider.Range />
-          </Slider.Track>
-          <Slider.Thumb index={0}>
-            <Slider.ValueText />
-          </Slider.Thumb>
-        </Slider.Root>
-      </Box>
-
-      {/* Bouton de validation en phase 3 */}
-      {phase === 3 && (
-        <Button mt={4} colorScheme="blue" onClick={onValidate}>
-          Valider
-        </Button>
-      )}
+                  <Slider.Track>
+          <Slider.Range />
+        </Slider.Track>
+        <Slider.Thumb index={0}>
+          <Slider.ValueText />
+        </Slider.Thumb>
+      </Slider.Root>
     </Box>
-  );
-};
+
+    {phase === 3 && (
+      <Button mt={4} colorScheme="blue" width="100%" maxW="300px" mx="auto" onClick={onValidate}>
+        Valider
+      </Button>
+    )}
+  </Box>
+);
+}
