@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Stage, Layer, Line, Circle, Arc, Text as KonvaText, Group } from "react-konva";
-import { Box, Text, useBreakpointValue } from "@chakra-ui/react";
+import { Box, Text, Button, useBreakpointValue } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { MultiHalo } from "../moduleetargument/MultiHalo";
 
@@ -11,42 +11,37 @@ const size = 500;
 const center = size / 2;
 const bottomLaneY = size + 80;
 
-const axisColor = "#000";
-const gridColor = "#ddd";
-
 export const ComplexCanvas: React.FC = () => {
-  // Nombre complexe z (modifiable si besoin)
-  const [z] = useState<Point>({ x: 2, y: 1 });
+  // Génère un nombre entier aléatoire entre -5 et 5
+  const randomCoord = () => Math.floor(Math.random() * 11) - 5;
 
-  // État des placements: index -> placé ?
+  // Boule verte (z) avec coordonnées aléatoires
+  const [z, setZ] = useState<Point>({ x: randomCoord(), y: randomCoord() });
+
   const [placed, setPlaced] = useState<Record<number, boolean>>({});
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
-  // Disposition responsive du panneau latéral
   const panelDirection = useBreakpointValue({ base: "column", md: "row" });
 
-  // Calculs de base
   const module = useMemo(() => Math.sqrt(z.x ** 2 + z.y ** 2), [z.x, z.y]);
-  const argument = useMemo(() => Math.atan2(z.y, z.x), [z.x, z.y]); // en radians
+  const argument = useMemo(() => Math.atan2(z.y, z.x), [z.x, z.y]);
   const argumentDeg = useMemo(() => (argument * 180) / Math.PI, [argument]);
 
-  // Puissances successives de i appliquées à z: z * i^k
   const points = useMemo<Point[]>(
     () => [
-      { x: z.x, y: z.y }, // k=0 → z
-      { x: -z.y, y: z.x }, // k=1 → z*i
-      { x: -z.x, y: -z.y }, // k=2 → z*i^2
-      { x: z.y, y: -z.x }, // k=3 → z*i^3
-      { x: z.x, y: z.y }, // k=4 → z*i^4 = z
+      { x: z.x, y: z.y }, // boule verte (z)
+      { x: -z.y, y: z.x }, // z*i
+      { x: -z.x, y: -z.y }, // z*i^2
+      { x: z.y, y: -z.x }, // z*i^3
+      { x: z.x, y: z.y }, // z*i^4 = z
     ],
     [z.x, z.y]
   );
 
   const colors = ["green", "red", "blue", "orange", "purple"];
 
-  // Animation du vecteur et de l’arc quand on a bien placé la boule sélectionnée
-  const [vectorProgress, setVectorProgress] = useState(0); // 0 → 1
-  const [arcProgress, setArcProgress] = useState(0); // angle en degrés
+  const [vectorProgress, setVectorProgress] = useState(0);
+  const [arcProgress, setArcProgress] = useState(0);
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -65,42 +60,46 @@ export const ComplexCanvas: React.FC = () => {
     }
   }, [selectedIdx, placed, argumentDeg]);
 
-  // Compteur de progression (ignore k=4 qui revient à z)
   const placedCount = useMemo(
     () => Object.entries(placed).filter(([k, v]) => v && Number(k) < 4).length,
     [placed]
   );
   const totalCount = 4;
 
-  // Position cible dans le repère pour un point complexe (x, y)
   const toCanvas = (p: Point) => ({
     x: center + p.x * unit,
     y: center - p.y * unit,
   });
 
+  // Fonction pour régénérer un nouveau z
+  const regenerateZ = () => {
+    setZ({ x: randomCoord(), y: randomCoord() });
+    setPlaced({});
+    setSelectedIdx(null);
+  };
+
   return (
     <Box display="flex" flexDirection={panelDirection} gap={6}>
-      {/* Canvas principal */}
       <Box flex="1">
         <Stage width={size} height={size + 140} style={{ backgroundColor: "#fff" }}>
           <Layer>
             {/* Grille */}
             {Array.from({ length: 17 }).map((_, i) => (
               <React.Fragment key={i}>
-                <Line points={[i * unit, 0, i * unit, size]} stroke={gridColor} strokeWidth={1} />
-                <Line points={[0, i * unit, size, i * unit]} stroke={gridColor} strokeWidth={1} />
+                <Line points={[i * unit, 0, i * unit, size]} stroke="#ddd" strokeWidth={1} />
+                <Line points={[0, i * unit, size, i * unit]} stroke="#ddd" strokeWidth={1} />
               </React.Fragment>
             ))}
 
             {/* Axes */}
-            <Line points={[0, center, size, center]} stroke={axisColor} strokeWidth={2} />
-            <Line points={[center, 0, center, size]} stroke={axisColor} strokeWidth={2} />
+            <Line points={[0, center, size, center]} stroke="black" strokeWidth={2} />
+            <Line points={[center, 0, center, size]} stroke="black" strokeWidth={2} />
 
-            {/* Badges d’axes */}
+            {/* Badges */}
             <KonvaText text="Réel" x={size - 40} y={center - 20} fontSize={14} fontStyle="bold" />
             <KonvaText text="Imaginaire pur" x={center + 10} y={10} fontSize={14} rotation={90} />
 
-            {/* Vecteur initial (module de z) */}
+            {/* Vecteur initial */}
             <Line
               points={[center, center, center + z.x * unit, center - z.y * unit]}
               stroke="#000"
@@ -108,7 +107,7 @@ export const ComplexCanvas: React.FC = () => {
               dash={[6, 4]}
             />
 
-            {/* Boules alignées en bas: z et z*i^k */}
+            {/* Boules */}
             {points.map((p, idx) => {
               const startX = 80 + idx * 80;
               const startY = bottomLaneY;
@@ -117,13 +116,7 @@ export const ComplexCanvas: React.FC = () => {
 
               return (
                 <React.Fragment key={idx}>
-                  {/* Wrapper animé (DOM) pour l’apparition progressive */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.2 }}
-                    // Important: ne pas insérer ce div dans le canvas; on encapsule seulement le rendu React
-                  >
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.2 }}>
                     <Group>
                       <Circle
                         x={startX}
@@ -135,8 +128,7 @@ export const ComplexCanvas: React.FC = () => {
                           const node = e.target;
                           const newX = node.x();
                           const newY = node.y();
-                          const nearTarget =
-                            Math.abs(newX - targetX) < 20 && Math.abs(newY - targetY) < 20;
+                          const nearTarget = Math.abs(newX - targetX) < 20 && Math.abs(newY - targetY) < 20;
                           if (nearTarget) {
                             setPlaced((prev) => ({ ...prev, [idx]: true }));
                             node.position({ x: targetX, y: targetY });
@@ -149,28 +141,13 @@ export const ComplexCanvas: React.FC = () => {
                     </Group>
                   </motion.div>
 
-                  {/* Effets déclenchés quand la boule est correctement placée et sélectionnée */}
                   {isPlaced && selectedIdx === idx && (
                     <>
-                      {/* MultiHalo festif */}
-                      <MultiHalo
-                        x={targetX}
-                        y={targetY}
-                        color={colors[idx]}
-                        count={3}
-                        minRadius={12}
-                        maxRadius={28}
-                        speed={0.8}
-                        visible={true}
-                      />
-
-                      {/* Projections sur les axes */}
+                      <MultiHalo x={targetX} y={targetY} color={colors[idx]} count={3} minRadius={12} maxRadius={28} speed={0.8} visible />
                       <Line points={[targetX, targetY, targetX, center]} stroke={colors[idx]} dash={[4, 4]} />
                       <Line points={[targetX, targetY, center, targetY]} stroke={colors[idx]} dash={[4, 4]} />
                       <KonvaText text={`${p.x}`} x={targetX - 10} y={center + 5} fontSize={12} fill={colors[idx]} />
                       <KonvaText text={`${p.y}`} x={center + 5} y={targetY - 10} fontSize={12} fill={colors[idx]} />
-
-                      {/* Vecteur animé depuis l’origine jusqu’au point */}
                       <Line
                         points={[
                           center,
@@ -181,8 +158,6 @@ export const ComplexCanvas: React.FC = () => {
                         stroke={colors[idx]}
                         strokeWidth={2}
                       />
-
-                      {/* Arc animé (argument) */}
                       <Arc
                         x={center}
                         y={center}
@@ -193,8 +168,6 @@ export const ComplexCanvas: React.FC = () => {
                         stroke={colors[idx]}
                         strokeWidth={2}
                       />
-
-                      {/* Feedback textuel dynamique */}
                       <KonvaText
                         text={`Bravo ! Tu as bien placé z·i^${idx}`}
                         x={center - 120}
@@ -212,35 +185,16 @@ export const ComplexCanvas: React.FC = () => {
         </Stage>
       </Box>
 
-      {/* Panneau latéral animé (responsive) */}
-      <Box
-        minW={{ base: "100%", md: "280px" }}
-        p={4}
-        bg="gray.50"
-        border="1px solid #ddd"
-        borderRadius="md"
-        shadow="md"
-      >
-        <Text fontSize="lg" fontWeight="bold" mb={3}>
-          Étapes de calcul
+      {/* Panneau latéral */}
+      <Box minW={{ base: "100%", md: "280px" }} p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
+        <Text fontSize="lg" fontWeight="bold" mb={3}>Étapes de calcul</Text>
+        <Text>Coordonnée : z = {z.x} + i{z.y}</Text>
+        <Text>Module : √({z.x}² + {z.y}²) = {module.toFixed(2)}</Text>
+        <Text>Argument : arctan({z.y}/{z.x}) = {argumentDeg.toFixed(2)}°</Text>
+        <Text fontWeight="semibold">Forme trigonométrique :</Text>
+                <Text>
+          z = {module.toFixed(2)} (cos({argumentDeg.toFixed(2)}°) + i·sin({argumentDeg.toFixed(2)}°))
         </Text>
-
-        {/* Révélation séquentielle des étapes avec Framer Motion */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Text>Coordonnée : z = {z.x} + i{z.y}</Text>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.30 }}>
-          <Text>Module : √({z.x}² + {z.y}²) = {module.toFixed(2)}</Text>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-          <Text>Argument : arctan({z.y}/{z.x}) = {argumentDeg.toFixed(2)}°</Text>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.60 }}>
-          <Text fontWeight="semibold">Forme trigonométrique :</Text>
-          <Text>
-            z = {module.toFixed(2)} (cos({argumentDeg.toFixed(2)}°) + i·sin({argumentDeg.toFixed(2)}°))
-          </Text>
-        </motion.div>
 
         {/* Compteur de progression */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.75 }}>
@@ -250,6 +204,13 @@ export const ComplexCanvas: React.FC = () => {
             </Text>
           </Box>
         </motion.div>
+
+        {/* Bouton pour régénérer z */}
+        <Box mt={4}>
+          <Button colorScheme="teal" onClick={regenerateZ}>
+            🎲 Nouveau z
+          </Button>
+        </Box>
       </Box>
     </Box>
   );
