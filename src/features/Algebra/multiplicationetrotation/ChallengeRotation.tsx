@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
-import { Box, Text, VStack, Collapsible, useBreakpointValue } from "@chakra-ui/react";
+import { Box, Text, useBreakpointValue } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { MultiHalo } from "./../moduleetargument/MultiHalo";
 
@@ -92,9 +92,9 @@ export const ChallengeRotation: React.FC = () => {
               const targetY = center - p.y * unit;
 
               return (
-                <>
+                <React.Fragment key={idx}>
+                  {/* Wrapper animé autour du Circle */}
                   <motion.div
-                    key={`motion-${idx}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.3 }}
@@ -122,7 +122,16 @@ export const ChallengeRotation: React.FC = () => {
 
                   {isPlaced && selectedPower === idx && (
                     <>
-                      <MultiHalo x={targetX} y={targetY} color={colors[idx]} count={3} minRadius={12} maxRadius={28} speed={0.8} visible={true} />
+                      <MultiHalo
+                        x={targetX}
+                        y={targetY}
+                        color={colors[idx]}
+                        count={3}
+                        minRadius={12}
+                        maxRadius={28}
+                        speed={0.8}
+                        visible={true}
+                      />
 
                       <Line points={[targetX, targetY, targetX, center]} stroke={colors[idx]} dash={[4, 4]} />
                       <Line points={[targetX, targetY, center, targetY]} stroke={colors[idx]} dash={[4, 4]} />
@@ -161,47 +170,31 @@ export const ChallengeRotation: React.FC = () => {
                       />
                     </>
                   )}
-                </>
+                </React.Fragment>
               );
             })}
           </Layer>
         </Stage>
       </Box>
 
-      {/* Panneau latéral animé */}
-      <Collapsible.Root open={selectedPower !== null}>
-        <Collapsible.Content>
-          <Box minW="220px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
-            <Text fontSize="lg" fontWeight="bold" mb={3}>
-              Étapes de calcul
-            </Text>
-            {selectedPower !== null ? (
-              <VStack align="start" gap={2}>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                  <Text>Coordonnée : z = {z.x} + i{z.y}</Text>
-                </motion.div>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                  <Text>Module : √({z.x}² + {z.y}²) = {module.toFixed(2)}</Text>
-                </motion.div>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-                  <Text>
-                    Argument : arctan({z.y}/{z.x}) = {((argument * 180) / Math.PI).toFixed(2)}°
-                  </Text>
-                </motion.div>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
-                                    <Text fontWeight="semibold">Forme trigonométrique :</Text>
-                  <Text>
-                    z = {module.toFixed(2)} (cos({((argument * 180) / Math.PI).toFixed(2)}°) + i·sin(
-                    {((argument * 180) / Math.PI).toFixed(2)}°))
-                  </Text>
-                </motion.div>
-              </VStack>
-            ) : (
-              <Text>Aucune boule sélectionnée</Text>
-            )}
-          </Box>
-        </Collapsible.Content>
-      </Collapsible.Root>
+      {/* Panneau latéral avec module affiché */}
+      {selectedPower !== null && (
+        <Box minW="220px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
+          <Text fontSize="lg" fontWeight="bold" mb={3}>
+            Étapes de calcul
+          </Text>
+          <Text>Coordonnée : z = {z.x} + i{z.y}</Text>
+          <Text>Module : √({z.x}² + {z.y}²) = {module.toFixed(2)}</Text>
+          <Text>
+            Argument : arctan({z.y}/{z.x}) = {((argument * 180) / Math.PI).toFixed(2)}°
+          </Text>
+          <Text fontWeight="semibold">Forme trigonométrique :</Text>
+          <Text>
+            z = {module.toFixed(2)} (cos({((argument * 180) / Math.PI).toFixed(2)}°) + i·sin(
+            {((argument * 180) / Math.PI).toFixed(2)}°))
+          </Text>
+        </Box>
+      )}
     </Box>
   );
 };
