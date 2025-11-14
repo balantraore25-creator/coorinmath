@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import type Konva from "konva";
 import type { Point } from "../types";
 import { useContainerSize } from "../components/useContainerSize";
-import { Halo } from "./Halo";
+import { MultiHalo } from "./MultiHalo"; // nouveau halo multi-cercles
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
@@ -115,15 +115,34 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
               );
             })}
 
-            {/* Axes */}
+            {/* Axes + badges */}
             {axisProgress > 0 && (
               <>
                 <Line points={[0, center, size.width, center]} stroke="black" strokeWidth={2} />
                 <Line points={[center, 0, center, size.height]} stroke="black" strokeWidth={2} />
+
+                {/* Badges */}
+                <KonvaText
+                  text="Réel"
+                  x={size.width - 40}
+                  y={center - 20}
+                  fontSize={14}
+                  fontStyle="bold"
+                  fill="black"
+                />
+                <KonvaText
+                  text="Imaginaire pur"
+                  x={center + 10}
+                  y={10}
+                  fontSize={14}
+                  fontStyle="bold"
+                  fill="black"
+                  rotation={90}
+                />
               </>
             )}
 
-            {/* Points + halo + projections */}
+            {/* Points + multi-halo + projections */}
             {(["A", "B", "C"] as const).map((label, idx) => {
               const color = ["red", "blue", "green"][idx];
               const p = getCoords(label);
@@ -136,8 +155,8 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                 <>
                   {isSelected && (
                     <>
-                      {/* Halo */}
-                      <Halo x={x} y={y} color={color} minRadius={12} maxRadius={28} speed={0.8} visible={true} />
+                      {/* MultiHalo */}
+                      <MultiHalo x={x} y={y} color={color} count={3} minRadius={12} maxRadius={28} speed={0.8} visible={true} />
 
                       {/* Projections */}
                       <Line points={[x, y, x, center]} stroke={color} dash={[4, 4]} />
@@ -145,15 +164,10 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                       <KonvaText text={`${p.x}`} x={x - 10} y={center + 5} fontSize={12} fill={color} />
                       <KonvaText text={`${p.y}`} x={center + 5} y={y - 10} fontSize={12} fill={color} />
 
-                      {/* Vecteur animé */}
-                      <Line
-                        points={[center, center, x, y]}
-                        stroke={color}
-                        strokeWidth={2}
-                        opacity={0.8}
-                      />
+                      {/* Vecteur */}
+                      <Line points={[center, center, x, y]} stroke={color} strokeWidth={2} opacity={0.8} />
 
-                      {/* Arc animé */}
+                      {/* Arc angle */}
                       <Arc
                         x={center}
                         y={center}
@@ -205,14 +219,14 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
         </Box>
       </Box>
 
-      {/* Panneau latéral animé avec étapes */}
+      {/* Panneau latéral animé */}
       <Collapsible.Root open={!!selectedPoint}>
         <Collapsible.Content>
           <Box
             minW="220px"
             p={4}
             bg="gray.50"
-            border="1px solid #ddd"
+                        border="1px solid #ddd"
             borderRadius="md"
             fontFamily="sans-serif"
             shadow="md"
@@ -222,7 +236,11 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             </Text>
             {selectedPoint ? (
               <VStack align="start" gap={2}>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
                   <Text>Coordonnée : z = {selectedPoint.x} + i{selectedPoint.y}</Text>
                 </motion.div>
 
