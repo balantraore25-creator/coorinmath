@@ -40,8 +40,9 @@ import DivisionReajustementMixte from './features/Arithmetics/Euclidean/Division
 import DisjonctionDeCasTutor from './features/Arithmetics/Euclidean/divisibility/DisjonctionDeCasTutor'
 import ComplexNumbersPage from './features/Algebra/Complex numbers/ComplexNumbersPage'
 import { ComplexActivity } from './features/Algebra/components/ComplexActivity'
-import { ComplexRotationActivity } from './features/Algebra/ComplexRotationActivity'
+//import { ComplexRotationActivity } from './features/Algebra/ComplexRotationActivity'
 import { ComplexActivitytwo } from './features/Algebra/moduleetargument/ComplexActivitytwo'
+import { ComplexRotationActivity } from './features/Algebra/multiplicationetrotation/ComplexRotationActivity'
 
 
 function App() {
