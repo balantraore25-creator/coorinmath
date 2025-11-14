@@ -1,84 +1,191 @@
-import { useState } from "react";
-import type { Complex } from "../types";
-import { polarToComplex, multiply } from "../utils/complexMath";
+import React, { useState, useEffect } from "react";
+import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
+import { Box, Text, VStack, Collapsible, useBreakpointValue } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { Slider, Button, Text } from "@chakra-ui/react";
+import { MultiHalo } from "./../moduleetargument/MultiHalo"; // halo multi-cercles
 
-function randomComplex(): Complex {
-  return {
-    re: Math.round((Math.random() * 4 - 2) * 10) / 10,
-    im: Math.round((Math.random() * 4 - 2) * 10) / 10,
-  };
+interface Point {
+  x: number;
+  y: number;
 }
 
-export const ChallengeRotation = () => {
-  const cx = 200, cy = 200, scale = 50;
-  const [z, setZ] = useState<Complex>({ re: 1, im: 1 });
-  const [target, setTarget] = useState<Complex>({ re: -1, im: 1 });
-  const [angle, setAngle] = useState(0);
+const unit = 50;
+const center = 250;
 
-  const w = polarToComplex(1, angle);
-  const wz = multiply(z, w);
+export const ChallengeRotation: React.FC = () => {
+  const [z] = useState<Point>({ x: 2, y: 1 });
+  const [placed, setPlaced] = useState<Record<number, boolean>>({});
+  const [selectedPower, setSelectedPower] = useState<number | null>(null);
 
-  const x1 = cx + z.re * scale, y1 = cy - z.im * scale;
-  const x2 = cx + wz.re * scale, y2 = cy - wz.im * scale;
-  const xt = cx + target.re * scale, yt = cy - target.im * scale;
+  const panelDirection = useBreakpointValue({ base: "column", md: "row" });
 
-  const error = Math.hypot(wz.re - target.re, wz.im - target.im);
-  const isCorrect = error < 0.2;
+  const module = Math.sqrt(z.x ** 2 + z.y ** 2);
+  const argument = Math.atan2(z.y, z.x);
 
-  const newChallenge = () => {
-    const newZ = randomComplex();
-    const randomAngle = Math.PI / 2;
-    setZ(newZ);
-    setTarget(multiply(newZ, polarToComplex(1, randomAngle)));
-    setAngle(0);
-  };
+  const powers: Point[] = [
+    { x: z.x, y: z.y }, // z
+    { x: -z.y, y: z.x }, // z*i
+    { x: -z.x, y: -z.y }, // z*i^2
+    { x: z.y, y: -z.x }, // z*i^3
+    { x: z.x, y: z.y }, // z*i^4 = z
+  ];
+
+  const colors = ["green", "red", "blue", "orange", "purple"];
+
+  const [vectorProgress, setVectorProgress] = useState(0);
+  const [arcProgress, setArcProgress] = useState(0);
+
+  useEffect(() => {
+    if (selectedPower !== null && placed[selectedPower]) {
+      setVectorProgress(0);
+      setArcProgress(0);
+
+      let frameId: number;
+      const animate = () => {
+        setVectorProgress((prev) => Math.min(prev + 0.02, 1));
+        setArcProgress((prev) => Math.min(prev + 2, (argument * 180) / Math.PI));
+        frameId = requestAnimationFrame(animate);
+      };
+      animate();
+      return () => cancelAnimationFrame(frameId);
+    }
+  }, [selectedPower, placed, argument]);
 
   return (
-    <div>
-      <Button onClick={newChallenge} mb={4}>Nouveau challenge</Button>
+    <Box display="flex" flexDirection={panelDirection} gap={6}>
+      {/* Canvas */}
+      <Box flex="1">
+        <Stage width={500} height={500} style={{ backgroundColor: "#fff" }}>
+          <Layer>
+            {/* Axes */}
+            <Line points={[0, center, 500, center]} stroke="black" strokeWidth={2} />
+            <Line points={[center, 0, center, 500]} stroke="black" strokeWidth={2} />
 
-      {/* Slider v3 corrigé */}
-      <Slider.Root
-        min={0}
-        max={2 * Math.PI}
-        step={0.01}
-        value={[angle]}
-        onValueChange={(details: { value: number[] }) => setAngle(details.value[0])}
-      >
-        <Slider.Label>Angle</Slider.Label>
-        <Slider.Control>
-          <Slider.Track>
-            <Slider.Range />
-          </Slider.Track>
-          <Slider.Thumb index={0} />
-        </Slider.Control>
-      </Slider.Root>
+            {/* Badges */}
+            <KonvaText text="Réel" x={460} y={center - 20} fontSize={14} fontStyle="bold" />
+            <KonvaText text="Imaginaire pur" x={center + 10} y={10} fontSize={14} rotation={90} />
 
-      <svg width="400" height="400" style={{ border: "1px solid #ccc" }}>
-        <line x1={0} y1={cy} x2={400} y2={cy} stroke="black" />
-        <line x1={cx} y1={0} x2={cx} y2={400} stroke="black" />
-        <circle cx={x1} cy={y1} r={8} fill="blue" />
-        <text x={x1 + 10} y={y1} fontSize="12" fill="blue">z</text>
-        <circle cx={xt} cy={yt} r={8} fill="green" />
-        <text x={xt + 10} y={yt} fontSize="12" fill="green">z'</text>
-        <circle cx={x2} cy={y2} r={8} fill="red" />
-        <text x={x2 + 10} y={y2} fontSize="12" fill="red">wz</text>
-        <motion.path
-          d={`M ${x1} ${y1} A ${Math.hypot(z.re, z.im) * scale} ${Math.hypot(z.re, z.im) * scale} 0 0 1 ${x2} ${y2}`}
-          stroke="orange"
-          strokeWidth={2}
-          fill="none"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1.5 }}
-        />
-      </svg>
+            {/* Boules */}
+            {powers.map((p, idx) => {
+              const x = center + p.x * unit;
+              const y = center - p.y * unit;
+              const isPlaced = placed[idx];
 
-      <Text mt={2} fontSize="lg" color={isCorrect ? "green.500" : "red.500"}>
-        {isCorrect ? "✅ Correct !" : "❌ Essaie encore"}
-      </Text>
-    </div>
+              return (
+                <>
+                  <Circle
+                    key={idx}
+                    x={x}
+                    y={y}
+                    radius={12}
+                    fill={colors[idx]}
+                    draggable
+                    onDragEnd={() => setPlaced((prev) => ({ ...prev, [idx]: true }))}
+                    onClick={() => setSelectedPower(idx)}
+                  />
+
+                  {isPlaced && selectedPower === idx && (
+                    <>
+                      {/* MultiHalo festif */}
+                      <MultiHalo
+                        x={x}
+                        y={y}
+                        color={colors[idx]}
+                        count={3}
+                        minRadius={12}
+                        maxRadius={28}
+                        speed={0.8}
+                        visible={true}
+                      />
+
+                      {/* Projections */}
+                      <Line points={[x, y, x, center]} stroke={colors[idx]} dash={[4, 4]} />
+                      <Line points={[x, y, center, y]} stroke={colors[idx]} dash={[4, 4]} />
+                      <KonvaText text={`${p.x}`} x={x - 10} y={center + 5} fontSize={12} fill={colors[idx]} />
+                      <KonvaText text={`${p.y}`} x={center + 5} y={y - 10} fontSize={12} fill={colors[idx]} />
+
+                      {/* Vecteur animé */}
+                      <Line
+                        points={[
+                          center,
+                          center,
+                          center + (x - center) * vectorProgress,
+                          center + (y - center) * vectorProgress,
+                        ]}
+                        stroke={colors[idx]}
+                        strokeWidth={2}
+                      />
+
+                      {/* Arc animé */}
+                      <Arc
+                        x={center}
+                        y={center}
+                        innerRadius={20}
+                        outerRadius={25}
+                        angle={arcProgress}
+                        rotation={0}
+                        stroke={colors[idx]}
+                        strokeWidth={2}
+                      />
+
+                      {/* Feedback textuel dynamique */}
+                      <KonvaText
+                        text={`Bravo ! Tu as bien placé z·i^${idx}`}
+                        x={center - 100}
+                        y={480}
+                        fontSize={16}
+                        fontStyle="bold"
+                        fill={colors[idx]}
+                      />
+                    </>
+                  )}
+                </>
+              );
+            })}
+          </Layer>
+        </Stage>
+      </Box>
+
+      {/* Panneau latéral animé */}
+      <Collapsible.Root open={selectedPower !== null}>
+        <Collapsible.Content>
+          <Box
+            minW="220px"
+            p={4}
+            bg="gray.50"
+            border="1px solid #ddd"
+            borderRadius="md"
+            shadow="md"
+          >
+            <Text fontSize="lg" fontWeight="bold" mb={3}>
+              Étapes de calcul
+            </Text>
+            {selectedPower !== null ? (
+              <VStack align="start" gap={2}>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                  <Text>Coordonnée : z = {z.x} + i{z.y}</Text>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                  <Text>Module : √({z.x}² + {z.y}²) = {module.toFixed(2)}</Text>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+                  <Text>
+                    Argument : arctan({z.y}/{z.x}) = {((argument * 180) / Math.PI).toFixed(2)}°
+                  </Text>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
+                  <Text fontWeight="semibold">Forme trigonométrique :</Text>
+                  <Text>
+                    z = {module.toFixed(2)} (cos({((argument * 180) / Math.PI).toFixed(2)}°) + i·sin({((argument * 180) / Math.PI).toFixed(2)}°))
+                  </Text>
+                </motion.div>
+              </VStack>
+            ) : (
+              <Text>Aucune boule sélectionnée</Text>
+            )}
+          </Box>
+        </Collapsible.Content>
+      </Collapsible.Root>
+    </Box>
   );
 };
