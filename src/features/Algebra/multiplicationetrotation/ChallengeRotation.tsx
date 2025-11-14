@@ -20,9 +20,11 @@ export const ChallengeRotation: React.FC = () => {
 
   const panelDirection = useBreakpointValue({ base: "column", md: "row" });
 
+  // Calculs trigonométriques
   const module = Math.sqrt(z.x ** 2 + z.y ** 2);
   const argument = Math.atan2(z.y, z.x);
 
+  // Puissances successives de z * i^k
   const powers: Point[] = [
     { x: z.x, y: z.y }, // z
     { x: -z.y, y: z.x }, // z*i
@@ -36,6 +38,7 @@ export const ChallengeRotation: React.FC = () => {
   const [vectorProgress, setVectorProgress] = useState(0);
   const [arcProgress, setArcProgress] = useState(0);
 
+  // Animation vectorielle et arc
   useEffect(() => {
     if (selectedPower !== null && placed[selectedPower]) {
       setVectorProgress(0);
@@ -51,6 +54,10 @@ export const ChallengeRotation: React.FC = () => {
       return () => cancelAnimationFrame(frameId);
     }
   }, [selectedPower, placed, argument]);
+
+  // Compteur de progression
+  const placedCount = Object.values(placed).filter(Boolean).length;
+  const totalCount = powers.length - 1; // on ignore z^4 = z
 
   return (
     <Box display="flex" flexDirection={panelDirection} gap={6}>
@@ -74,7 +81,7 @@ export const ChallengeRotation: React.FC = () => {
             <KonvaText text="Réel" x={size - 40} y={center - 20} fontSize={14} fontStyle="bold" />
             <KonvaText text="Imaginaire pur" x={center + 10} y={10} fontSize={14} rotation={90} />
 
-            {/* Vecteur de module z */}
+            {/* Vecteur initial */}
             <Line
               points={[center, center, center + z.x * unit, center - z.y * unit]}
               stroke="black"
@@ -82,7 +89,7 @@ export const ChallengeRotation: React.FC = () => {
               dash={[6, 4]}
             />
 
-            {/* Boules alignées en bas avec animation progressive */}
+            {/* Boules animées */}
             {powers.map((p, idx) => {
               const x = 80 + idx * 80;
               const y = size + 80;
@@ -93,7 +100,6 @@ export const ChallengeRotation: React.FC = () => {
 
               return (
                 <React.Fragment key={idx}>
-                  {/* Wrapper animé autour du Circle */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -133,11 +139,13 @@ export const ChallengeRotation: React.FC = () => {
                         visible={true}
                       />
 
+                      {/* Projections */}
                       <Line points={[targetX, targetY, targetX, center]} stroke={colors[idx]} dash={[4, 4]} />
                       <Line points={[targetX, targetY, center, targetY]} stroke={colors[idx]} dash={[4, 4]} />
                       <KonvaText text={`${p.x}`} x={targetX - 10} y={center + 5} fontSize={12} fill={colors[idx]} />
                       <KonvaText text={`${p.y}`} x={center + 5} y={targetY - 10} fontSize={12} fill={colors[idx]} />
 
+                      {/* Vecteur animé */}
                       <Line
                         points={[
                           center,
@@ -149,6 +157,7 @@ export const ChallengeRotation: React.FC = () => {
                         strokeWidth={2}
                       />
 
+                      {/* Arc animé */}
                       <Arc
                         x={center}
                         y={center}
@@ -160,6 +169,7 @@ export const ChallengeRotation: React.FC = () => {
                         strokeWidth={2}
                       />
 
+                      {/* Feedback */}
                       <KonvaText
                         text={`Bravo ! Tu as bien placé z·i^${idx}`}
                         x={center - 100}
@@ -177,24 +187,29 @@ export const ChallengeRotation: React.FC = () => {
         </Stage>
       </Box>
 
-      {/* Panneau latéral avec module affiché */}
-      {selectedPower !== null && (
-        <Box minW="220px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
-          <Text fontSize="lg" fontWeight="bold" mb={3}>
-            Étapes de calcul
-          </Text>
-          <Text>Coordonnée : z = {z.x} + i{z.y}</Text>
-          <Text>Module : √({z.x}² + {z.y}²) = {module.toFixed(2)}</Text>
-          <Text>
-            Argument : arctan({z.y}/{z.x}) = {((argument * 180) / Math.PI).toFixed(2)}°
-          </Text>
-          <Text fontWeight="semibold">Forme trigonométrique :</Text>
-          <Text>
-            z = {module.toFixed(2)} (cos({((argument * 180) / Math.PI).toFixed(2)}°) + i·sin(
-            {((argument * 180) / Math.PI).toFixed(2)}°))
+      {/* Panneau latéral */}
+      <Box minW="220px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
+        <Text fontSize="lg" fontWeight="bold" mb={3}>
+          Étapes de calcul
+        </Text>
+        <Text>Coordonnée : z = {z.x} + i{z.y}</Text>
+        <Text>Module : √({z.x}² + {z.y}²) = {module.toFixed(2)}</Text>
+        <Text>
+          Argument : arctan({z.y}/{z.x}) = {((argument * 180) / Math.PI).toFixed(2)}°
+        </Text>
+        <Text fontWeight="semibold">Forme trigonométrique :</Text>
+        <Text>
+          z = {module.toFixed(2)} (cos({((argument * 180) / Math.PI).toFixed(2)}°) + i·sin(
+          {((argument * 180) / Math.PI).toFixed(2)}°))
+        </Text>
+
+                {/* Compteur de progression */}
+        <Box mt={4} p={2} bg="white" border="1px solid #ccc" borderRadius="md">
+          <Text fontSize="md" fontWeight="semibold">
+            Progression : {placedCount} / {totalCount} boules bien placées
           </Text>
         </Box>
-      )}
+      </Box>
     </Box>
   );
 };
