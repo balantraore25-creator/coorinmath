@@ -303,3 +303,4 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     </Box>
   );
 };
+
