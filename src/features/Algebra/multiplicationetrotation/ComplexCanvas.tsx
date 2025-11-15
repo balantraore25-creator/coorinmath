@@ -1,23 +1,70 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
-import { Box, Text, Button, useBreakpointValue } from "@chakra-ui/react";
-import { MultiHalo } from "../moduleetargument/MultiHalo";
+import React, { useMemo, useState } from "react";
+import { Stage, Layer } from "react-konva";
+import { Box, useBreakpointValue } from "@chakra-ui/react";
+import { GridLayer } from "./Stage + Layer (Konva)/GridLayer";
+import { AxisLabels } from "./Stage + Layer (Konva)/AxisLabels";
+import { BaseVector } from "./Stage + Layer (Konva)/BaseVector";
+import { DraggablePoint } from "./Stage + Layer (Konva)/DraggablePoint (boules interactives)/DraggablePoint";
+import { FeedbackPanel } from "./FeedbackPanel (panneau latéral statique)/FeedbackPanel";
+import { DynamicFormulaPanel } from "./DynamicFormulaPanel (panneau dynamique)/DynamicFormulaPanel";
 
+// Types
 type Point = { x: number; y: number };
 
+// Constantes
 const unit = 50;
 const size = 500;
 const center = size / 2;
+const colors = ["green", "red", "blue", "orange", "purple"];
+
+// Hook animation simple
+function useVectorAnimation(selectedIdx: number | null, placed: Record<number, boolean>, argumentDeg: number) {
+  const [vectorProgress, setVectorProgress] = useState(0);
+  const [arcProgress, setArcProgress] = useState(0);
+
+  React.useEffect(() => {
+    if (selectedIdx !== null && placed[selectedIdx]) {
+      setVectorProgress(0);
+      setArcProgress(0);
+      const step = () => {
+        setVectorProgress((p) => Math.min(p + 0.02, 1));
+        setArcProgress((a) => Math.min(a + 2, argumentDeg));
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+  }, [selectedIdx, placed, argumentDeg]);
+
+  return { vectorProgress, arcProgress };
+}
+
+// Hook synchronisation étapes
+function useStepAnimation(selectedIdx: number | null, placed: Record<number, boolean>) {
+  const [currentStep, setCurrentStep] = useState(0);
+
+  React.useEffect(() => {
+    if (selectedIdx !== null && placed[selectedIdx]) {
+      setCurrentStep(0);
+      const interval = setInterval(() => {
+        setCurrentStep((s) => Math.min(s + 1, 3));
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedIdx, placed]);
+
+  return currentStep;
+}
 
 export const ComplexCanvas: React.FC = () => {
-  // Coordonnée aléatoire bornée entre -3 et 3
-  const randomCoord = () => Math.floor(Math.random() * 7) - 3;
-
-  const [z, setZ] = useState<Point>({ x: randomCoord(), y: randomCoord() });
+  const [z] = useState<Point>({ x: 2, y: 1 });
   const [placed, setPlaced] = useState<Record<number, boolean>>({});
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
   const panelDirection = useBreakpointValue({ base: "column", md: "row" });
+
+  const module = useMemo(() => Math.sqrt(z.x ** 2 + z.y ** 2), [z.x, z.y]);
+  const argument = useMemo(() => Math.atan2(z.y, z.x), [z.x, z.y]);
+  const argumentDeg = useMemo(() => (argument * 180) / Math.PI, [argument]);
 
   const points = useMemo<Point[]>(
     () => [
@@ -30,180 +77,55 @@ export const ComplexCanvas: React.FC = () => {
     [z.x, z.y]
   );
 
-  const colors = ["green", "red", "blue", "orange", "purple"];
+  const placedCount = useMemo(
+    () => Object.entries(placed).filter(([k, v]) => v && Number(k) < 4).length,
+    [placed]
+  );
+  const totalCount = 4;
 
-  const [vectorProgress, setVectorProgress] = useState(0);
-  const [arcProgress, setArcProgress] = useState(0);
-  const rafRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (selectedIdx !== null && placed[selectedIdx]) {
-      setVectorProgress(0);
-      setArcProgress(0);
-      let frame = 0;
-      const step = () => {
-        frame++;
-        // Ease-out pour l’arc
-        const easedArc = 360 * (1 - Math.pow(0.95, frame));
-        setVectorProgress((p) => Math.min(p + 0.02, 1));
-        setArcProgress(Math.min(easedArc, 360));
-        rafRef.current = requestAnimationFrame(step);
-      };
-      rafRef.current = requestAnimationFrame(step);
-      return () => {
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      };
-    }
-  }, [selectedIdx, placed]);
-
-  const toCanvas = (p: Point) => ({
-    x: center + p.x * unit,
-    y: center - p.y * unit,
-  });
-
-  const regenerateZ = () => {
-    setZ({ x: randomCoord(), y: randomCoord() });
-    setPlaced({});
-    setSelectedIdx(null);
-  };
+  const { vectorProgress, arcProgress } = useVectorAnimation(selectedIdx, placed, argumentDeg);
+  const currentStep = useStepAnimation(selectedIdx, placed);
 
   return (
     <Box display="flex" flexDirection={panelDirection} gap={6}>
       <Box flex="1">
         <Stage width={size} height={size + 140} style={{ backgroundColor: "#fff" }}>
           <Layer>
-            {/* Grille 7x7 */}
-            {Array.from({ length: 8 }).map((_, i) => (
-              <React.Fragment key={i}>
-                <Line
-                  points={[i * (size / 7), 0, i * (size / 7), size]}
-                  stroke="#ddd"
-                  strokeWidth={1}
-                />
-                <Line
-                  points={[0, i * (size / 7), size, i * (size / 7)]}
-                  stroke="#ddd"
-                  strokeWidth={1}
-                />
-              </React.Fragment>
+            <GridLayer size={size} unit={unit} center={center} />
+            <AxisLabels size={size} center={center} />
+            <BaseVector z={z} unit={unit} center={center} />
+
+            {points.map((p, idx) => (
+              <DraggablePoint
+                key={idx}
+                p={p}
+                idx={idx}
+                color={colors[idx]}
+                placed={!!placed[idx]}
+                onPlace={(i) => setPlaced((prev) => ({ ...prev, [i]: true }))}
+                onSelect={setSelectedIdx}
+                selectedIdx={selectedIdx}
+                vectorProgress={vectorProgress}
+                arcProgress={arcProgress}
+                currentStep={currentStep}
+                unit={unit}
+                center={center}
+                size={size}
+              />
             ))}
-
-            {/* Axes */}
-            <Line points={[0, center, size, center]} stroke="black" strokeWidth={2} />
-            <Line points={[center, 0, center, size]} stroke="black" strokeWidth={2} />
-
-            <KonvaText text="Réel" x={size - 40} y={center - 20} fontSize={14} fontStyle="bold" />
-            <KonvaText text="Imaginaire pur" x={center + 10} y={10} fontSize={14} rotation={90} />
-
-            {points.map((p, idx) => {
-              const { x: targetX, y: targetY } = toCanvas(p);
-              const isPlaced = !!placed[idx];
-
-              return (
-                <React.Fragment key={idx}>
-                  <Circle
-                    x={80 + idx * 80}
-                    y={size + 80}
-                    radius={12}
-                    fill={colors[idx]}
-                    draggable
-                    onDragEnd={(e) => {
-                      const node = e.target;
-                      const newX = node.x();
-                      const newY = node.y();
-                      if (Math.abs(newX - targetX) < 20 && Math.abs(newY - targetY) < 20) {
-                        setPlaced((prev) => ({ ...prev, [idx]: true }));
-                        node.position({ x: targetX, y: targetY });
-                      } else {
-                        node.position({ x: 80 + idx * 80, y: size + 80 });
-                      }
-                    }}
-                    onClick={() => setSelectedIdx(idx)}
-                  />
-
-                  {isPlaced && (
-                    <>
-                      {/* Trait pointillé vers l'origine */}
-                      <Line
-                        points={[center, center, targetX, targetY]}
-                        stroke={colors[idx]}
-                        dash={[6, 4]}
-                      />
-
-                      {/* Vecteur animé progressif */}
-                      <Line
-                        points={[
-                          center,
-                          center,
-                          center + (targetX - center) * vectorProgress,
-                          center + (targetY - center) * vectorProgress,
-                        ]}
-                        stroke={colors[idx]}
-                        strokeWidth={2}
-                      />
-
-                      {/* Arc ease-out animé */}
-                      <Arc
-                        x={center}
-                        y={center}
-                        innerRadius={20}
-                        outerRadius={25}
-                        angle={arcProgress}
-                        rotation={0}
-                        stroke={colors[idx]}
-                        strokeWidth={2}
-                      />
-
-                      {/* Valeur de l'angle */}
-                      <KonvaText
-                        text={`${((Math.atan2(p.y, p.x) * 180) / Math.PI).toFixed(1)}°`}
-                        x={center + 30}
-                        y={center - 30}
-                        fontSize={14}
-                        fill={colors[idx]}
-                      />
-
-                      <MultiHalo
-                        x={targetX}
-                        y={targetY}
-                        color={colors[idx]}
-                        count={3}
-                        minRadius={12}
-                        maxRadius={28}
-                        speed={0.8}
-                        visible
-                      />
-                    </>
-                  )}
-                </React.Fragment>
-              );
-            })}
           </Layer>
         </Stage>
       </Box>
 
-      {/* Panneau latéral */}
-      <Box minW={{ base: "100%", md: "280px" }} p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
-        <Text fontSize="lg" fontWeight="bold" mb={3}>Étapes de calcul</Text>
-        {selectedIdx !== null && placed[selectedIdx] && (
-          <>
-            <Text>Coordonnée : {points[selectedIdx].x} + i{points[selectedIdx].y}</Text>
-            <Text>
-              Module : √({points[selectedIdx].x}² + {points[selectedIdx].y}²) ={" "}
-              {Math.sqrt(points[selectedIdx].x**2 + points[selectedIdx].y**2).toFixed(2)}
-            </Text>
-            <Text>
-              Argument : arctan({points[selectedIdx].y}/{points[selectedIdx].x}) ={" "}
-              {((Math.atan2(points[selectedIdx].y, points[selectedIdx].x) * 180) / Math.PI).toFixed(2)}°
-            </Text>
-          </>
-        )}
-
-        <Box mt={4}>
-          <Button colorScheme="teal" onClick={regenerateZ}>
-            🎲 Nouveau z
-          </Button>
-        </Box>
+      <Box>
+        <FeedbackPanel
+          z={z}
+          module={module}
+          argumentDeg={argumentDeg}
+          placedCount={placedCount}
+          totalCount={totalCount}
+        />
+        <DynamicFormulaPanel z={z} placed={placed} />
       </Box>
     </Box>
   );
