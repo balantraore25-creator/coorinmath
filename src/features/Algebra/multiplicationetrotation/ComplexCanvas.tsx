@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Stage, Layer, Line, Circle, Arc, Text as KonvaText, Group } from "react-konva";
+import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
 import { Box, Text, Button, useBreakpointValue } from "@chakra-ui/react";
-import { motion } from "framer-motion";
 import { MultiHalo } from "../moduleetargument/MultiHalo";
 
 type Point = { x: number; y: number };
@@ -9,31 +8,24 @@ type Point = { x: number; y: number };
 const unit = 50;
 const size = 500;
 const center = size / 2;
-const bottomLaneY = size + 80;
 
 export const ComplexCanvas: React.FC = () => {
-  // Génère un nombre entier aléatoire entre -5 et 5
-  const randomCoord = () => Math.floor(Math.random() * 11) - 5;
+  // Coordonnée aléatoire bornée entre -3 et 3
+  const randomCoord = () => Math.floor(Math.random() * 7) - 3;
 
-  // Boule verte (z) avec coordonnées aléatoires
   const [z, setZ] = useState<Point>({ x: randomCoord(), y: randomCoord() });
-
   const [placed, setPlaced] = useState<Record<number, boolean>>({});
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
   const panelDirection = useBreakpointValue({ base: "column", md: "row" });
 
-  const module = useMemo(() => Math.sqrt(z.x ** 2 + z.y ** 2), [z.x, z.y]);
-  const argument = useMemo(() => Math.atan2(z.y, z.x), [z.x, z.y]);
-  const argumentDeg = useMemo(() => (argument * 180) / Math.PI, [argument]);
-
   const points = useMemo<Point[]>(
     () => [
-      { x: z.x, y: z.y }, // boule verte (z)
-      { x: -z.y, y: z.x }, // z*i
-      { x: -z.x, y: -z.y }, // z*i^2
-      { x: z.y, y: -z.x }, // z*i^3
-      { x: z.x, y: z.y }, // z*i^4 = z
+      { x: z.x, y: z.y },
+      { x: -z.y, y: z.x },
+      { x: -z.x, y: -z.y },
+      { x: z.y, y: -z.x },
+      { x: z.x, y: z.y },
     ],
     [z.x, z.y]
   );
@@ -48,9 +40,13 @@ export const ComplexCanvas: React.FC = () => {
     if (selectedIdx !== null && placed[selectedIdx]) {
       setVectorProgress(0);
       setArcProgress(0);
+      let frame = 0;
       const step = () => {
+        frame++;
+        // Ease-out pour l’arc
+        const easedArc = 360 * (1 - Math.pow(0.95, frame));
         setVectorProgress((p) => Math.min(p + 0.02, 1));
-        setArcProgress((a) => Math.min(a + 2, argumentDeg));
+        setArcProgress(Math.min(easedArc, 360));
         rafRef.current = requestAnimationFrame(step);
       };
       rafRef.current = requestAnimationFrame(step);
@@ -58,20 +54,13 @@ export const ComplexCanvas: React.FC = () => {
         if (rafRef.current) cancelAnimationFrame(rafRef.current);
       };
     }
-  }, [selectedIdx, placed, argumentDeg]);
-
-  const placedCount = useMemo(
-    () => Object.entries(placed).filter(([k, v]) => v && Number(k) < 4).length,
-    [placed]
-  );
-  const totalCount = 4;
+  }, [selectedIdx, placed]);
 
   const toCanvas = (p: Point) => ({
     x: center + p.x * unit,
     y: center - p.y * unit,
   });
 
-  // Fonction pour régénérer un nouveau z
   const regenerateZ = () => {
     setZ({ x: randomCoord(), y: randomCoord() });
     setPlaced({});
@@ -83,11 +72,19 @@ export const ComplexCanvas: React.FC = () => {
       <Box flex="1">
         <Stage width={size} height={size + 140} style={{ backgroundColor: "#fff" }}>
           <Layer>
-            {/* Grille */}
-            {Array.from({ length: 17 }).map((_, i) => (
+            {/* Grille 7x7 */}
+            {Array.from({ length: 8 }).map((_, i) => (
               <React.Fragment key={i}>
-                <Line points={[i * unit, 0, i * unit, size]} stroke="#ddd" strokeWidth={1} />
-                <Line points={[0, i * unit, size, i * unit]} stroke="#ddd" strokeWidth={1} />
+                <Line
+                  points={[i * (size / 7), 0, i * (size / 7), size]}
+                  stroke="#ddd"
+                  strokeWidth={1}
+                />
+                <Line
+                  points={[0, i * (size / 7), size, i * (size / 7)]}
+                  stroke="#ddd"
+                  strokeWidth={1}
+                />
               </React.Fragment>
             ))}
 
@@ -95,59 +92,45 @@ export const ComplexCanvas: React.FC = () => {
             <Line points={[0, center, size, center]} stroke="black" strokeWidth={2} />
             <Line points={[center, 0, center, size]} stroke="black" strokeWidth={2} />
 
-            {/* Badges */}
             <KonvaText text="Réel" x={size - 40} y={center - 20} fontSize={14} fontStyle="bold" />
             <KonvaText text="Imaginaire pur" x={center + 10} y={10} fontSize={14} rotation={90} />
 
-            {/* Vecteur initial */}
-            <Line
-              points={[center, center, center + z.x * unit, center - z.y * unit]}
-              stroke="#000"
-              strokeWidth={2}
-              dash={[6, 4]}
-            />
-
-            {/* Boules */}
             {points.map((p, idx) => {
-              const startX = 80 + idx * 80;
-              const startY = bottomLaneY;
               const { x: targetX, y: targetY } = toCanvas(p);
               const isPlaced = !!placed[idx];
 
               return (
                 <React.Fragment key={idx}>
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.2 }}>
-                    <Group>
-                      <Circle
-                        x={startX}
-                        y={startY}
-                        radius={12}
-                        fill={colors[idx]}
-                        draggable
-                        onDragEnd={(e) => {
-                          const node = e.target;
-                          const newX = node.x();
-                          const newY = node.y();
-                          const nearTarget = Math.abs(newX - targetX) < 20 && Math.abs(newY - targetY) < 20;
-                          if (nearTarget) {
-                            setPlaced((prev) => ({ ...prev, [idx]: true }));
-                            node.position({ x: targetX, y: targetY });
-                          } else {
-                            node.position({ x: startX, y: startY });
-                          }
-                        }}
-                        onClick={() => setSelectedIdx(idx)}
-                      />
-                    </Group>
-                  </motion.div>
+                  <Circle
+                    x={80 + idx * 80}
+                    y={size + 80}
+                    radius={12}
+                    fill={colors[idx]}
+                    draggable
+                    onDragEnd={(e) => {
+                      const node = e.target;
+                      const newX = node.x();
+                      const newY = node.y();
+                      if (Math.abs(newX - targetX) < 20 && Math.abs(newY - targetY) < 20) {
+                        setPlaced((prev) => ({ ...prev, [idx]: true }));
+                        node.position({ x: targetX, y: targetY });
+                      } else {
+                        node.position({ x: 80 + idx * 80, y: size + 80 });
+                      }
+                    }}
+                    onClick={() => setSelectedIdx(idx)}
+                  />
 
-                  {isPlaced && selectedIdx === idx && (
+                  {isPlaced && (
                     <>
-                      <MultiHalo x={targetX} y={targetY} color={colors[idx]} count={3} minRadius={12} maxRadius={28} speed={0.8} visible />
-                      <Line points={[targetX, targetY, targetX, center]} stroke={colors[idx]} dash={[4, 4]} />
-                      <Line points={[targetX, targetY, center, targetY]} stroke={colors[idx]} dash={[4, 4]} />
-                      <KonvaText text={`${p.x}`} x={targetX - 10} y={center + 5} fontSize={12} fill={colors[idx]} />
-                      <KonvaText text={`${p.y}`} x={center + 5} y={targetY - 10} fontSize={12} fill={colors[idx]} />
+                      {/* Trait pointillé vers l'origine */}
+                      <Line
+                        points={[center, center, targetX, targetY]}
+                        stroke={colors[idx]}
+                        dash={[6, 4]}
+                      />
+
+                      {/* Vecteur animé progressif */}
                       <Line
                         points={[
                           center,
@@ -158,6 +141,8 @@ export const ComplexCanvas: React.FC = () => {
                         stroke={colors[idx]}
                         strokeWidth={2}
                       />
+
+                      {/* Arc ease-out animé */}
                       <Arc
                         x={center}
                         y={center}
@@ -168,13 +153,25 @@ export const ComplexCanvas: React.FC = () => {
                         stroke={colors[idx]}
                         strokeWidth={2}
                       />
+
+                      {/* Valeur de l'angle */}
                       <KonvaText
-                        text={`Bravo ! Tu as bien placé z·i^${idx}`}
-                        x={center - 120}
-                        y={size - 24}
-                        fontSize={16}
-                        fontStyle="bold"
+                        text={`${((Math.atan2(p.y, p.x) * 180) / Math.PI).toFixed(1)}°`}
+                        x={center + 30}
+                        y={center - 30}
+                        fontSize={14}
                         fill={colors[idx]}
+                      />
+
+                      <MultiHalo
+                        x={targetX}
+                        y={targetY}
+                        color={colors[idx]}
+                        count={3}
+                        minRadius={12}
+                        maxRadius={28}
+                        speed={0.8}
+                        visible
                       />
                     </>
                   )}
@@ -188,24 +185,20 @@ export const ComplexCanvas: React.FC = () => {
       {/* Panneau latéral */}
       <Box minW={{ base: "100%", md: "280px" }} p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
         <Text fontSize="lg" fontWeight="bold" mb={3}>Étapes de calcul</Text>
-        <Text>Coordonnée : z = {z.x} + i{z.y}</Text>
-        <Text>Module : √({z.x}² + {z.y}²) = {module.toFixed(2)}</Text>
-        <Text>Argument : arctan({z.y}/{z.x}) = {argumentDeg.toFixed(2)}°</Text>
-        <Text fontWeight="semibold">Forme trigonométrique :</Text>
-                <Text>
-          z = {module.toFixed(2)} (cos({argumentDeg.toFixed(2)}°) + i·sin({argumentDeg.toFixed(2)}°))
-        </Text>
-
-        {/* Compteur de progression */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.75 }}>
-          <Box mt={4} p={2} bg="white" border="1px solid #ccc" borderRadius="md">
-            <Text fontSize="md" fontWeight="semibold">
-              Progression : {placedCount} / {totalCount} boules bien placées
+        {selectedIdx !== null && placed[selectedIdx] && (
+          <>
+            <Text>Coordonnée : {points[selectedIdx].x} + i{points[selectedIdx].y}</Text>
+            <Text>
+              Module : √({points[selectedIdx].x}² + {points[selectedIdx].y}²) ={" "}
+              {Math.sqrt(points[selectedIdx].x**2 + points[selectedIdx].y**2).toFixed(2)}
             </Text>
-          </Box>
-        </motion.div>
+            <Text>
+              Argument : arctan({points[selectedIdx].y}/{points[selectedIdx].x}) ={" "}
+              {((Math.atan2(points[selectedIdx].y, points[selectedIdx].x) * 180) / Math.PI).toFixed(2)}°
+            </Text>
+          </>
+        )}
 
-        {/* Bouton pour régénérer z */}
         <Box mt={4}>
           <Button colorScheme="teal" onClick={regenerateZ}>
             🎲 Nouveau z
