@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
@@ -127,10 +127,10 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             {[...Array(visibleLines || 0)].map((_, i) => {
               const pos = i * unit;
               return (
-                <>
-                  <Line key={`v${i}`} points={[pos, 0, pos, size.height]} stroke="#ddd" strokeWidth={1} />
-                  <Line key={`h${i}`} points={[0, pos, size.width, pos]} stroke="#ddd" strokeWidth={1} />
-                </>
+                <React.Fragment key={i}>
+                  <Line points={[pos, 0, pos, size.height]} stroke="#ddd" strokeWidth={1} />
+                  <Line points={[0, pos, size.width, pos]} stroke="#ddd" strokeWidth={1} />
+                </React.Fragment>
               );
             })}
             {axisProgress > 0 && (
@@ -144,13 +144,15 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             {(["A", "B", "C"] as const).map((label, idx) => {
               const color = ["red", "blue", "green"][idx];
               const p = studentPoints[label];
+              if (!p) return null; // ✅ Protection contre undefined
+
               const x = center + p.x * unit;
               const y = center - p.y * unit;
               const prog = pointProgress[label] ?? 0;
               const isSelected = selectedLabel === label;
 
               return (
-                <>
+                <React.Fragment key={label}>
                   {isSelected && selectedPoint && !isNaN(selectedPoint.x) && !isNaN(selectedPoint.y) && (
                     <>
                       <MultiHalo x={x} y={y} color={color} count={3} minRadius={12} maxRadius={28} speed={0.8} visible />
@@ -160,7 +162,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                     </>
                   )}
                   <Circle
-                    key={label}
                     x={x}
                     y={y}
                     radius={10 * Math.max(prog, 0.0001)}
@@ -169,14 +170,14 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                     onDragEnd={(e) => handleDragEnd(e, label)}
                     onClick={() => setSelectedLabel(label)}
                   />
-                </>
+                </React.Fragment>
               );
             })}
           </Layer>
         </Stage>
       </Box>
 
-      {/* Panneau latéral + cercle trigonométrique */}
+      {/* Panneau latéral */}
       <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
         <Text fontSize="lg" fontWeight="bold" mb={3}>Étapes de calcul</Text>
         {selectedPoint ? (
@@ -187,12 +188,12 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             <Text>④ Argument = {angleDisplay}</Text>
             <Text>⑤ Forme trigonométrique : z = {module?.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))</Text>
             <Text>⑥ Forme polaire : z = {module?.toFixed(2)} · e^(i{angleDisplay})</Text>
-                    </VStack>
+          </VStack>
         ) : (
           <Text>Aucune boule sélectionnée</Text>
         )}
 
-        {/* Toggle degrés ↔ radians */}
+                {/* Toggle degrés ↔ radians */}
         <HStack mt={4}>
           <Text fontSize="sm">Deg</Text>
           <Toggle checked={showDegrees} onChange={setShowDegrees} />
