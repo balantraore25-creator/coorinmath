@@ -30,3 +30,4 @@ export const DynamicFormulaPanel: React.FC<DynamicFormulaPanelProps> = ({ z, pla
     </Box>
   );
 };
+

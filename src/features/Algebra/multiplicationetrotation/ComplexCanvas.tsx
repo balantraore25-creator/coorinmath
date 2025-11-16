@@ -56,7 +56,7 @@ function useStepAnimation(selectedIdx: number | null, placed: Record<number, boo
 }
 
 export const ComplexCanvas: React.FC = () => {
-  const [z] = useState<Point>({ x: 2, y: 1 });
+  const [z, setZ] = useState<Point>({ x: 2, y: 1 }); // 🔹 z est maintenant modifiable
   const [placed, setPlaced] = useState<Record<number, boolean>>({});
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
@@ -68,7 +68,7 @@ export const ComplexCanvas: React.FC = () => {
 
   const points = useMemo<Point[]>(
     () => [
-      { x: z.x, y: z.y },
+      { x: z.x, y: z.y },       // boule verte (modifiable)
       { x: -z.y, y: z.x },
       { x: -z.x, y: -z.y },
       { x: z.y, y: -z.x },
@@ -111,6 +111,12 @@ export const ComplexCanvas: React.FC = () => {
                 unit={unit}
                 center={center}
                 size={size}
+                // 🔹 Ajout : mise à jour de z quand la boule verte est déplacée
+                onDragMove={
+                  idx === 0
+                    ? (newPoint: Point) => setZ(newPoint)
+                    : undefined
+                }
               />
             ))}
           </Layer>
