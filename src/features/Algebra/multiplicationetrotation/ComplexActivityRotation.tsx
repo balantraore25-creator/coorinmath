@@ -3,7 +3,7 @@ import { ComplexCanvas } from "./ComplexCanvas";
 import type { Point } from "../types";
 import { Box, Button } from "@chakra-ui/react";
 
-export const ComplexActivitythree: React.FC = () => {
+export const ComplexActivityRotation: React.FC = () => {
   // Génération aléatoire des points initiaux
   const generateRandomPoints = (): { A: Point; B: Point; C: Point } => ({
     A: { x: Math.floor(Math.random() * 9 - 4), y: Math.floor(Math.random() * 9 - 4) },
