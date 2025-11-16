@@ -12,7 +12,15 @@ export const Toggle: React.FC<ToggleProps> = ({ checked, onChange, label }) => {
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={label ?? "Toggle"}
+      tabIndex={0}
       onClick={() => onChange(!checked)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onChange(!checked);
+        }
+      }}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -41,13 +49,13 @@ export const Toggle: React.FC<ToggleProps> = ({ checked, onChange, label }) => {
           style={{
             position: "absolute",
             top: 2,
-            left: checked ? 18 : 2,
+            transform: `translateX(${checked ? 18 : 2}px)`,
             width: 16,
             height: 16,
             borderRadius: "50%",
             background: "#fff",
             boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-            transition: "left 200ms ease",
+            transition: "transform 200ms ease",
           }}
         />
       </span>

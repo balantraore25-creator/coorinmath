@@ -2,13 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
-import {
-  Box,
-  Text,
-  VStack,
-  HStack,
-  useBreakpointValue,
-} from "@chakra-ui/react";
+import { Box, Text, VStack, HStack, useBreakpointValue } from "@chakra-ui/react";
 import { useMotionValue, animate } from "framer-motion";
 import type Konva from "konva";
 import type { Point } from "../types";
@@ -22,20 +16,23 @@ interface Props {
   points: { A: Point; B: Point; C: Point };
 }
 
-type StudentPoints = Record<string, Point>;
-type ProgressMap = Record<string, number>;
+// ✅ Typage corrigé
+type StudentPoints = Record<"A" | "B" | "C", Point>;
+type ProgressMap = Record<"A" | "B" | "C", number>;
 
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const { ref, size } = useContainerSize();
   const [studentPoints, setStudentPoints] = useState<StudentPoints>(points);
   const [visibleLines, setVisibleLines] = useState(0);
   const [axisProgress, setAxisProgress] = useState(0);
-  const [pointProgress, setPointProgress] = useState<ProgressMap>({});
-  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const [pointProgress, setPointProgress] = useState<Partial<ProgressMap>>({});
+  const [selectedLabel, setSelectedLabel] = useState<keyof StudentPoints | null>(null);
   const [showDegrees, setShowDegrees] = useState(true);
 
-  const unit = size.width / 17;
-  const center = size.width / 2;
+  const safeW = Number.isFinite(size.width) ? size.width : 0;
+  const safeH = Number.isFinite(size.height) ? size.height : 0;
+  const unit = safeW / 17;
+  const center = safeW / 2;
   const panelDirection = useBreakpointValue({ base: "column", md: "row" });
 
   useEffect(() => {
@@ -46,6 +43,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     setSelectedLabel(null);
   }, [points]);
 
+  // Animations grille → axes → points
   useEffect(() => {
     let frameId: number;
     const animateGrid = () => {
@@ -83,18 +81,18 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     return () => cancelAnimationFrame(frameId);
   }, [points]);
 
-  const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
+  const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: keyof StudentPoints) => {
     const node = e.target;
     const newX = Math.round((node.x() - center) / unit);
     const newY = Math.round(-(node.y() - center) / unit);
-
     if (isNaN(newX) || isNaN(newY)) return;
-
     setStudentPoints((prev) => ({ ...prev, [label]: { x: newX, y: newY } }));
     setSelectedLabel(label);
   };
 
-  const selectedPoint = selectedLabel ? studentPoints[selectedLabel] : null;
+  // ✅ Une seule déclaration de selectedPoint
+  const selectedPoint: Point | null = selectedLabel ? studentPoints[selectedLabel] : null;
+
   const { module, angleRad, angleDeg, cosTheta, sinTheta } = selectedPoint
     ? useAngle(selectedPoint.x, selectedPoint.y)
     : { module: null, angleRad: 0, angleDeg: 0, cosTheta: 1, sinTheta: 0 };
@@ -122,29 +120,34 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     >
       {/* Canvas */}
       <Box flex="1">
-        <Stage width={size.width} height={size.height} style={{ backgroundColor: "#fff" }}>
+        <Stage width={safeW} height={safeH} style={{ backgroundColor: "#fff" }}>
           <Layer>
+            {/* Grille sécurisée */}
             {[...Array(visibleLines || 0)].map((_, i) => {
               const pos = i * unit;
               return (
                 <React.Fragment key={i}>
-                  <Line points={[pos, 0, pos, size.height]} stroke="#ddd" strokeWidth={1} />
-                  <Line points={[0, pos, size.width, pos]} stroke="#ddd" strokeWidth={1} />
+                  <Line points={[pos, 0, pos, safeH]} stroke="#ddd" strokeWidth={1} />
+                  <Line points={[0, pos, safeW, pos]} stroke="#ddd" strokeWidth={1} />
                 </React.Fragment>
               );
             })}
+
+            {/* Axes */}
             {axisProgress > 0 && (
               <>
-                <Line points={[0, center, size.width, center]} stroke="black" strokeWidth={2} />
-                <Line points={[center, 0, center, size.height]} stroke="black" strokeWidth={2} />
-                <KonvaText text="Réel" x={size.width - 40} y={center - 20} fontSize={14} fontStyle="bold" fill="black" />
+                <Line points={[0, center, safeW, center]} stroke="black" strokeWidth={2} />
+                <Line points={[center, 0, center, safeH]} stroke="black" strokeWidth={2} />
+                <KonvaText text="Réel" x={safeW - 40} y={center - 20} fontSize={14} fontStyle="bold" fill="black" />
                 <KonvaText text="Imaginaire pur" x={center + 10} y={10} fontSize={14} fontStyle="bold" fill="black" rotation={90} />
               </>
             )}
+
+            {/* Points A, B, C */}
             {(["A", "B", "C"] as const).map((label, idx) => {
               const color = ["red", "blue", "green"][idx];
               const p = studentPoints[label];
-              if (!p) return null; // ✅ Protection contre undefined
+              if (!p) return null;
 
               const x = center + p.x * unit;
               const y = center - p.y * unit;
@@ -186,14 +189,14 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             <Text>② Module : {module?.toFixed(2)}</Text>
             <Text>③ cos θ = {cosTheta.toFixed(3)}, sin θ = {sinTheta.toFixed(3)}</Text>
             <Text>④ Argument = {angleDisplay}</Text>
-            <Text>⑤ Forme trigonométrique : z = {module?.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))</Text>
+                        <Text>⑤ Forme trigonométrique : z = {module?.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))</Text>
             <Text>⑥ Forme polaire : z = {module?.toFixed(2)} · e^(i{angleDisplay})</Text>
           </VStack>
         ) : (
           <Text>Aucune boule sélectionnée</Text>
         )}
 
-                {/* Toggle degrés ↔ radians */}
+        {/* Toggle degrés ↔ radians */}
         <HStack mt={4}>
           <Text fontSize="sm">Deg</Text>
           <Toggle checked={showDegrees} onChange={setShowDegrees} />

@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
-import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
-import { Toggle } from "./Toggle"; // chemin vers ton composant Toggle
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence, useMotionValue, animate, useMotionValueEvent } from "framer-motion";
+import { Toggle } from "./Toggle";
 import { useAngle } from "./hooks/useAngle";
 
 type Props = { x: number; y: number; showDegrees: boolean; onToggle: () => void };
@@ -9,16 +9,19 @@ export const TrigCircleAnimated: React.FC<Props> = ({ x, y, showDegrees, onToggl
   const { module, angleRad, angleDeg } = useAngle(x, y);
   const angleTarget = showDegrees ? angleDeg : angleRad;
 
-  // Motion value pour interpolation fluide
   const angleValue = useMotionValue(0);
+  const [angleDisplay, setAngleDisplay] = useState(0);
+
   useEffect(() => {
     const controls = animate(angleValue, angleTarget, { duration: 1.2, ease: "easeOut" });
     return controls.stop;
   }, [angleTarget]);
 
+  useMotionValueEvent(angleValue, "change", (latest) => setAngleDisplay(latest));
+
   const cx = 150, cy = 150, r = 100;
-  const endX = cx + r * Math.cos(angleRad);
-  const endY = cy - r * Math.sin(angleRad);
+  const endX = cx + r * Math.cos(angleDisplay);
+  const endY = cy - r * Math.sin(angleDisplay);
 
   return (
     <div>
@@ -29,7 +32,7 @@ export const TrigCircleAnimated: React.FC<Props> = ({ x, y, showDegrees, onToggl
 
         {/* Arc progressif */}
         <motion.path
-          d={`M ${cx + r} ${cy} A ${r} ${r} 0 ${angleValue.get() > 180 ? 1 : 0} 1 ${endX} ${endY}`}
+          d={`M ${cx + r} ${cy} A ${r} ${r} 0 ${angleDisplay > Math.PI ? 1 : 0} 1 ${endX} ${endY}`}
           stroke="red"
           strokeWidth={3}
           fill="none"
@@ -53,15 +56,14 @@ export const TrigCircleAnimated: React.FC<Props> = ({ x, y, showDegrees, onToggl
         </AnimatePresence>
       </svg>
 
-      <p>Angle ({showDegrees ? "deg" : "rad"}) : {angleValue.get().toFixed(2)}</p>
+      <p>Angle ({showDegrees ? "deg" : "rad"}) : {angleDisplay.toFixed(2)}</p>
       <p>Module : {module.toFixed(2)}</p>
 
       <Toggle
-  checked={!showDegrees}
-  onChange={onToggle}
-  label={showDegrees ? "Degrés" : "Radians"}
-/>
-
+        checked={showDegrees}
+        onChange={onToggle}
+        label={showDegrees ? "Degrés" : "Radians"}
+      />
     </div>
   );
 };
