@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
 import {
@@ -14,7 +16,7 @@ import { useContainerSize } from "../components/useContainerSize";
 import { MultiHalo } from "./MultiHalo";
 import { useAngle } from "./hooks/useAngle";
 import { TrigCircleAnimated } from "./TrigCircleAnimated";
-import { Toggle } from "./Toggle"; // chemin vers ton composant Toggle
+import { Toggle } from "./Toggle";
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
@@ -29,7 +31,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [visibleLines, setVisibleLines] = useState(0);
   const [axisProgress, setAxisProgress] = useState(0);
   const [pointProgress, setPointProgress] = useState<ProgressMap>({});
-  const [speed] = useState(1);
+  const [speed] = useState(1); // ✅ vitesse fixe ou modifiable ailleurs
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const [showDegrees, setShowDegrees] = useState(true);
 
@@ -37,7 +39,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const center = size.width / 2;
   const panelDirection = useBreakpointValue({ base: "column", md: "row" });
 
-  // Reset states
   useEffect(() => {
     setStudentPoints(points);
     setVisibleLines(0);
@@ -46,7 +47,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     setSelectedLabel(null);
   }, [points]);
 
-  // Animation intro
   useEffect(() => {
     let frameId: number;
     const animateGrid = () => {
@@ -92,15 +92,11 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     setSelectedLabel(label);
   };
 
-  const getCoords = (label: string) => studentPoints[label];
   const selectedPoint = selectedLabel ? studentPoints[selectedLabel] : null;
-
-  // Hook angle
   const { module, angleRad, angleDeg, cosTheta, sinTheta } = selectedPoint
     ? useAngle(selectedPoint.x, selectedPoint.y)
     : { module: null, angleRad: 0, angleDeg: 0, cosTheta: 1, sinTheta: 0 };
 
-  // Motion value pour interpolation
   const angleValue = useMotionValue(showDegrees ? angleDeg : angleRad);
   useEffect(() => {
     const target = showDegrees ? angleDeg : angleRad;
@@ -113,13 +109,20 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     : `${angleValue.get().toFixed(3)} rad`;
 
   return (
-    <Box ref={ref} width="100%" maxW="100%" mx="auto" display="flex" flexDirection={panelDirection} gap={6}>
+    <Box
+      ref={ref}
+      width="100%"
+      maxW="100%"
+      mx="auto"
+      display="flex"
+      flexDirection={panelDirection}
+      gap={6}
+    >
       {/* Canvas */}
       <Box flex="1">
         <Stage width={size.width} height={size.height} style={{ backgroundColor: "#fff" }}>
           <Layer>
-            {/* Grille */}
-            {[...Array(visibleLines)].map((_, i) => {
+            {[...Array(visibleLines || 0)].map((_, i) => {
               const pos = i * unit;
               return (
                 <>
@@ -128,8 +131,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                 </>
               );
             })}
-
-            {/* Axes */}
             {axisProgress > 0 && (
               <>
                 <Line points={[0, center, size.width, center]} stroke="black" strokeWidth={2} />
@@ -138,11 +139,9 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                 <KonvaText text="Imaginaire pur" x={center + 10} y={10} fontSize={14} fontStyle="bold" fill="black" rotation={90} />
               </>
             )}
-
-            {/* Points */}
             {(["A", "B", "C"] as const).map((label, idx) => {
               const color = ["red", "blue", "green"][idx];
-              const p = getCoords(label);
+              const p = studentPoints[label];
               const x = center + p.x * unit;
               const y = center - p.y * unit;
               const prog = pointProgress[label] ?? 0;
@@ -152,20 +151,9 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                 <>
                   {isSelected && (
                     <>
-                      <MultiHalo x={x} y={y} color={color} count={3} minRadius={12} maxRadius={28} speed={0.8} visible={true} />
+                      <MultiHalo x={x} y={y} color={color} count={3} minRadius={12} maxRadius={28} speed={0.8} visible />
                       <Line points={[center, center, x, y]} stroke={color} strokeWidth={2} opacity={0.8} />
-                      <Arc
-                        x={center}
-                        y={center}
-                        innerRadius={20}
-                        outerRadius={25}
-                        angle={angleValue.get()}
-                        rotation={0}
-                        fill={`${color}33`}
-                        stroke={color}
-                        strokeWidth={2}
-                        opacity={0.7}
-                      />
+                      <Arc x={center} y={center} innerRadius={20} outerRadius={25} angle={angleValue.get()} rotation={0} fill={`${color}33`} stroke={color} strokeWidth={2} opacity={0.7} />
                       <KonvaText text={angleDisplay} x={center + 35} y={center - 15} fontSize={12} fill={color} />
                     </>
                   )}
@@ -195,7 +183,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             <Text>② Module : {module?.toFixed(2)}</Text>
             <Text>③ cos θ = {cosTheta.toFixed(3)}, sin θ = {sinTheta.toFixed(3)}</Text>
             <Text>④ Argument = {angleDisplay}</Text>
-                        <Text>
+            <Text>
               ⑤ Forme trigonométrique : z = {module?.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))
             </Text>
             <Text>
@@ -206,13 +194,11 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
           <Text>Aucune boule sélectionnée</Text>
         )}
 
-        {/* Toggle degrés ↔ radians */}
-        {/* Toggle degrés ↔ radians */}
-<HStack mt={4}>
-  <Text fontSize="sm">Deg</Text>
-  <Toggle checked={showDegrees} onChange={setShowDegrees} />
-  <Text fontSize="sm">Rad</Text>
-</HStack>
+                <HStack mt={4}>
+          <Text fontSize="sm">Deg</Text>
+          <Toggle checked={showDegrees} onChange={setShowDegrees} />
+          <Text fontSize="sm">Rad</Text>
+        </HStack>
       </Box>
 
       {/* Visualisation cercle trigonométrique */}
