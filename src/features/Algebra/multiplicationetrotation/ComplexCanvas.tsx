@@ -16,7 +16,6 @@ interface Props {
   points: { A: Point; B: Point; C: Point };
 }
 
-// ✅ Typage corrigé
 type StudentPoints = Record<"A" | "B" | "C", Point>;
 type ProgressMap = Record<"A" | "B" | "C", number>;
 
@@ -35,15 +34,12 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const center = safeW / 2;
   const panelDirection = useBreakpointValue({ base: "column", md: "row" });
 
+  // ✅ Synchroniser seulement les points si props changent
   useEffect(() => {
     setStudentPoints(points);
-    setVisibleLines(0);
-    setAxisProgress(0);
-    setPointProgress({});
-    setSelectedLabel(null);
   }, [points]);
 
-  // Animations grille → axes → points
+  // ✅ Animation initiale une seule fois au montage
   useEffect(() => {
     let frameId: number;
     const animateGrid = () => {
@@ -79,7 +75,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     };
     animateGrid();
     return () => cancelAnimationFrame(frameId);
-  }, [points]);
+  }, []); // ✅ pas de dépendance sur points
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: keyof StudentPoints) => {
     const node = e.target;
@@ -90,7 +86,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     setSelectedLabel(label);
   };
 
-  // ✅ Une seule déclaration de selectedPoint
   const selectedPoint: Point | null = selectedLabel ? studentPoints[selectedLabel] : null;
 
   const { module, angleRad, angleDeg, cosTheta, sinTheta } = selectedPoint
