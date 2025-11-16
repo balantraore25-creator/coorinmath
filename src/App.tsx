@@ -115,7 +115,7 @@ function App() {
                     <Route path="complexnumbers" element={<ComplexNumbersPage />} />
                     <Route path="complexnumbers/unite1" element={<ComplexActivity />} />
                      <Route path="complexnumbers/unite2" element={<ComplexActivitytwo />} />
-                     <Route path="complexnumbers/unite3" element={<ComplexActivitythree />} />
+                     <Route path="complexnumbers/rotation" element={<ComplexActivitythree />} />
                    
                   </Route>
                
