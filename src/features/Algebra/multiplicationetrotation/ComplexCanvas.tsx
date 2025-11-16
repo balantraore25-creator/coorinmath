@@ -31,7 +31,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [visibleLines, setVisibleLines] = useState(0);
   const [axisProgress, setAxisProgress] = useState(0);
   const [pointProgress, setPointProgress] = useState<ProgressMap>({});
-  const [speed] = useState(1); // ✅ vitesse fixe ou modifiable ailleurs
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const [showDegrees, setShowDegrees] = useState(true);
 
@@ -77,17 +76,20 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
           setPointProgress((prev) => ({ ...prev, [label]: Math.min(p, 1) }));
           if (p < 1) requestAnimationFrame(step);
         };
-        setTimeout(step, (idx * 300) / speed);
+        setTimeout(step, idx * 300);
       });
     };
     animateGrid();
     return () => cancelAnimationFrame(frameId);
-  }, [speed, points]);
+  }, [points]);
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>, label: string) => {
     const node = e.target;
     const newX = Math.round((node.x() - center) / unit);
     const newY = Math.round(-(node.y() - center) / unit);
+
+    if (isNaN(newX) || isNaN(newY)) return;
+
     setStudentPoints((prev) => ({ ...prev, [label]: { x: newX, y: newY } }));
     setSelectedLabel(label);
   };
@@ -149,7 +151,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
 
               return (
                 <>
-                  {isSelected && (
+                  {isSelected && selectedPoint && !isNaN(selectedPoint.x) && !isNaN(selectedPoint.y) && (
                     <>
                       <MultiHalo x={x} y={y} color={color} count={3} minRadius={12} maxRadius={28} speed={0.8} visible />
                       <Line points={[center, center, x, y]} stroke={color} strokeWidth={2} opacity={0.8} />
@@ -183,26 +185,23 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             <Text>② Module : {module?.toFixed(2)}</Text>
             <Text>③ cos θ = {cosTheta.toFixed(3)}, sin θ = {sinTheta.toFixed(3)}</Text>
             <Text>④ Argument = {angleDisplay}</Text>
-            <Text>
-              ⑤ Forme trigonométrique : z = {module?.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))
-            </Text>
-            <Text>
-              ⑥ Forme polaire : z = {module?.toFixed(2)} · e^(i{angleDisplay})
-            </Text>
-          </VStack>
+            <Text>⑤ Forme trigonométrique : z = {module?.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))</Text>
+            <Text>⑥ Forme polaire : z = {module?.toFixed(2)} · e^(i{angleDisplay})</Text>
+                    </VStack>
         ) : (
           <Text>Aucune boule sélectionnée</Text>
         )}
 
-                <HStack mt={4}>
+        {/* Toggle degrés ↔ radians */}
+        <HStack mt={4}>
           <Text fontSize="sm">Deg</Text>
           <Toggle checked={showDegrees} onChange={setShowDegrees} />
           <Text fontSize="sm">Rad</Text>
         </HStack>
       </Box>
 
-      {/* Visualisation cercle trigonométrique */}
-      {selectedPoint && (
+      {/* Cercle trigonométrique animé */}
+      {selectedPoint && !isNaN(selectedPoint.x) && !isNaN(selectedPoint.y) && (
         <TrigCircleAnimated
           x={selectedPoint.x}
           y={selectedPoint.y}
