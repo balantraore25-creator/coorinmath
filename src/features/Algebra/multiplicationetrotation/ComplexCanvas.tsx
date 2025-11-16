@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Stage, Layer } from "react-konva";
-import { Box, useBreakpointValue } from "@chakra-ui/react";
+import { Box, useBreakpointValue, Text } from "@chakra-ui/react";
 import { GridLayer } from "./Stage + Layer (Konva)/GridLayer";
 import { AxisLabels } from "./Stage + Layer (Konva)/AxisLabels";
 import { BaseVector } from "./Stage + Layer (Konva)/BaseVector";
@@ -19,7 +19,7 @@ export const ComplexCanvas: React.FC = () => {
   const [z, setZ] = useState<Point>({ x: 2, y: 1 });
   const [placed, setPlaced] = useState<Record<number, boolean>>({});
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
-  const [k, setK] = useState<number>(0); // 🔹 synchronisation avec le panel
+  const [k, setK] = useState<number>(0);
 
   const panelDirection = useBreakpointValue({ base: "column", md: "row" });
 
@@ -75,12 +75,19 @@ export const ComplexCanvas: React.FC = () => {
           placedCount={Object.values(placed).filter(Boolean).length}
           totalCount={1}
         />
+
+        {/* ✅ Panel dynamique synchronisé */}
         <DynamicFormulaPanel
           selectedPoints={[z]}
           placed={placed}
           k={k}
           onKChange={setK}
         />
+
+        {/* ✅ Exemple d’affichage supplémentaire propre */}
+        <Text mt={4} fontWeight="bold">
+          Module = {module.toFixed(2)}, Argument = {argumentDeg.toFixed(1)}°
+        </Text>
       </Box>
     </Box>
   );
