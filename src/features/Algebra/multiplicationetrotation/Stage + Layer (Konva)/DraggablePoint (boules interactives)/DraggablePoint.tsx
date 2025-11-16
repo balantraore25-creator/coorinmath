@@ -24,10 +24,10 @@ export interface DraggablePointProps {
   selectedIdx: number | null;
   vectorProgress: number;
   arcProgress: number;
-  currentStep: number;
+  currentStep: number;   // utilisé pour halo pédagogique
   unit: number;
   center: number;
-  size: number;
+  size: number;          // utilisé pour limiter le drag
   onDragMove?: (newPoint: Point) => void;
 }
 
@@ -55,19 +55,8 @@ export const DraggablePoint: React.FC<DraggablePointProps> = ({
   const x = center + p.x * unit;
   const y = center - p.y * unit;
 
-  const pulseOpacity =
-    selectedIdx === idx ? 0.6 + 0.4 * Math.sin(Date.now() / 300) : 1;
-
-  const colorPhase = (Math.sin(Date.now() / 500) + 1) / 2;
-  const dynamicColor = `rgba(${Math.round(0 + 255 * colorPhase)}, 255, 0, 1)`;
-
-  const rainbowColors = ["red","orange","yellow","green","blue","indigo","violet"];
-  const rainbowSpeed = 200 / Math.max(vectorProgress, 0.1);
-  const rainbowIndex = Math.floor((Date.now() / rainbowSpeed) % rainbowColors.length);
-  const rainbowColor = rainbowColors[rainbowIndex];
-
-  const pulsatingRadius = size + Math.sin(Date.now() / 300) * (arcProgress / 30);
-  const labelScale = 1 + 0.1 * Math.sin(Date.now() / 400);
+  // Rayon pulsant basé sur vectorProgress
+  const pulsatingRadius = 6 + vectorProgress * 4;
 
   useEffect(() => {
     if (!editing && selectedIdx === idx) {
@@ -83,19 +72,30 @@ export const DraggablePoint: React.FC<DraggablePointProps> = ({
     }
   }, [editing, p.x, p.y, selectedIdx, idx]);
 
+  // Limiter le drag à l'intérieur du canvas
+  const dragBoundFunc = (pos: { x: number; y: number }) => {
+    const pad = 10;
+    return {
+      x: Math.min(size - pad, Math.max(pad, pos.x)),
+      y: Math.min(size - pad, Math.max(pad, pos.y)),
+    };
+  };
+
   return (
     <>
-      {selectedIdx === idx && (
+      {/* Halo pédagogique basé sur currentStep */}
+      {selectedIdx === idx && currentStep > 0 && (
         <Circle
           x={x}
           y={y}
-          radius={14 + vectorProgress * 12}
-          stroke={rainbowColor}
-          strokeWidth={3}
-          opacity={0.4}
+          radius={pulsatingRadius + currentStep * 2}
+          stroke={color}
+          strokeWidth={1}
+          opacity={0.25}
         />
       )}
 
+      {/* Arc indicatif */}
       {selectedIdx === idx && arcProgress > 0 && (
         <Arc
           x={center}
@@ -110,40 +110,29 @@ export const DraggablePoint: React.FC<DraggablePointProps> = ({
         />
       )}
 
+      {/* Boule principale */}
       <Circle
         x={x}
         y={y}
         radius={pulsatingRadius}
-        fill={placed ? dynamicColor : "lightgray"}
+        fill={placed ? color : "lightgray"}
         draggable
+        dragBoundFunc={dragBoundFunc}
         stroke={selectedIdx === idx ? "black" : undefined}
         strokeWidth={selectedIdx === idx ? 2 : 0}
-        opacity={pulseOpacity}
         onClick={() => onSelect(idx)}
         onDragEnd={(e) => {
           const newPoint: Point = {
             x: (e.target.x() - center) / unit,
             y: -(e.target.y() - center) / unit,
           };
-          if (onDragMove) {
-            onDragMove(newPoint);
-          }
+          onDragMove?.(newPoint);
           onPlace(idx);
           onSelect(idx);
         }}
       />
 
-      {selectedIdx === idx && currentStep > 0 && (
-        <Circle
-          x={x}
-          y={y}
-          radius={8 + currentStep * 2}
-          stroke={color}
-          strokeWidth={1}
-          opacity={0.2}
-        />
-      )}
-
+      {/* Label coordonné */}
       {selectedIdx === idx && (
         <>
           <ScaleFade in={!editing} initialScale={0.8}>
@@ -153,8 +142,6 @@ export const DraggablePoint: React.FC<DraggablePointProps> = ({
               text={animatedText}
               fontSize={14}
               fill={color}
-              scaleX={labelScale}
-              scaleY={labelScale}
               opacity={0.9}
               onClick={() => {
                 setEditing(true);
@@ -165,16 +152,16 @@ export const DraggablePoint: React.FC<DraggablePointProps> = ({
               <Circle
                 x={x + 60}
                 y={y - 15}
-                radius={40}
-                stroke={dynamicColor}
+                radius={24}
+                stroke={color}
                 strokeWidth={2}
                 opacity={0.4}
               />
             )}
           </ScaleFade>
 
-          {/* DrawerRoot Chakra UI v3 */}
-          <DrawerRoot open={editing} onOpenChange={() => setEditing(false)}>
+          {/* DrawerRoot corrigé */}
+          <DrawerRoot open={editing} onOpenChange={(details) => setEditing(details.open)}>
             <DrawerContent>
               <DrawerHeader>Modifier les coordonnées</DrawerHeader>
               <DrawerBody>
@@ -205,7 +192,7 @@ export const DraggablePoint: React.FC<DraggablePointProps> = ({
                   onClick={() => {
                     setEditing(false);
                     setJustValidated(true);
-                    if (onDragMove) onDragMove(tempCoord);
+                    onDragMove?.(tempCoord);
                     setTimeout(() => setJustValidated(false), 800);
                   }}
                 >
