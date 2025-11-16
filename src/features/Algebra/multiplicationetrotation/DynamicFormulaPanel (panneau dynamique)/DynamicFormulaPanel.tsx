@@ -1,33 +1,91 @@
 import React from "react";
-import { Box, Text } from "@chakra-ui/react";
-import { AnimatedFormula } from "./AnimatedFormula";
+import {
+  Box,
+  Text,
+  VStack,
+  HStack,
+  Separator,
+  SliderRoot,
+  SliderTrack,
+  SliderRange,
+  SliderThumb,
+  Badge,
+} from "@chakra-ui/react";
 
 type Point = { x: number; y: number };
 
-type DynamicFormulaPanelProps = {
-  z: Point;
-  placed: Record<number, boolean>;
-};
+interface DynamicFormulaPanelProps {
+  selectedPoints: Point[];
+  placed?: Record<number, boolean>;
+  k: number;
+  onKChange: (newK: number) => void;
+}
 
-export const DynamicFormulaPanel: React.FC<DynamicFormulaPanelProps> = ({ z, placed }) => {
-  const formulas = [
-    { idx: 0, steps: [`z·i^0 = (${z.x} + i${z.y})·1`, `= ${z.x} + i${z.y}`] },
-    { idx: 1, steps: [`z·i^1 = (${z.x} + i${z.y})·i`, `= ${z.x}·i + i${z.y}·i`, `= ${z.x}·i - ${z.y}`, `= -${z.y} + i${z.x}`] },
-    { idx: 2, steps: [`z·i^2 = (${z.x} + i${z.y})·(-1)`, `= -${z.x} - i${z.y}`] },
-    { idx: 3, steps: [`z·i^3 = (${z.x} + i${z.y})·(-i)`, `= -${z.x}·i - i${z.y}·i`, `= -${z.x}·i + ${z.y}`, `= ${z.y} - i${z.x}`] },
-  ];
+const toDegrees = (rad: number) => (rad * 180) / Math.PI;
 
+export const DynamicFormulaPanel: React.FC<DynamicFormulaPanelProps> = ({
+  selectedPoints,
+  placed = {},
+  k,
+  onKChange,
+}) => {
   return (
-    <Box mt={4} p={3} bg="white" border="1px solid #ccc" borderRadius="md">
-      <Text fontSize="md" fontWeight="bold" mb={2}>
-        Démonstration des puissances de i
+    <Box p={4} borderWidth="1px" borderRadius="md" bg="white">
+      <Text fontSize="lg" fontWeight="bold" mb={3}>
+        Formules dynamiques
       </Text>
-      {formulas.map((f) =>
-        placed[f.idx] ? (
-          <AnimatedFormula key={f.idx} steps={f.steps} delay={f.idx * 0.5} />
-        ) : null
-      )}
+
+      <Separator my={3} />
+
+      <Text mb={2}>Choisir la puissance de i : i^k</Text>
+
+      <SliderRoot
+        min={0}
+        max={4}
+        step={1}
+        value={[k]}
+        onValueChange={(details) => onKChange(details.value[0])}
+        width="100%"
+        mb={4}
+      >
+        <SliderTrack />
+        <SliderRange />
+        <SliderThumb index={0}>
+          <Box fontSize="sm" fontWeight="semibold">{k}</Box>
+        </SliderThumb>
+      </SliderRoot>
+
+      <VStack align="start" gap={3}>
+        {selectedPoints.map((p, idx) => {
+          const r = Math.sqrt(p.x * p.x + p.y * p.y);
+          const theta = Math.atan2(p.y, p.x);
+          const thetaDeg = toDegrees(theta);
+          const newThetaDeg = thetaDeg + k * 90;
+
+          return (
+            <Box key={idx} p={3} borderWidth="1px" borderRadius="md" w="100%">
+              <HStack justify="space-between" gap={2} mb={2}>
+                <Text fontWeight="semibold">Boule {idx + 1}</Text>
+                <Badge colorScheme={placed[idx] ? "green" : "gray"}>
+                  {placed[idx] ? "Placée" : "Non placée"}
+                </Badge>
+              </HStack>
+
+              <Text>
+                Écriture polaire : z = {r.toFixed(2)} · e^(i {thetaDeg.toFixed(1)}°)
+              </Text>
+
+              <Text mt={1}>
+                Multiplication par i^{k} : z · i^{k} = {r.toFixed(2)} · e^(i ({thetaDeg.toFixed(1)}° + {k}·90°))
+              </Text>
+
+              <Text mt={1} fontSize="sm" color="gray.700">
+                → Le module reste {r.toFixed(2)}, l’argument devient {newThetaDeg.toFixed(1)}°
+              </Text>
+            </Box>
+          );
+        })}
+      </VStack>
     </Box>
   );
 };
-
