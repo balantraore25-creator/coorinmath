@@ -4,17 +4,17 @@ import {
   Box,
   Text,
   VStack,
-  Collapsible,
   HStack,
   useBreakpointValue,
-  Switch,
-  Slider,
 } from "@chakra-ui/react";
-import { motion, useMotionValue, animate } from "framer-motion";
+import { useMotionValue, animate } from "framer-motion";
 import type Konva from "konva";
 import type { Point } from "../types";
 import { useContainerSize } from "../components/useContainerSize";
 import { MultiHalo } from "./MultiHalo";
+import { useAngle } from "./hooks/useAngle";
+import { TrigCircleAnimated } from "./TrigCircleAnimated";
+import { Toggle } from "./Toggle"; // chemin vers ton composant Toggle
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
@@ -29,7 +29,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [visibleLines, setVisibleLines] = useState(0);
   const [axisProgress, setAxisProgress] = useState(0);
   const [pointProgress, setPointProgress] = useState<ProgressMap>({});
-  const [speed, setSpeed] = useState(1);
+  const [speed] = useState(1);
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const [showDegrees, setShowDegrees] = useState(true);
 
@@ -94,25 +94,23 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
 
   const getCoords = (label: string) => studentPoints[label];
   const selectedPoint = selectedLabel ? studentPoints[selectedLabel] : null;
-  const module = selectedPoint ? Math.sqrt(selectedPoint.x ** 2 + selectedPoint.y ** 2) : null;
 
-  // cos/sin + reconstruction
-  const cosTheta = module && module !== 0 ? selectedPoint!.x / module : 1;
-  const sinTheta = module && module !== 0 ? selectedPoint!.y / module : 0;
-  const theta = Math.atan2(sinTheta, cosTheta);
+  // Hook angle
+  const { module, angleRad, angleDeg, cosTheta, sinTheta } = selectedPoint
+    ? useAngle(selectedPoint.x, selectedPoint.y)
+    : { module: null, angleRad: 0, angleDeg: 0, cosTheta: 1, sinTheta: 0 };
 
   // Motion value pour interpolation
-  const angleValue = useMotionValue(showDegrees ? (theta * 180) / Math.PI : theta);
-
+  const angleValue = useMotionValue(showDegrees ? angleDeg : angleRad);
   useEffect(() => {
-    const target = showDegrees ? (theta * 180) / Math.PI : theta;
+    const target = showDegrees ? angleDeg : angleRad;
     const controls = animate(angleValue, target, { duration: 0.6, ease: "easeInOut" });
     return controls.stop;
-  }, [showDegrees, theta]);
+  }, [showDegrees, angleDeg, angleRad]);
 
   const angleDisplay = showDegrees
     ? `${angleValue.get().toFixed(2)}°`
-    : `${theta.toFixed(3)} rad`;
+    : `${angleValue.get().toFixed(3)} rad`;
 
   return (
     <Box ref={ref} width="100%" maxW="100%" mx="auto" display="flex" flexDirection={panelDirection} gap={6}>
@@ -155,13 +153,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                   {isSelected && (
                     <>
                       <MultiHalo x={x} y={y} color={color} count={3} minRadius={12} maxRadius={28} speed={0.8} visible={true} />
-                      <Line points={[x, y, x, center]} stroke={color} dash={[4, 4]} />
-                      <Line points={[x, y, center, y]} stroke={color} dash={[4, 4]} />
-                      <KonvaText text={`${p.x}`} x={x - 10} y={center + 5} fontSize={12} fill={color} />
-                      <KonvaText text={`${p.y}`} x={center + 5} y={y - 10} fontSize={12} fill={color} />
                       <Line points={[center, center, x, y]} stroke={color} strokeWidth={2} opacity={0.8} />
-
-                      {/* Arc animé */}
                       <Arc
                         x={center}
                         y={center}
@@ -169,17 +161,12 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                         outerRadius={25}
                         angle={angleValue.get()}
                         rotation={0}
+                        fill={`${color}33`}
                         stroke={color}
                         strokeWidth={2}
                         opacity={0.7}
                       />
-                      <KonvaText
-                        text={angleDisplay}
-                        x={center + 35}
-                        y={center - 15}
-                        fontSize={12}
-                        fill={color}
-                      />
+                      <KonvaText text={angleDisplay} x={center + 35} y={center - 15} fontSize={12} fill={color} />
                     </>
                   )}
                   <Circle
@@ -197,125 +184,46 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             })}
           </Layer>
         </Stage>
-
-        {/* Slider vitesse (Chakra UI v3) */}
-        <Box mt={4} px={[2, 4, 6]}>
-          <Text mb={2} fontSize={["sm", "md"]}>
-            Vitesse de l’animation : {speed.toFixed(1)}x
-          </Text>
-          <Slider.Root
-            min={0.5}
-            max={2}
-            step={0.1}
-            value={[speed]}
-            onValueChange={(details) => setSpeed(details.value[0])}
-          >
-            <Slider.Track>
-              <Slider.Range />
-            </Slider.Track>
-            <Slider.Thumb index={0} />
-          </Slider.Root>
-        </Box>
       </Box>
 
-            {/* Panneau latéral */}
-      <Collapsible.Root open={!!selectedPoint}>
-        <Collapsible.Content>
-          <Box
-            minW="220px"
-            p={4}
-            bg="gray.50"
-            border="1px solid #ddd"
-            borderRadius="md"
-            shadow="md"
-          >
-            <HStack justify="space-between" mb={3}>
-              <Text fontSize="lg" fontWeight="bold">
-                Étapes de calcul
-              </Text>
-              <HStack>
-                <Text fontSize="sm">Deg</Text>
-                <Switch.Root
-                  checked={showDegrees}
-                  onCheckedChange={(details) => setShowDegrees(details.checked)}
-                >
-                  <Switch.HiddenInput />
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
-                </Switch.Root>
-                <Text fontSize="sm">Rad</Text>
-              </HStack>
-            </HStack>
+      {/* Panneau latéral + cercle trigonométrique */}
+      <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
+        <Text fontSize="lg" fontWeight="bold" mb={3}>Étapes de calcul</Text>
+        {selectedPoint ? (
+          <VStack align="start" gap={2}>
+            <Text>① Coordonnée : z = {selectedPoint.x} + i{selectedPoint.y}</Text>
+            <Text>② Module : {module?.toFixed(2)}</Text>
+            <Text>③ cos θ = {cosTheta.toFixed(3)}, sin θ = {sinTheta.toFixed(3)}</Text>
+            <Text>④ Argument = {angleDisplay}</Text>
+                        <Text>
+              ⑤ Forme trigonométrique : z = {module?.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))
+            </Text>
+            <Text>
+              ⑥ Forme polaire : z = {module?.toFixed(2)} · e^(i{angleDisplay})
+            </Text>
+          </VStack>
+        ) : (
+          <Text>Aucune boule sélectionnée</Text>
+        )}
 
-            {selectedPoint ? (
-              <VStack align="start" gap={2}>
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Text>Coordonnée : z = {selectedPoint.x} + i{selectedPoint.y}</Text>
-                </motion.div>
+        {/* Toggle degrés ↔ radians */}
+        {/* Toggle degrés ↔ radians */}
+<HStack mt={4}>
+  <Text fontSize="sm">Deg</Text>
+  <Toggle checked={showDegrees} onChange={setShowDegrees} />
+  <Text fontSize="sm">Rad</Text>
+</HStack>
+      </Box>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <Text>
-                    Module : √({selectedPoint.x}² + {selectedPoint.y}²) = {module?.toFixed(2)}
-                  </Text>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  <Text>
-                    cos θ = {cosTheta.toFixed(3)}, sin θ = {sinTheta.toFixed(3)}
-                  </Text>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                >
-                  <Text>
-                    Argument reconstruit par atan2(sin, cos) = {angleDisplay}
-                  </Text>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.0 }}
-                >
-                  <Text fontWeight="semibold">Forme trigonométrique :</Text>
-                  <Text>
-                    z = {module?.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))
-                  </Text>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.2 }}
-                >
-                  <Text fontWeight="semibold">Forme polaire :</Text>
-                  <Text>
-                    z = {module?.toFixed(2)} · e^{"i" + angleDisplay}
-                  </Text>
-                </motion.div>
-              </VStack>
-            ) : (
-              <Text>Aucune boule sélectionnée</Text>
-            )}
-          </Box>
-        </Collapsible.Content>
-      </Collapsible.Root>
+      {/* Visualisation cercle trigonométrique */}
+      {selectedPoint && (
+        <TrigCircleAnimated
+          x={selectedPoint.x}
+          y={selectedPoint.y}
+          showDegrees={showDegrees}
+          onToggle={() => setShowDegrees(!showDegrees)}
+        />
+      )}
     </Box>
   );
 };
