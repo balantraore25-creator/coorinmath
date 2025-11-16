@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
-import { Box, Text, Slider, VStack, Collapsible, useBreakpointValue } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import {
+  Box,
+  Text,
+  VStack,
+  Collapsible,
+  HStack,
+  useBreakpointValue,
+  Switch,
+  Slider,
+} from "@chakra-ui/react";
+import { motion, useMotionValue, animate } from "framer-motion";
 import type Konva from "konva";
 import type { Point } from "../types";
 import { useContainerSize } from "../components/useContainerSize";
-import { MultiHalo } from "./MultiHalo"; // nouveau halo multi-cercles
+import { MultiHalo } from "./MultiHalo";
 
 interface Props {
   points: { A: Point; B: Point; C: Point };
@@ -22,11 +31,10 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   const [pointProgress, setPointProgress] = useState<ProgressMap>({});
   const [speed, setSpeed] = useState(1);
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const [showDegrees, setShowDegrees] = useState(true);
 
   const unit = size.width / 17;
   const center = size.width / 2;
-
-  // Responsive: panneau latéral à droite ou en bas
   const panelDirection = useBreakpointValue({ base: "column", md: "row" });
 
   // Reset states
@@ -41,7 +49,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   // Animation intro
   useEffect(() => {
     let frameId: number;
-
     const animateGrid = () => {
       let i = 0;
       const step = () => {
@@ -52,7 +59,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
       };
       step();
     };
-
     const animateAxes = () => {
       let t = 0;
       const step = () => {
@@ -63,7 +69,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
       };
       step();
     };
-
     const animatePoints = () => {
       (["A", "B", "C"] as const).forEach((label, idx) => {
         let p = 0;
@@ -75,7 +80,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
         setTimeout(step, (idx * 300) / speed);
       });
     };
-
     animateGrid();
     return () => cancelAnimationFrame(frameId);
   }, [speed, points]);
@@ -89,14 +93,26 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
   };
 
   const getCoords = (label: string) => studentPoints[label];
-
   const selectedPoint = selectedLabel ? studentPoints[selectedLabel] : null;
-  const module =
-    selectedPoint !== null
-      ? Math.sqrt(selectedPoint.x ** 2 + selectedPoint.y ** 2)
-      : null;
-  const argument =
-    selectedPoint !== null ? Math.atan2(selectedPoint.y, selectedPoint.x) : null;
+  const module = selectedPoint ? Math.sqrt(selectedPoint.x ** 2 + selectedPoint.y ** 2) : null;
+
+  // cos/sin + reconstruction
+  const cosTheta = module && module !== 0 ? selectedPoint!.x / module : 1;
+  const sinTheta = module && module !== 0 ? selectedPoint!.y / module : 0;
+  const theta = Math.atan2(sinTheta, cosTheta);
+
+  // Motion value pour interpolation
+  const angleValue = useMotionValue(showDegrees ? (theta * 180) / Math.PI : theta);
+
+  useEffect(() => {
+    const target = showDegrees ? (theta * 180) / Math.PI : theta;
+    const controls = animate(angleValue, target, { duration: 0.6, ease: "easeInOut" });
+    return controls.stop;
+  }, [showDegrees, theta]);
+
+  const angleDisplay = showDegrees
+    ? `${angleValue.get().toFixed(2)}°`
+    : `${theta.toFixed(3)} rad`;
 
   return (
     <Box ref={ref} width="100%" maxW="100%" mx="auto" display="flex" flexDirection={panelDirection} gap={6}>
@@ -115,34 +131,17 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
               );
             })}
 
-            {/* Axes + badges */}
+            {/* Axes */}
             {axisProgress > 0 && (
               <>
                 <Line points={[0, center, size.width, center]} stroke="black" strokeWidth={2} />
                 <Line points={[center, 0, center, size.height]} stroke="black" strokeWidth={2} />
-
-                {/* Badges */}
-                <KonvaText
-                  text="Réel"
-                  x={size.width - 40}
-                  y={center - 20}
-                  fontSize={14}
-                  fontStyle="bold"
-                  fill="black"
-                />
-                <KonvaText
-                  text="Imaginaire pur"
-                  x={center + 10}
-                  y={10}
-                  fontSize={14}
-                  fontStyle="bold"
-                  fill="black"
-                  rotation={90}
-                />
+                <KonvaText text="Réel" x={size.width - 40} y={center - 20} fontSize={14} fontStyle="bold" fill="black" />
+                <KonvaText text="Imaginaire pur" x={center + 10} y={10} fontSize={14} fontStyle="bold" fill="black" rotation={90} />
               </>
             )}
 
-            {/* Points + multi-halo + projections */}
+            {/* Points */}
             {(["A", "B", "C"] as const).map((label, idx) => {
               const color = ["red", "blue", "green"][idx];
               const p = getCoords(label);
@@ -155,29 +154,31 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                 <>
                   {isSelected && (
                     <>
-                      {/* MultiHalo */}
                       <MultiHalo x={x} y={y} color={color} count={3} minRadius={12} maxRadius={28} speed={0.8} visible={true} />
-
-                      {/* Projections */}
                       <Line points={[x, y, x, center]} stroke={color} dash={[4, 4]} />
                       <Line points={[x, y, center, y]} stroke={color} dash={[4, 4]} />
                       <KonvaText text={`${p.x}`} x={x - 10} y={center + 5} fontSize={12} fill={color} />
                       <KonvaText text={`${p.y}`} x={center + 5} y={y - 10} fontSize={12} fill={color} />
-
-                      {/* Vecteur */}
                       <Line points={[center, center, x, y]} stroke={color} strokeWidth={2} opacity={0.8} />
 
-                      {/* Arc angle */}
+                      {/* Arc animé */}
                       <Arc
                         x={center}
                         y={center}
                         innerRadius={20}
                         outerRadius={25}
-                        angle={(argument! * 180) / Math.PI}
+                        angle={angleValue.get()}
                         rotation={0}
                         stroke={color}
                         strokeWidth={2}
                         opacity={0.7}
+                      />
+                      <KonvaText
+                        text={angleDisplay}
+                        x={center + 35}
+                        y={center - 15}
+                        fontSize={12}
+                        fill={color}
                       />
                     </>
                   )}
@@ -197,7 +198,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
           </Layer>
         </Stage>
 
-        {/* Slider vitesse */}
+        {/* Slider vitesse (Chakra UI v3) */}
         <Box mt={4} px={[2, 4, 6]}>
           <Text mb={2} fontSize={["sm", "md"]}>
             Vitesse de l’animation : {speed.toFixed(1)}x
@@ -207,33 +208,46 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             max={2}
             step={0.1}
             value={[speed]}
-            onValueChange={(details: { value: number[] }) => setSpeed(details.value[0])}
+            onValueChange={(details) => setSpeed(details.value[0])}
           >
             <Slider.Track>
               <Slider.Range />
             </Slider.Track>
-            <Slider.Thumb index={0}>
-              <Slider.ValueText />
-            </Slider.Thumb>
+            <Slider.Thumb index={0} />
           </Slider.Root>
         </Box>
       </Box>
 
-      {/* Panneau latéral animé */}
+            {/* Panneau latéral */}
       <Collapsible.Root open={!!selectedPoint}>
         <Collapsible.Content>
           <Box
             minW="220px"
             p={4}
             bg="gray.50"
-                        border="1px solid #ddd"
+            border="1px solid #ddd"
             borderRadius="md"
-            fontFamily="sans-serif"
             shadow="md"
           >
-            <Text fontSize="lg" fontWeight="bold" mb={3}>
-              Étapes de calcul
-            </Text>
+            <HStack justify="space-between" mb={3}>
+              <Text fontSize="lg" fontWeight="bold">
+                Étapes de calcul
+              </Text>
+              <HStack>
+                <Text fontSize="sm">Deg</Text>
+                <Switch.Root
+                  checked={showDegrees}
+                  onCheckedChange={(details) => setShowDegrees(details.checked)}
+                >
+                  <Switch.HiddenInput />
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Root>
+                <Text fontSize="sm">Rad</Text>
+              </HStack>
+            </HStack>
+
             {selectedPoint ? (
               <VStack align="start" gap={2}>
                 <motion.div
@@ -260,8 +274,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                   transition={{ delay: 0.6 }}
                 >
                   <Text>
-                    Argument : arctan({selectedPoint.y}/{selectedPoint.x}) ={" "}
-                    {argument !== null ? ((argument * 180) / Math.PI).toFixed(2) + "°" : ""}
+                    cos θ = {cosTheta.toFixed(3)}, sin θ = {sinTheta.toFixed(3)}
                   </Text>
                 </motion.div>
 
@@ -270,11 +283,30 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
                 >
+                  <Text>
+                    Argument reconstruit par atan2(sin, cos) = {angleDisplay}
+                  </Text>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0 }}
+                >
                   <Text fontWeight="semibold">Forme trigonométrique :</Text>
                   <Text>
-                    z = {module?.toFixed(2)} (cos(
-                    {argument !== null ? ((argument * 180) / Math.PI).toFixed(2) : "θ"}°) + i·sin(
-                    {argument !== null ? ((argument * 180) / Math.PI).toFixed(2) : "θ"}°))
+                    z = {module?.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))
+                  </Text>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 }}
+                >
+                  <Text fontWeight="semibold">Forme polaire :</Text>
+                  <Text>
+                    z = {module?.toFixed(2)} · e^{"i" + angleDisplay}
                   </Text>
                 </motion.div>
               </VStack>
@@ -287,4 +319,3 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     </Box>
   );
 };
-
