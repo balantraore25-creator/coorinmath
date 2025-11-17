@@ -20,6 +20,7 @@ type StudentPoints = Record<"A" | "B" | "C", Point>;
 type ProgressMap = Record<"A" | "B" | "C", number>;
 
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
+  // ✅ Valeurs par défaut si props manquantes
   const safePoints: StudentPoints = {
     A: points?.A ?? { x: 0, y: 0 },
     B: points?.B ?? { x: 0, y: 0 },
@@ -44,7 +45,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     setStudentPoints(safePoints);
   }, [points]);
 
-  // Animations
+  // ✅ Animation initiale
   useEffect(() => {
     let frameId: number;
     const animateGrid = () => {
@@ -93,7 +94,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
 
   const selectedPoint: Point | null = selectedLabel ? studentPoints[selectedLabel] : null;
 
-  // Toujours appeler useAngle
+  // ✅ Toujours appeler useAngle avec valeurs sûres
   const spX = Number.isFinite(selectedPoint?.x) ? selectedPoint!.x : 0;
   const spY = Number.isFinite(selectedPoint?.y) ? selectedPoint!.y : 0;
   const { module, angleRad, angleDeg, cosTheta, sinTheta } = useAngle(spX, spY);
@@ -105,9 +106,14 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     return controls.stop;
   }, [showDegrees, angleDeg, angleRad]);
 
-  const angleDisplay = showDegrees
-    ? `${angleDeg.toFixed(2)}°`
-    : `${angleRad.toFixed(3)} rad`;
+   {/*const angleDisplay = showDegrees
+    ? `${angleValue.get().toFixed(2)}°`
+    : `${angleValue.get().toFixed(3)} rad`;*/}
+
+    // ✅ Pour l’affichage texte, utiliser directement les valeurs calculées
+const angleDisplay = showDegrees
+  ? `${angleDeg.toFixed(2)}°`
+  : `${angleRad.toFixed(3)} rad`;
 
   return (
     <Box ref={ref} width="100%" maxW="100%" mx="auto" display="flex" flexDirection={panelDirection} gap={6}>
@@ -153,11 +159,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                     <>
                       <MultiHalo x={x} y={y} color={color} count={3} minRadius={12} maxRadius={28} speed={0.8} visible />
                       <Line points={[center, center, x, y]} stroke={color} strokeWidth={2} opacity={0.8} />
-
-                      {/* ✅ Projections sur les axes */}
-                      <Line points={[x, y, x, center]} stroke={color} strokeWidth={1} dash={[4, 4]} opacity={0.6} />
-                      <Line points={[x, y, center, y]} stroke={color} strokeWidth={1} dash={[4, 4]} opacity={0.6} />
-
                       <Arc x={center} y={center} innerRadius={20} outerRadius={25} angle={angleValue.get()} rotation={0} fill={`${color}33`} stroke={color} strokeWidth={2} opacity={0.7} />
                       <KonvaText text={angleDisplay} x={center + 35} y={center - 15} fontSize={12} fill={color} />
                     </>
@@ -178,10 +179,10 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
         </Stage>
       </Box>
 
-            {/* Panneau latéral */}
+      {/* Panneau latéral */}
       <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
         <Text fontSize="lg" fontWeight="bold" mb={3}>Étapes de calcul</Text>
-        {selectedPoint ? (
+                {selectedPoint ? (
           <VStack align="start" gap={2}>
             <Text>① Coordonnée : z = {selectedPoint.x} + i{selectedPoint.y}</Text>
             <Text>② Module : {module.toFixed(2)}</Text>
@@ -193,9 +194,6 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             <Text>
               ⑥ Forme polaire : z = {module.toFixed(2)} · e^(i{angleDisplay})
             </Text>
-            {/* ✅ Ajout des projections affichées en texte */}
-            <Text>⑦ Projection sur l’axe réel : x = {selectedPoint.x}</Text>
-            <Text>⑧ Projection sur l’axe imaginaire : y = {selectedPoint.y}</Text>
           </VStack>
         ) : (
           <Text>Aucune boule sélectionnée</Text>
