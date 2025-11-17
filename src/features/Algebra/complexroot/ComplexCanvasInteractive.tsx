@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
 import { Box, Text, VStack, Button } from "@chakra-ui/react";
 import { MultiHalo } from "./MultiHalo";
-import { useAngle } from "./hooks/useAngle";
 import type { Point } from "../types";
 
+// --- Fonctions utilitaires ---
 function multiplyComplex(a: Point, b: Point): Point {
   return { x: a.x * b.x - a.y * b.y, y: a.x * b.y + a.y * b.x };
 }
@@ -21,6 +21,15 @@ function computePowers(w: Point, n: number): Point[] {
   return powers;
 }
 
+function computeAngle(p: Point) {
+  const module = Math.sqrt(p.x * p.x + p.y * p.y);
+  const angleRad = Math.atan2(p.y, p.x);
+  const angleDeg = (angleRad * 180) / Math.PI;
+  const cosTheta = module !== 0 ? p.x / module : 1;
+  const sinTheta = module !== 0 ? p.y / module : 0;
+  return { module, angleRad, angleDeg, cosTheta, sinTheta };
+}
+
 function rotationMessage(angleDeg: number): string {
   const a = Math.round(angleDeg) % 360;
   if (a === 90) return "Rotation de 90°";
@@ -30,6 +39,7 @@ function rotationMessage(angleDeg: number): string {
   return `Rotation de ${a}°`;
 }
 
+// --- Composant principal ---
 interface ComplexCanvasInteractiveProps {
   z: Point;
   w: Point;
@@ -80,7 +90,7 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
       <Box flex="1">
         <Stage width={safeW} height={safeH} style={{ backgroundColor: "#fff" }}>
           <Layer>
-            {/* ✅ Légende affichant w */}
+            {/* Légende affichant w */}
             <KonvaText
               text={`w = ${w.x} + i${w.y}`}
               x={10}
@@ -90,7 +100,7 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
               fontStyle="bold"
             />
 
-            {/* ✅ Formules dynamiques affichées si showFormulas = true */}
+            {/* Formules dynamiques */}
             {showFormulas &&
               powers.map((p, idx) => {
                 if (idx > currentStep) return null;
@@ -132,7 +142,7 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
               const px = center + product.x * unit;
               const py = center - product.y * unit;
 
-              const { angleDeg } = useAngle(product);
+              const { angleDeg } = computeAngle(product);
 
               const studentPos = studentPositions[idx];
               const isCorrect = studentPos && studentPos.x === product.x && studentPos.y === product.y;
@@ -186,7 +196,7 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
           </Layer>
         </Stage>
 
-        {/* ✅ Bouton pour masquer/afficher les formules */}
+        {/* Bouton pour masquer/afficher les formules */}
         <Button mt={2} colorScheme="purple" onClick={() => setShowFormulas(!showFormulas)}>
           {showFormulas ? "Masquer les formules" : "Afficher les formules"}
         </Button>
@@ -195,13 +205,13 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
       {/* Panneau latéral */}
       <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md">
         <Text fontSize="lg" fontWeight="bold" mb={3}>Multiplication complexe</Text>
-                <VStack align="start" gap={2}>
+        <VStack align="start" gap={2}>
           <Text>z = {z.x} + i{z.y}</Text>
           <Text>w = {w.x} + i{w.y}</Text>
-          {powers.map((p, idx) => {
+                    {powers.map((p, idx) => {
             if (idx > currentStep) return null;
             const product = multiplyComplex(z, p);
-            const { module, angleDeg } = useAngle(product);
+            const { module, angleDeg } = computeAngle(product);
 
             return (
               <Text key={idx}>
