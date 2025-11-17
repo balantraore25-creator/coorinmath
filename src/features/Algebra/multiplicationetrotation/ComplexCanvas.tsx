@@ -106,9 +106,14 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     return controls.stop;
   }, [showDegrees, angleDeg, angleRad]);
 
-  const angleDisplay = showDegrees
+   {/*const angleDisplay = showDegrees
     ? `${angleValue.get().toFixed(2)}°`
-    : `${angleValue.get().toFixed(3)} rad`;
+    : `${angleValue.get().toFixed(3)} rad`;*/}
+
+    // ✅ Pour l’affichage texte, utiliser directement les valeurs calculées
+const angleDisplay = showDegrees
+  ? `${angleDeg.toFixed(2)}°`
+  : `${angleRad.toFixed(3)} rad`;
 
   return (
     <Box ref={ref} width="100%" maxW="100%" mx="auto" display="flex" flexDirection={panelDirection} gap={6}>
