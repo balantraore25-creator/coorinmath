@@ -43,6 +43,7 @@ import { ComplexActivity } from './features/Algebra/components/ComplexActivity'
 //import { ComplexRotationActivity } from './features/Algebra/ComplexRotationActivity'
 import { ComplexActivitytwo } from './features/Algebra/moduleetargument/ComplexActivitytwo'
 import { ComplexActivityRotation} from './features/Algebra/multiplicationetrotation/ComplexActivityRotation'
+import { ComplexActivityRoot } from './features/Algebra/complexroot/ComplexActivityRoot'
 //import { ComplexRotationActivity } from './features/Algebra/multiplicationetrotation/ComplexRotationActivity'
 //import { ComplexCanvas } from './features/Algebra/Multiplicationetrotation/components/ComplexCanvas'
 
@@ -116,6 +117,8 @@ function App() {
                     <Route path="complexnumbers/unite1" element={<ComplexActivity />} />
                      <Route path="complexnumbers/unite2" element={<ComplexActivitytwo />} />
                      <Route path="complexnumbers/rotation" element={<ComplexActivityRotation />} />
+                    <Route path="complexnumbers/root" element={<ComplexActivityRoot />} />
+                   
                    
                   </Route>
                
