@@ -158,6 +158,10 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                       <Line points={[x, y, x, center]} stroke={color} strokeWidth={1} dash={[4, 4]} opacity={0.6} />
                       <Line points={[x, y, center, y]} stroke={color} strokeWidth={1} dash={[4, 4]} opacity={0.6} />
 
+                      {/* ✅ Labels des coordonnées projetées */}
+                      <KonvaText text={`x = ${selectedPoint.x}`} x={x + 5} y={center + 5} fontSize={12} fill={color} />
+                      <KonvaText text={`y = ${selectedPoint.y}`} x={center + 5} y={y - 15} fontSize={12} fill={color} />
+
                       <Arc x={center} y={center} innerRadius={20} outerRadius={25} angle={angleValue.get()} rotation={0} fill={`${color}33`} stroke={color} strokeWidth={2} opacity={0.7} />
                       <KonvaText text={angleDisplay} x={center + 35} y={center - 15} fontSize={12} fill={color} />
                     </>
@@ -168,7 +172,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                     radius={10 * Math.max(prog, 0.0001)}
                     fill={color}
                     draggable
-                    onDragEnd={(e) => handleDragEnd(e, label)}
+                                        onDragEnd={(e) => handleDragEnd(e, label)}
                     onClick={() => setSelectedLabel(label)}
                   />
                 </React.Fragment>
@@ -178,14 +182,25 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
         </Stage>
       </Box>
 
-            {/* Panneau latéral */}
-      <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
-        <Text fontSize="lg" fontWeight="bold" mb={3}>Étapes de calcul</Text>
+      {/* Panneau latéral */}
+      <Box
+        minW="300px"
+        p={4}
+        bg="gray.50"
+        border="1px solid #ddd"
+        borderRadius="md"
+        shadow="md"
+      >
+        <Text fontSize="lg" fontWeight="bold" mb={3}>
+          Étapes de calcul
+        </Text>
         {selectedPoint ? (
           <VStack align="start" gap={2}>
             <Text>① Coordonnée : z = {selectedPoint.x} + i{selectedPoint.y}</Text>
             <Text>② Module : {module.toFixed(2)}</Text>
-            <Text>③ cos θ = {cosTheta.toFixed(3)}, sin θ = {sinTheta.toFixed(3)}</Text>
+            <Text>
+              ③ cos θ = {cosTheta.toFixed(3)}, sin θ = {sinTheta.toFixed(3)}
+            </Text>
             <Text>④ Argument = {angleDisplay}</Text>
             <Text>
               ⑤ Forme trigonométrique : z = {module.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))
@@ -193,7 +208,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
             <Text>
               ⑥ Forme polaire : z = {module.toFixed(2)} · e^(i{angleDisplay})
             </Text>
-            {/* ✅ Ajout des projections affichées en texte */}
+            {/* ✅ Projections affichées en texte */}
             <Text>⑦ Projection sur l’axe réel : x = {selectedPoint.x}</Text>
             <Text>⑧ Projection sur l’axe imaginaire : y = {selectedPoint.y}</Text>
           </VStack>
