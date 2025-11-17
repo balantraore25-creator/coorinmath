@@ -1,69 +1,94 @@
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence, useMotionValue, animate, useMotionValueEvent } from "framer-motion";
-import { Toggle } from "./Toggle";
-import { useAngle } from "./hooks/useAngle";
+"use client";
 
-type Props = { x: number; y: number; showDegrees: boolean; onToggle: () => void };
+import React from "react";
+import { Stage, Layer, Circle, Line, Arc, Text as KonvaText } from "react-konva";
+import { Box } from "@chakra-ui/react";
+import { useAngle } from "./hooks/useAngle"; // ✅ nouvelle version qui prend un Point
+import type { Point } from "../types";
 
-export const TrigCircleAnimated: React.FC<Props> = ({ x, y, showDegrees, onToggle }) => {
-  const { module, angleRad, angleDeg } = useAngle(x, y);
-  const angleTarget = showDegrees ? angleDeg : angleRad;
+function multiplyComplex(a: Point, b: Point): Point {
+  return { x: a.x * b.x - a.y * b.y, y: a.x * b.y + a.y * b.x };
+}
 
-  const angleValue = useMotionValue(0);
-  const [angleDisplay, setAngleDisplay] = useState(0);
+function computePowers(w: Point, n: number): Point[] {
+  const powers: Point[] = [];
+  let current = { ...w };
+  for (let i = 1; i <= n; i++) {
+    powers.push(current);
+    current = multiplyComplex(current, w);
+  }
+  return powers;
+}
 
-  useEffect(() => {
-    const controls = animate(angleValue, angleTarget, { duration: 1.2, ease: "easeOut" });
-    return controls.stop;
-  }, [angleTarget]);
+function rotationMessage(angleDeg: number): string {
+  const a = Math.round(angleDeg) % 360;
+  if (a === 90) return "Rotation de 90°";
+  if (a === 180) return "Symétrie centrale (180°)";
+  if (a === 270 || a === -90) return "Rotation de 270° ou -90°";
+  if (a === 0) return "Retour au point de départ (360°)";
+  return `Rotation de ${a}°`;
+}
 
-  useMotionValueEvent(angleValue, "change", (latest) => setAngleDisplay(latest));
+interface TrigCircleAnimatedProps {
+  z: Point;
+  w: Point;
+}
 
-  const cx = 150, cy = 150, r = 100;
-  const endX = cx + r * Math.cos(angleDisplay);
-  const endY = cy - r * Math.sin(angleDisplay);
+export const TrigCircleAnimated: React.FC<TrigCircleAnimatedProps> = ({ z, w }) => {
+  const safeW = 500;
+  const safeH = 500;
+  const unit = safeW / 17;
+  const center = safeW / 2;
+
+  const powers = computePowers(w, 4);
 
   return (
-    <div>
-      <svg width={300} height={300}>
-        <circle cx={cx} cy={cy} r={r} stroke="black" fill="none" />
-        <line x1={cx - r} y1={cy} x2={cx + r} y2={cy} stroke="gray" />
-        <line x1={cx} y1={cy - r} x2={cx} y2={cy + r} stroke="gray" />
+    <Box>
+      <Stage width={safeW} height={safeH} style={{ backgroundColor: "#fff" }}>
+        <Layer>
+          {/* Boule de z */}
+          <Circle x={center + z.x * unit} y={center - z.y * unit} radius={10} fill="red" />
 
-        {/* Arc progressif */}
-        <motion.path
-          d={`M ${cx + r} ${cy} A ${r} ${r} 0 ${angleDisplay > Math.PI ? 1 : 0} 1 ${endX} ${endY}`}
-          stroke="red"
-          strokeWidth={3}
-          fill="none"
-        />
+          {/* Boules des produits z·w^n */}
+          {powers.map((p, idx) => {
+            const product = multiplyComplex(z, p);
+            const px = center + product.x * unit;
+            const py = center - product.y * unit;
 
-        {/* Rayon */}
-        <AnimatePresence mode="wait">
-          <motion.line
-            key={showDegrees ? "deg" : "rad"}
-            x1={cx}
-            y1={cy}
-            x2={endX}
-            y2={endY}
-            stroke="red"
-            strokeWidth={2}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-          />
-        </AnimatePresence>
-      </svg>
+            // ✅ Nouveau appel avec Point
+            const { angleDeg } = useAngle(product);
 
-      <p>Angle ({showDegrees ? "deg" : "rad"}) : {angleDisplay.toFixed(2)}</p>
-      <p>Module : {module.toFixed(2)}</p>
-
-      <Toggle
-        checked={showDegrees}
-        onChange={onToggle}
-        label={showDegrees ? "Degrés" : "Radians"}
-      />
-    </div>
+            return (
+              <React.Fragment key={idx}>
+                <Circle x={px} y={py} radius={10} fill="blue" />
+                <Line
+                  points={[center + z.x * unit, center - z.y * unit, px, py]}
+                  stroke="orange"
+                  strokeWidth={2}
+                />
+                <Arc
+                  x={center}
+                  y={center}
+                  innerRadius={40}
+                  outerRadius={45}
+                  angle={angleDeg}
+                  rotation={0}
+                  stroke="orange"
+                  strokeWidth={2}
+                  opacity={0.7}
+                />
+                <KonvaText
+                  text={rotationMessage(angleDeg)}
+                  x={px + 15}
+                  y={py - 15}
+                  fontSize={12}
+                  fill="orange"
+                />
+              </React.Fragment>
+            );
+          })}
+        </Layer>
+      </Stage>
+    </Box>
   );
 };
