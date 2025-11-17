@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
 import { Box, Text, VStack, Button } from "@chakra-ui/react";
 import { MultiHalo } from "./MultiHalo";
-import { useAngle } from "./hooks/useAngle";
+import { useAngle } from "./hooks/useAngle"; // ✅ nouvelle version qui prend un Point
 import type { Point } from "../types";
 
 function multiplyComplex(a: Point, b: Point): Point {
@@ -37,7 +37,7 @@ interface ComplexCanvasInteractiveProps {
 
 export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> = ({ z, w }) => {
   const [studentPositions, setStudentPositions] = useState<Point[]>([]);
-  const [currentStep, setCurrentStep] = useState<number>(0); // étape en cours
+  const [currentStep, setCurrentStep] = useState<number>(0);
   const [score, setScore] = useState<number>(0);
 
   const safeW = 500;
@@ -54,7 +54,6 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
     newPositions[idx] = { x: newX, y: newY };
     setStudentPositions(newPositions);
 
-    // ✅ Validation : débloque l’étape suivante seulement si correct
     const product = multiplyComplex(z, powers[idx]);
     if (newX === product.x && newY === product.y) {
       setScore((prev) => prev + 1);
@@ -62,7 +61,6 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
     }
   };
 
-  // 🔄 Relance automatique
   const handleReplay = () => {
     setStudentPositions([]);
     setCurrentStep(0);
@@ -94,11 +92,13 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
 
             {/* Boules des produits z·w^n */}
             {powers.map((p, idx) => {
-              if (idx > currentStep) return null; // n’affiche que jusqu’à l’étape en cours
+              if (idx > currentStep) return null;
               const product = multiplyComplex(z, p);
               const px = center + product.x * unit;
               const py = center - product.y * unit;
-              const { angleDeg } = useAngle(product.x, product.y);
+
+              // ✅ Nouveau appel avec Point
+              const { angleDeg } = useAngle(product);
 
               const studentPos = studentPositions[idx];
               const isCorrect = studentPos && studentPos.x === product.x && studentPos.y === product.y;
@@ -143,7 +143,10 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
           {powers.map((p, idx) => {
             if (idx > currentStep) return null;
             const product = multiplyComplex(z, p);
-            const { module, angleDeg } = useAngle(product.x, product.y);
+
+            // ✅ Nouveau appel avec Point
+            const { module, angleDeg } = useAngle(product);
+
             return (
               <Text key={idx}>
                 z·w^{idx + 1} = {product.x} + i{product.y} | Module = {module.toFixed(2)} | Angle = {angleDeg.toFixed(2)}° → {rotationMessage(angleDeg)}
