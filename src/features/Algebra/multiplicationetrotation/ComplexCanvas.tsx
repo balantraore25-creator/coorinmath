@@ -20,7 +20,7 @@ type StudentPoints = Record<"A" | "B" | "C", Point>;
 type ProgressMap = Record<"A" | "B" | "C", number>;
 
 export const ComplexCanvas: React.FC<Props> = ({ points }) => {
-  // ✅ valeurs par défaut si props manquantes
+  // ✅ Valeurs par défaut si props manquantes
   const safePoints: StudentPoints = {
     A: points?.A ?? { x: 0, y: 0 },
     B: points?.B ?? { x: 0, y: 0 },
@@ -45,7 +45,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
     setStudentPoints(safePoints);
   }, [points]);
 
-  // ✅ animations inchangées
+  // ✅ Animation initiale
   useEffect(() => {
     let frameId: number;
     const animateGrid = () => {
@@ -94,11 +94,10 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
 
   const selectedPoint: Point | null = selectedLabel ? studentPoints[selectedLabel] : null;
 
-  // ✅ sécurisation avant useAngle
-  const { module, angleRad, angleDeg, cosTheta, sinTheta } =
-    selectedPoint && Number.isFinite(selectedPoint.x) && Number.isFinite(selectedPoint.y)
-      ? useAngle(selectedPoint.x, selectedPoint.y)
-      : { module: null, angleRad: 0, angleDeg: 0, cosTheta: 1, sinTheta: 0 };
+  // ✅ Toujours appeler useAngle avec valeurs sûres
+  const spX = Number.isFinite(selectedPoint?.x) ? selectedPoint!.x : 0;
+  const spY = Number.isFinite(selectedPoint?.y) ? selectedPoint!.y : 0;
+  const { module, angleRad, angleDeg, cosTheta, sinTheta } = useAngle(spX, spY);
 
   const angleValue = useMotionValue(showDegrees ? angleDeg : angleRad);
   useEffect(() => {
@@ -113,10 +112,11 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
 
   return (
     <Box ref={ref} width="100%" maxW="100%" mx="auto" display="flex" flexDirection={panelDirection} gap={6}>
+      {/* Canvas */}
       <Box flex="1">
         <Stage width={safeW} height={safeH} style={{ backgroundColor: "#fff" }}>
           <Layer>
-            {/* Grille sécurisée */}
+            {/* Grille */}
             {[...Array(visibleLines ?? 0)].map((_, i) => {
               const pos = i * unit;
               return (
@@ -174,35 +174,20 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
         </Stage>
       </Box>
 
-            {/* Panneau latéral */}
-      <Box
-        minW="300px"
-        p={4}
-        bg="gray.50"
-        border="1px solid #ddd"
-        borderRadius="md"
-        shadow="md"
-      >
-        <Text fontSize="lg" fontWeight="bold" mb={3}>
-          Étapes de calcul
-        </Text>
-        {selectedPoint ? (
+      {/* Panneau latéral */}
+      <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md" shadow="md">
+        <Text fontSize="lg" fontWeight="bold" mb={3}>Étapes de calcul</Text>
+                {selectedPoint ? (
           <VStack align="start" gap={2}>
-            <Text>
-              ① Coordonnée : z = {selectedPoint.x} + i{selectedPoint.y}
-            </Text>
-            <Text>② Module : {module?.toFixed(2) ?? "0.00"}</Text>
-            <Text>
-              ③ cos θ = {cosTheta.toFixed(3)}, sin θ = {sinTheta.toFixed(3)}
-            </Text>
+            <Text>① Coordonnée : z = {selectedPoint.x} + i{selectedPoint.y}</Text>
+            <Text>② Module : {module.toFixed(2)}</Text>
+            <Text>③ cos θ = {cosTheta.toFixed(3)}, sin θ = {sinTheta.toFixed(3)}</Text>
             <Text>④ Argument = {angleDisplay}</Text>
             <Text>
-              ⑤ Forme trigonométrique : z = {module?.toFixed(2) ?? "0.00"} (cos(
-              {angleDisplay}) + i·sin({angleDisplay}))
+              ⑤ Forme trigonométrique : z = {module.toFixed(2)} (cos({angleDisplay}) + i·sin({angleDisplay}))
             </Text>
             <Text>
-              ⑥ Forme polaire : z = {module?.toFixed(2) ?? "0.00"} · e^(i
-              {angleDisplay})
+              ⑥ Forme polaire : z = {module.toFixed(2)} · e^(i{angleDisplay})
             </Text>
           </VStack>
         ) : (
