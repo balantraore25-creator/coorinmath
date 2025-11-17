@@ -16,6 +16,7 @@ interface Props {
   points: { A: Point; B: Point; C: Point };
 }
 
+// ✅ Typage strict
 type StudentPoints = Record<"A" | "B" | "C", Point>;
 type ProgressMap = Record<"A" | "B" | "C", number>;
 
@@ -118,7 +119,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
         <Stage width={safeW} height={safeH} style={{ backgroundColor: "#fff" }}>
           <Layer>
             {/* Grille sécurisée */}
-            {[...Array(visibleLines || 0)].map((_, i) => {
+            {[...Array(visibleLines ?? 0)].map((_, i) => {
               const pos = i * unit;
               return (
                 <React.Fragment key={i}>
