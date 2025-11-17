@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
-import { Box, Text, VStack, Button, Input, HStack } from "@chakra-ui/react";
+import { Box, Text, VStack, Button } from "@chakra-ui/react";
 import { MultiHalo } from "./MultiHalo";
 import { useAngle } from "./hooks/useAngle";
 import type { Point } from "../types";
@@ -32,18 +32,15 @@ function rotationMessage(angleDeg: number): string {
 
 interface ComplexCanvasInteractiveProps {
   z: Point;
+  w: Point;
 }
 
-export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> = ({ z }) => {
-  // ✅ l’élève saisit w
-  const [wx, setWx] = useState<number>(0);
-  const [wy, setWy] = useState<number>(0);
-  const w: Point = { x: wx, y: wy };
-
+export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> = ({ z, w }) => {
   const [studentPositions, setStudentPositions] = useState<Point[]>([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [score, setScore] = useState<number>(0);
   const [errorIndex, setErrorIndex] = useState<number | null>(null);
+  const [showFormulas, setShowFormulas] = useState<boolean>(true);
 
   const safeW = 500;
   const safeH = 500;
@@ -83,6 +80,34 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
       <Box flex="1">
         <Stage width={safeW} height={safeH} style={{ backgroundColor: "#fff" }}>
           <Layer>
+            {/* ✅ Légende affichant w */}
+            <KonvaText
+              text={`w = ${w.x} + i${w.y}`}
+              x={10}
+              y={10}
+              fontSize={16}
+              fill="blue"
+              fontStyle="bold"
+            />
+
+            {/* ✅ Formules dynamiques affichées si showFormulas = true */}
+            {showFormulas &&
+              powers.map((p, idx) => {
+                if (idx > currentStep) return null;
+                const product = multiplyComplex(z, p);
+                return (
+                  <KonvaText
+                    key={idx}
+                    text={`z · w^${idx + 1} = ${product.x} + i${product.y}`}
+                    x={10}
+                    y={40 + idx * 20}
+                    fontSize={14}
+                    fill="purple"
+                    fontStyle="bold"
+                  />
+                );
+              })}
+
             {/* Grille + axes */}
             {[...Array(17)].map((_, i) => {
               const pos = i * unit;
@@ -160,36 +185,19 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
             })}
           </Layer>
         </Stage>
+
+        {/* ✅ Bouton pour masquer/afficher les formules */}
+        <Button mt={2} colorScheme="purple" onClick={() => setShowFormulas(!showFormulas)}>
+          {showFormulas ? "Masquer les formules" : "Afficher les formules"}
+        </Button>
       </Box>
 
       {/* Panneau latéral */}
       <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md">
         <Text fontSize="lg" fontWeight="bold" mb={3}>Multiplication complexe</Text>
-        <VStack align="start" gap={2}>
+                <VStack align="start" gap={2}>
           <Text>z = {z.x} + i{z.y}</Text>
-
-          {/* ✅ Saisie de w */}
-          <Box>
-            <Text>Entrez w :</Text>
-            <HStack>
-              <Input
-                type="number"
-                value={wx}
-                onChange={(e) => setWx(Number(e.target.value))}
-                width="70px"
-                placeholder="x'"
-              />
-              <Text> + i </Text>
-              <Input
-                type="number"
-                value={wy}
-                onChange={(e) => setWy(Number(e.target.value))}
-                width="70px"
-                placeholder="y'"
-              />
-            </HStack>
-          </Box>
-
+          <Text>w = {w.x} + i{w.y}</Text>
           {powers.map((p, idx) => {
             if (idx > currentStep) return null;
             const product = multiplyComplex(z, p);
@@ -205,14 +213,15 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
 
         {currentStep === powers.length && (
           <Box mt={4} p={2} bg="green.100" borderRadius="md">
-            <Text fontWeight="bold">Score final : {score}/{powers.length} boules placées correctement 🎉</Text>
+            <Text fontWeight="bold">
+              Score final : {score}/{powers.length} boules placées correctement 🎉
+            </Text>
             <Button mt={2} colorScheme="blue" onClick={handleReplay}>
               🔄 Rejouer
             </Button>
           </Box>
-               )}
+        )}
       </Box>
     </Box>
   );
 };
-
