@@ -158,9 +158,9 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                       <Line points={[x, y, x, center]} stroke={color} strokeWidth={1} dash={[4, 4]} opacity={0.6} />
                       <Line points={[x, y, center, y]} stroke={color} strokeWidth={1} dash={[4, 4]} opacity={0.6} />
 
-                      {/* ✅ Labels des coordonnées projetées */}
-                      <KonvaText text={`x = ${selectedPoint.x}`} x={x + 5} y={center + 5} fontSize={12} fill={color} />
-                      <KonvaText text={`y = ${selectedPoint.y}`} x={center + 5} y={y - 15} fontSize={12} fill={color} />
+                      {/* ✅ Labels des coordonnées projetées sur les axes */}
+                      <KonvaText text={`${selectedPoint.x}`} x={x - 10} y={center + 5} fontSize={12} fill={color} />
+                      <KonvaText text={`${selectedPoint.y}`} x={center + 5} y={y - 10} fontSize={12} fill={color} />
 
                       <Arc x={center} y={center} innerRadius={20} outerRadius={25} angle={angleValue.get()} rotation={0} fill={`${color}33`} stroke={color} strokeWidth={2} opacity={0.7} />
                       <KonvaText text={angleDisplay} x={center + 35} y={center - 15} fontSize={12} fill={color} />
@@ -172,7 +172,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
                     radius={10 * Math.max(prog, 0.0001)}
                     fill={color}
                     draggable
-                                        onDragEnd={(e) => handleDragEnd(e, label)}
+                    onDragEnd={(e) => handleDragEnd(e, label)}
                     onClick={() => setSelectedLabel(label)}
                   />
                 </React.Fragment>
@@ -182,7 +182,7 @@ export const ComplexCanvas: React.FC<Props> = ({ points }) => {
         </Stage>
       </Box>
 
-      {/* Panneau latéral */}
+            {/* Panneau latéral */}
       <Box
         minW="300px"
         p={4}
