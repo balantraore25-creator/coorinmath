@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { ComplexCanvas } from "./ComplexCanvas";
+import { ComplexCanvasInteractive } from "./ComplexCanvasInteractive";
 import type { Point } from "../types";
 import { Box, Button } from "@chakra-ui/react";
 
@@ -31,7 +31,7 @@ export const ComplexActivityRoot: React.FC = () => {
   return (
     <Box>
       {/* Canvas avec 5 boules (z + puissances de w) */}
-      <ComplexCanvas z={zPoint} w={wPoint} />
+      <ComplexCanvasInteractive z={zPoint} w={wPoint} />
 
       {/* Bouton pour relancer l’activité avec de nouveaux points aléatoires */}
       <Box mt={4} display="flex" justifyContent="center">
