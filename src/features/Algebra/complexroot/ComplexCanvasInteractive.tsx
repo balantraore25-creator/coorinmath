@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva";
 import { Box, Text, VStack, Button } from "@chakra-ui/react";
 import { MultiHalo } from "./MultiHalo";
@@ -21,25 +21,36 @@ function computePowers(w: Point, n: number): Point[] {
   return powers;
 }
 
-function computeAngle(p: Point) {
-  const module = Math.sqrt(p.x * p.x + p.y * p.y);
-  const angleRad = Math.atan2(p.y, p.x);
-  const angleDeg = (angleRad * 180) / Math.PI;
-  const cosTheta = module !== 0 ? p.x / module : 1;
-  const sinTheta = module !== 0 ? p.y / module : 0;
-  return { module, angleRad, angleDeg, cosTheta, sinTheta };
+function computeAngleOZW(z: Point, w: Point): number {
+  const v1 = { x: -z.x, y: -z.y }; // ZO
+  const v2 = { x: w.x - z.x, y: w.y - z.y }; // ZW
+
+  const dot = v1.x * v2.x + v1.y * v2.y;
+  const norm1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+  const norm2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+
+  if (norm1 === 0 || norm2 === 0) return 0;
+  return (Math.acos(dot / (norm1 * norm2)) * 180) / Math.PI;
 }
 
-function rotationMessage(angleDeg: number): string {
-  const a = Math.round(angleDeg) % 360;
-  if (a === 90) return "Rotation de 90°";
-  if (a === 180) return "Symétrie centrale (180°)";
-  if (a === 270 || a === -90) return "Rotation de 270° ou -90°";
-  if (a === 0) return "Retour au point de départ (360°)";
-  return `Rotation de ${a}°`;
+// Transition de couleur progressive
+function interpolateColor(angle: number, progress: number): string {
+  const startColor = { r: 0, g: 255, b: 0 }; // vert
+  const midColor = { r: 255, g: 165, b: 0 }; // orange
+  const endColor = { r: 255, g: 0, b: 0 };   // rouge
+
+  let targetColor = startColor;
+  if (angle < 90) targetColor = startColor;
+  else if (angle < 150) targetColor = midColor;
+  else targetColor = endColor;
+
+  const r = Math.round(startColor.r + (targetColor.r - startColor.r) * progress);
+  const g = Math.round(startColor.g + (targetColor.g - startColor.g) * progress);
+  const b = Math.round(startColor.b + (targetColor.b - startColor.b) * progress);
+
+  return `rgb(${r},${g},${b})`;
 }
 
-// --- Composant principal ---
 interface ComplexCanvasInteractiveProps {
   z: Point;
   w: Point;
@@ -51,6 +62,17 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
   const [score, setScore] = useState<number>(0);
   const [errorIndex, setErrorIndex] = useState<number | null>(null);
   const [showFormulas, setShowFormulas] = useState<boolean>(true);
+
+  // Animation progressive de l’arc
+  const [arcProgress, setArcProgress] = useState<number>(0);
+  useEffect(() => {
+    if (arcProgress < 1) {
+      const timer = setInterval(() => {
+        setArcProgress((prev) => Math.min(prev + 0.05, 1));
+      }, 50);
+      return () => clearInterval(timer);
+    }
+  }, [arcProgress]);
 
   const safeW = 500;
   const safeH = 500;
@@ -71,6 +93,7 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
       setScore((prev) => prev + 1);
       setCurrentStep((prev) => Math.max(prev, idx + 1));
       setErrorIndex(null);
+      setArcProgress(0); // relance l’animation
     } else {
       setErrorIndex(idx);
       setTimeout(() => setErrorIndex(null), 1000);
@@ -82,67 +105,22 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
     setCurrentStep(0);
     setScore(0);
     setErrorIndex(null);
+    setArcProgress(0);
   };
 
   return (
     <Box display="flex" gap={6}>
-      {/* Canevas */}
       <Box flex="1">
         <Stage width={safeW} height={safeH} style={{ backgroundColor: "#fff" }}>
           <Layer>
-            {/* Légende affichant w */}
-            <KonvaText
-              text={`w = ${w.x} + i${w.y}`}
-              x={10}
-              y={10}
-              fontSize={16}
-              fill="blue"
-              fontStyle="bold"
-            />
-
-            {/* Formules dynamiques */}
-            {showFormulas &&
-              powers.map((p, idx) => {
-                if (idx > currentStep) return null;
-                const product = multiplyComplex(z, p);
-                return (
-                  <KonvaText
-                    key={idx}
-                    text={`z · w^${idx + 1} = ${product.x} + i${product.y}`}
-                    x={10}
-                    y={40 + idx * 20}
-                    fontSize={14}
-                    fill="purple"
-                    fontStyle="bold"
-                  />
-                );
-              })}
-
-            {/* Grille + axes */}
-            {[...Array(17)].map((_, i) => {
-              const pos = i * unit;
-              return (
-                <React.Fragment key={i}>
-                  <Line points={[pos, 0, pos, safeH]} stroke="#ddd" strokeWidth={1} />
-                  <Line points={[0, pos, safeW, pos]} stroke="#ddd" strokeWidth={1} />
-                </React.Fragment>
-              );
-            })}
-            <Line points={[0, center, safeW, center]} stroke="black" strokeWidth={2} />
-            <Line points={[center, 0, center, safeH]} stroke="black" strokeWidth={2} />
-
-            {/* Boule de z */}
             <Circle x={center + z.x * unit} y={center - z.y * unit} radius={10} fill="red" />
             <MultiHalo x={center + z.x * unit} y={center - z.y * unit} color="red" count={3} minRadius={12} maxRadius={28} speed={0.8} visible />
 
-            {/* Boules des produits z·w^n */}
             {powers.map((p, idx) => {
               if (idx > currentStep) return null;
               const product = multiplyComplex(z, p);
               const px = center + product.x * unit;
               const py = center - product.y * unit;
-
-              const { angleDeg } = computeAngle(product);
 
               const studentPos = studentPositions[idx];
               const isCorrect = studentPos && studentPos.x === product.x && studentPos.y === product.y;
@@ -154,40 +132,48 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
                     x={studentPos ? center + studentPos.x * unit : 80}
                     y={studentPos ? center - studentPos.y * unit : safeH - 50 - idx * 40}
                     radius={10}
-                    fill={isCorrect ? "green" : "blue"}
+                    fill={isError ? "red" : isCorrect ? "green" : "blue"}
                     draggable
                     onDragEnd={(e) => handleDragEnd(idx, e)}
                   />
-                  {isError && (
-                    <MultiHalo
-                      x={studentPos ? center + studentPos.x * unit : 80}
-                      y={studentPos ? center - studentPos.y * unit : safeH - 50 - idx * 40}
-                      color="red"
-                      count={2}
-                      minRadius={15}
-                      maxRadius={30}
-                      speed={1.2}
-                      visible
-                    />
-                  )}
-                  <KonvaText
-                    text={
-                      isCorrect
-                        ? "✅ Correct !"
-                        : studentPos
-                        ? "❌ Mauvais endroit, réessayez"
-                        : "Déplacez la boule ici"
-                    }
-                    x={px + 15}
-                    y={py + 15}
-                    fontSize={12}
-                    fill={isCorrect ? "green" : "red"}
-                  />
+
                   {isCorrect && (
                     <>
+                      <Line points={[center + z.x * unit, center - z.y * unit, center, center]} stroke="orange" strokeWidth={2} />
                       <Line points={[center + z.x * unit, center - z.y * unit, px, py]} stroke="orange" strokeWidth={2} />
-                      <Arc x={center} y={center} innerRadius={40} outerRadius={45} angle={angleDeg} rotation={0} stroke="orange" strokeWidth={2} opacity={0.7} />
-                      <KonvaText text={rotationMessage(angleDeg)} x={px + 15} y={py - 15} fontSize={12} fill="orange" />
+
+                      {(() => {
+                        const angleOZW = computeAngleOZW(z, product);
+                        const angleZO = (Math.atan2(-z.y, -z.x) * 180) / Math.PI;
+                        const arcColor = interpolateColor(angleOZW, arcProgress);
+
+                        // Rayon animé : grandit avec arcProgress
+                        const innerR = 15 + 10 * arcProgress;
+                        const outerR = 20 + 15 * arcProgress;
+
+                        return (
+                          <>
+                            <Arc
+                              x={center + z.x * unit}
+                              y={center - z.y * unit}
+                              innerRadius={innerR}
+                              outerRadius={outerR}
+                              angle={angleOZW * arcProgress}
+                              rotation={angleZO}
+                              stroke={arcColor}
+                              strokeWidth={3}
+                              opacity={0.8}
+                            />
+                            <KonvaText
+                              text={`∠OZW = ${angleOZW.toFixed(2)}°`}
+                              x={center + z.x * unit + 15}
+                              y={center - z.y * unit - 15}
+                              fontSize={12}
+                              fill={arcColor}
+                            />
+                          </>
+                        );
+                      })()}
                     </>
                   )}
                 </React.Fragment>
@@ -196,26 +182,24 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
           </Layer>
         </Stage>
 
-        {/* Bouton pour masquer/afficher les formules */}
         <Button mt={2} colorScheme="purple" onClick={() => setShowFormulas(!showFormulas)}>
           {showFormulas ? "Masquer les formules" : "Afficher les formules"}
         </Button>
       </Box>
 
-      {/* Panneau latéral */}
       <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md">
         <Text fontSize="lg" fontWeight="bold" mb={3}>Multiplication complexe</Text>
         <VStack align="start" gap={2}>
           <Text>z = {z.x} + i{z.y}</Text>
           <Text>w = {w.x} + i{w.y}</Text>
-                    {powers.map((p, idx) => {
+          {powers.map((p, idx) => {
             if (idx > currentStep) return null;
             const product = multiplyComplex(z, p);
-            const { module, angleDeg } = computeAngle(product);
+            const angleOZW = computeAngleOZW(z, product);
 
             return (
               <Text key={idx}>
-                z·w^{idx + 1} = {product.x} + i{product.y} | Module = {module.toFixed(2)} | Angle = {angleDeg.toFixed(2)}° → {rotationMessage(angleDeg)}
+                                z·w^{idx + 1} = {product.x} + i{product.y} | ∠OZW = {angleOZW.toFixed(2)}°
               </Text>
             );
           })}
