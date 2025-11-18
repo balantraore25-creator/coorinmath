@@ -113,9 +113,25 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
       <Box flex="1">
         <Stage width={safeW} height={safeH} style={{ backgroundColor: "#fff" }}>
           <Layer>
+            {/* Grille visible */}
+            {[...Array(17)].map((_, i) => {
+              const pos = i * unit;
+              return (
+                <React.Fragment key={i}>
+                  <Line points={[pos, 0, pos, safeH]} stroke="#888" strokeWidth={1} opacity={0.6} />
+                  <Line points={[0, pos, safeW, pos]} stroke="#888" strokeWidth={1} opacity={0.6} />
+                </React.Fragment>
+              );
+            })}
+            {/* Axes */}
+            <Line points={[0, center, safeW, center]} stroke="black" strokeWidth={2} />
+            <Line points={[center, 0, center, safeH]} stroke="black" strokeWidth={2} />
+
+            {/* Boule de z */}
             <Circle x={center + z.x * unit} y={center - z.y * unit} radius={10} fill="red" />
             <MultiHalo x={center + z.x * unit} y={center - z.y * unit} color="red" count={3} minRadius={12} maxRadius={28} speed={0.8} visible />
 
+            {/* Boules des produits z·w^n */}
             {powers.map((p, idx) => {
               if (idx > currentStep) return null;
               const product = multiplyComplex(z, p);
@@ -168,7 +184,7 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
                               text={`∠OZW = ${angleOZW.toFixed(2)}°`}
                               x={center + z.x * unit + 15}
                               y={center - z.y * unit - 15}
-                              fontSize={12}
+                                                            fontSize={12}
                               fill={arcColor}
                             />
                           </>
@@ -187,6 +203,7 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
         </Button>
       </Box>
 
+      {/* Panneau latéral */}
       <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md">
         <Text fontSize="lg" fontWeight="bold" mb={3}>Multiplication complexe</Text>
         <VStack align="start" gap={2}>
@@ -199,7 +216,7 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
 
             return (
               <Text key={idx}>
-                                z·w^{idx + 1} = {product.x} + i{product.y} | ∠OZW = {angleOZW.toFixed(2)}°
+                z·w^{idx + 1} = {product.x} + i{product.y} | ∠OZW = {angleOZW.toFixed(2)}°
               </Text>
             );
           })}
