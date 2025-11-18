@@ -21,9 +21,10 @@ function computePowers(w: Point, n: number): Point[] {
   return powers;
 }
 
-function computeAngleOZW(z: Point, w: Point): number {
-  const v1 = { x: -z.x, y: -z.y }; // ZO
-  const v2 = { x: w.x - z.x, y: w.y - z.y }; // ZW
+// Angle ∠ZOW (au sommet O, entre OZ et OW)
+function computeAngleZOW(z: Point, w: Point): number {
+  const v1 = { x: z.x, y: z.y }; // OZ
+  const v2 = { x: w.x, y: w.y }; // OW
 
   const dot = v1.x * v2.x + v1.y * v2.y;
   const norm1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
@@ -159,9 +160,8 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
                       <Line points={[center + z.x * unit, center - z.y * unit, px, py]} stroke="orange" strokeWidth={2} />
 
                       {(() => {
-                        const angleOZW = computeAngleOZW(z, product);
-                        const angleZO = (Math.atan2(-z.y, -z.x) * 180) / Math.PI;
-                        const arcColor = interpolateColor(angleOZW, arcProgress);
+                        const angleZOW = computeAngleZOW(z, product);
+                        const arcColor = interpolateColor(angleZOW, arcProgress);
 
                         // Rayon animé : grandit avec arcProgress
                         const innerR = 15 + 10 * arcProgress;
@@ -170,21 +170,21 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
                         return (
                           <>
                             <Arc
-                              x={center + z.x * unit}
-                              y={center - z.y * unit}
+                              x={center}
+                              y={center}
                               innerRadius={innerR}
                               outerRadius={outerR}
-                              angle={angleOZW * arcProgress}
-                              rotation={angleZO}
+                              angle={angleZOW * arcProgress}
+                              rotation={0}
                               stroke={arcColor}
                               strokeWidth={3}
                               opacity={0.8}
                             />
                             <KonvaText
-                              text={`∠OZW = ${angleOZW.toFixed(2)}°`}
-                              x={center + z.x * unit + 15}
-                              y={center - z.y * unit - 15}
-                                                            fontSize={12}
+                              text={`∠ZOW = ${angleZOW.toFixed(2)}°`}
+                              x={center + 20}
+                              y={center - 20}
+                              fontSize={12}
                               fill={arcColor}
                             />
                           </>
@@ -203,7 +203,7 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
         </Button>
       </Box>
 
-      {/* Panneau latéral */}
+            {/* Panneau latéral */}
       <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md">
         <Text fontSize="lg" fontWeight="bold" mb={3}>Multiplication complexe</Text>
         <VStack align="start" gap={2}>
@@ -212,11 +212,11 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
           {powers.map((p, idx) => {
             if (idx > currentStep) return null;
             const product = multiplyComplex(z, p);
-            const angleOZW = computeAngleOZW(z, product);
+            const angleZOW = computeAngleZOW(z, product);
 
             return (
               <Text key={idx}>
-                z·w^{idx + 1} = {product.x} + i{product.y} | ∠OZW = {angleOZW.toFixed(2)}°
+                z·w^{idx + 1} = {product.x} + i{product.y} | ∠ZOW = {angleZOW.toFixed(2)}°
               </Text>
             );
           })}
