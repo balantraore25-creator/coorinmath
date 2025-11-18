@@ -156,8 +156,9 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
 
                   {isCorrect && (
                     <>
-                      <Line points={[center + z.x * unit, center - z.y * unit, center, center]} stroke="orange" strokeWidth={2} />
-                      <Line points={[center + z.x * unit, center - z.y * unit, px, py]} stroke="orange" strokeWidth={2} />
+                      {/* Traits passant par O */}
+                      <Line points={[center, center, center + z.x * unit, center - z.y * unit]} stroke="orange" strokeWidth={2} />
+                      <Line points={[center, center, px, py]} stroke="orange" strokeWidth={2} />
 
                       {(() => {
                         const angleZOW = computeAngleZOW(z, product);
