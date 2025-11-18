@@ -5,6 +5,7 @@ import { Stage, Layer, Line, Circle, Arc, Text as KonvaText } from "react-konva"
 import { Box, Text, VStack, Button } from "@chakra-ui/react";
 import type { Point } from "../types";
 
+// --- Fonctions utilitaires ---
 function multiplyComplex(a: Point, b: Point): Point {
   return { x: a.x * b.x - a.y * b.y, y: a.x * b.y + a.y * b.x };
 }
@@ -30,7 +31,21 @@ function computeAngleZOW(z: Point, w: Point): number {
 }
 
 export const ComplexCanvasInteractive: React.FC<{z: Point; w: Point}> = ({ z, w }) => {
-  const safeW = 500, safeH = 500, unit = safeW/17, center = safeW/2;
+  // Responsive dimensions
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const safeW = Math.min(dimensions.width * 0.9, 500);
+  const safeH = Math.min(dimensions.height * 0.6, 500);
+  const unit = safeW / 17;
+  const center = safeW / 2;
+
   const powers = computePowers(w, 4);
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -58,13 +73,24 @@ export const ComplexCanvasInteractive: React.FC<{z: Point; w: Point}> = ({ z, w 
   }, [currentStep]);
 
   return (
-    <Box display="flex" gap={6}>
+    <Box display="flex" flexDirection={{ base: "column", md: "row" }} gap={6}>
       <Box flex="1">
         <Stage width={safeW} height={safeH} style={{ backgroundColor: "#fff" }}>
           <Layer>
+            {/* Grille */}
+            {[...Array(17)].map((_, i) => {
+              const pos = i * unit;
+              return (
+                <React.Fragment key={i}>
+                  <Line points={[pos, 0, pos, safeH]} stroke="#ccc" strokeWidth={1} opacity={0.4} />
+                  <Line points={[0, pos, safeW, pos]} stroke="#ccc" strokeWidth={1} opacity={0.4} />
+                </React.Fragment>
+              );
+            })}
+
             {/* Axes */}
-            <Line points={[0, center, safeW, center]} stroke="black" />
-            <Line points={[center, 0, center, safeH]} stroke="black" />
+            <Line points={[0, center, safeW, center]} stroke="black" strokeWidth={2} />
+            <Line points={[center, 0, center, safeH]} stroke="black" strokeWidth={2} />
 
             {/* Boule de z */}
             <Circle x={center + z.x*unit} y={center - z.y*unit} radius={10} fill="red" />
@@ -75,6 +101,21 @@ export const ComplexCanvasInteractive: React.FC<{z: Point; w: Point}> = ({ z, w 
             {/* Traits depuis O */}
             <Line points={[center, center, center + z.x*unit, center - z.y*unit]} stroke="green" />
             <Line points={[center, center, center + animatedPoint.x*unit, center - animatedPoint.y*unit]} stroke="orange" />
+
+            {/* Trajectoire circulaire temporaire */}
+            {currentStep > 0 && (
+              <Arc
+                x={center}
+                y={center}
+                innerRadius={Math.sqrt(animatedPoint.x**2 + animatedPoint.y**2) * unit - 5}
+                outerRadius={Math.sqrt(animatedPoint.x**2 + animatedPoint.y**2) * unit + 5}
+                angle={computeAngleZOW(z, animatedPoint) * arcProgress}
+                rotation={0}
+                stroke="rgba(0,0,255,0.5)"
+                strokeWidth={2}
+                dash={[6, 4]}
+              />
+            )}
 
             {/* Arc dynamique */}
             {currentStep > 0 && (
@@ -106,8 +147,8 @@ export const ComplexCanvasInteractive: React.FC<{z: Point; w: Point}> = ({ z, w 
         </Button>
       </Box>
 
-            {/* Panneau latéral */}
-      <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md">
+      {/* Panneau latéral */}
+      <Box minW={{ base: "100%", md: "300px" }} p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md">
         <Text fontSize="lg" fontWeight="bold" mb={3} color="purple.700">
           Multiplication dynamique
         </Text>
