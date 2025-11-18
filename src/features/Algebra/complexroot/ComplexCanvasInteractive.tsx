@@ -52,10 +52,13 @@ export const ComplexCanvasInteractive: React.FC<{z: Point; w: Point}> = ({ z, w 
   const [animatedPoint, setAnimatedPoint] = useState<Point>(z);
   const [arcProgress, setArcProgress] = useState(0);
 
-  // Animation vers la prochaine étape
+  // Animation cumulative
   useEffect(() => {
     if (currentStep === 0) return;
+
+    const start = currentStep === 1 ? z : multiplyComplex(z, powers[currentStep-2]);
     const target = multiplyComplex(z, powers[currentStep-1]);
+
     let progress = 0;
     const interval = setInterval(() => {
       progress += 0.05;
@@ -64,11 +67,12 @@ export const ComplexCanvasInteractive: React.FC<{z: Point; w: Point}> = ({ z, w 
         clearInterval(interval);
       }
       setAnimatedPoint({
-        x: z.x + (target.x - z.x) * progress,
-        y: z.y + (target.y - z.y) * progress,
+        x: start.x + (target.x - start.x) * progress,
+        y: start.y + (target.y - start.y) * progress,
       });
       setArcProgress(progress);
     }, 50);
+
     return () => clearInterval(interval);
   }, [currentStep]);
 
