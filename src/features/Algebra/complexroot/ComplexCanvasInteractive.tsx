@@ -156,9 +156,17 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
 
                   {isCorrect && (
                     <>
-                      {/* Traits passant par O */}
-                      <Line points={[center, center, center + z.x * unit, center - z.y * unit]} stroke="orange" strokeWidth={2} />
-                      <Line points={[center, center, px, py]} stroke="orange" strokeWidth={2} />
+                      {/* Deux traits partant de O */}
+                      <Line
+                        points={[center, center, center + z.x * unit, center - z.y * unit]}
+                        stroke="green"
+                        strokeWidth={2}
+                      />
+                      <Line
+                        points={[center, center, px, py]}
+                        stroke="orange"
+                        strokeWidth={2}
+                      />
 
                       {(() => {
                         const angleZOW = computeAngleZOW(z, product);
@@ -199,12 +207,12 @@ export const ComplexCanvasInteractive: React.FC<ComplexCanvasInteractiveProps> =
           </Layer>
         </Stage>
 
-        <Button mt={2} colorScheme="purple" onClick={() => setShowFormulas(!showFormulas)}>
+                <Button mt={2} colorScheme="purple" onClick={() => setShowFormulas(!showFormulas)}>
           {showFormulas ? "Masquer les formules" : "Afficher les formules"}
         </Button>
       </Box>
 
-            {/* Panneau latéral */}
+      {/* Panneau latéral */}
       <Box minW="300px" p={4} bg="gray.50" border="1px solid #ddd" borderRadius="md">
         <Text fontSize="lg" fontWeight="bold" mb={3}>Multiplication complexe</Text>
         <VStack align="start" gap={2}>
