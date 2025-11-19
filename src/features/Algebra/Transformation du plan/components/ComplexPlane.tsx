@@ -1,6 +1,8 @@
 //import React from 'react';
 
-type Complex = { re: number; im: number };
+//type Complex = { re: number; im: number };
+export type Complex = { re: number; im: number };
+
 
 interface Props {
   z: Complex;
