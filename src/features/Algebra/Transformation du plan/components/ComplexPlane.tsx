@@ -1,5 +1,5 @@
-// ComplexPlane.tsx
-import type { ReactElement } from "react";
+// ComplexPlanePanZoom.tsx
+import React, { useState } from "react";
 
 export type Complex = { re: number; im: number };
 
@@ -14,18 +14,16 @@ interface Props {
 
 const width = 640;
 const height = 640;
-const origin = { x: width / 2, y: height / 2 };
-const scale = 40;
 const maxUnits = 8;
 
-function toSVG({ re, im }: Complex) {
+function toSVG({ re, im }: Complex, scale: number, origin: { x: number; y: number }) {
   return {
     x: origin.x + re * scale,
     y: origin.y - im * scale,
   };
 }
 
-export default function ComplexPlane({
+export default function ComplexPlanePanZoom({
   z,
   fz,
   a,
@@ -33,12 +31,18 @@ export default function ComplexPlane({
   showGrid = true,
   showProjections = true,
 }: Props) {
-  const Z = toSVG(z);
-  const FZ = toSVG(fz);
-  const A = a ? toSVG(a) : null;
+  const [scale, setScale] = useState(40); // zoom
+  const [offsetX, setOffsetX] = useState(width / 2); // translation horizontale
+  const [offsetY, setOffsetY] = useState(height / 2); // translation verticale
+
+  const origin = { x: offsetX, y: offsetY };
+
+  const Z = toSVG(z, scale, origin);
+  const FZ = toSVG(fz, scale, origin);
+  const A = a ? toSVG(a, scale, origin) : null;
 
   // Grille
-  const gridLines: ReactElement[] = [];
+  const gridLines: React.ReactElement[] = [];
   if (showGrid) {
     for (let i = 0; i <= width / scale; i++) {
       const x = i * scale;
@@ -51,7 +55,7 @@ export default function ComplexPlane({
   }
 
   // Graduations
-  const ticks: ReactElement[] = [];
+  const ticks: React.ReactElement[] = [];
   for (let k = -maxUnits; k <= maxUnits; k++) {
     if (k !== 0) {
       ticks.push(
@@ -99,62 +103,105 @@ export default function ComplexPlane({
   }
 
   return (
-    <svg width={width} height={height} style={{ border: "1px solid #ccc" }}>
-      {showGrid && gridLines}
+    <div style={{ textAlign: "center" }}>
+      {/* Contrôles interactifs */}
+      <div style={{ marginBottom: "10px" }}>
+        <label>
+          Zoom (px/unité) : {scale}
+          <input
+            type="range"
+            min="20"
+            max="80"
+            step="5"
+            value={scale}
+            onChange={(e) => setScale(parseInt(e.target.value))}
+          />
+        </label>
+      </div>
+      <div style={{ marginBottom: "10px" }}>
+        <label>
+          Translation X : {offsetX}
+          <input
+            type="range"
+            min="0"
+            max={width}
+            step="10"
+            value={offsetX}
+            onChange={(e) => setOffsetX(parseInt(e.target.value))}
+          />
+        </label>
+      </div>
+      <div style={{ marginBottom: "10px" }}>
+        <label>
+          Translation Y : {offsetY}
+          <input
+            type="range"
+            min="0"
+            max={height}
+            step="10"
+            value={offsetY}
+            onChange={(e) => setOffsetY(parseInt(e.target.value))}
+          />
+        </label>
+      </div>
 
-      {/* Axes */}
-      <defs>
-        <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5"
-          orient="auto" markerUnits="strokeWidth">
-          <path d="M0,0 L10,5 L0,10 Z" fill="black" />
-        </marker>
-      </defs>
+      <svg width={width} height={height} style={{ border: "1px solid #ccc" }}>
+        {showGrid && gridLines}
 
-      <line x1={0} y1={origin.y} x2={width} y2={origin.y} stroke="black" markerEnd="url(#arrow)" />
-      <line x1={origin.x} y1={height} x2={origin.x} y2={0} stroke="black" markerEnd="url(#arrow)" />
+        {/* Axes avec flèches */}
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5"
+            orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L10,5 L0,10 Z" fill="black" />
+          </marker>
+        </defs>
 
-      <text x={width - 20} y={origin.y - 5} fontSize="12">U</text>
-      <text x={origin.x + 5} y={15} fontSize="12">V</text>
-      <circle cx={origin.x} cy={origin.y} r={3} fill="black" />
-      <text x={origin.x + 5} y={origin.y - 5} fontSize="12">O</text>
+        <line x1={0} y1={origin.y} x2={width} y2={origin.y} stroke="black" markerEnd="url(#arrow)" />
+        <line x1={origin.x} y1={height} x2={origin.x} y2={0} stroke="black" markerEnd="url(#arrow)" />
 
-      {ticks}
+        <text x={width - 20} y={origin.y - 5} fontSize="12">U</text>
+        <text x={origin.x + 5} y={15} fontSize="12">V</text>
+        <circle cx={origin.x} cy={origin.y} r={3} fill="black" />
+        <text x={origin.x + 5} y={origin.y - 5} fontSize="12">O</text>
 
-      {/* Points */}
-      <circle cx={Z.x} cy={Z.y} r={5} fill="blue" />
-      <text x={Z.x + 5} y={Z.y - 5}>z</text>
+        {ticks}
 
-      <circle cx={FZ.x} cy={FZ.y} r={5} fill="green" />
-      <text x={FZ.x + 5} y={FZ.y - 5}>f(z)</text>
+        {/* Points */}
+        <circle cx={Z.x} cy={Z.y} r={5} fill="blue" />
+        <text x={Z.x + 5} y={Z.y - 5}>z</text>
 
-      {A && (
-        <>
-          <circle cx={A.x} cy={A.y} r={5} fill="red" />
-          <text x={A.x + 5} y={A.y - 5}>a</text>
-        </>
-      )}
+        <circle cx={FZ.x} cy={FZ.y} r={5} fill="green" />
+        <text x={FZ.x + 5} y={FZ.y - 5}>f(z)</text>
 
-      {/* Projections */}
-      {showProjections && (
-        <>
-          <line x1={Z.x} y1={Z.y} x2={Z.x} y2={origin.y} stroke="blue" strokeDasharray="2" />
-          <line x1={Z.x} y1={Z.y} x2={origin.x} y2={Z.y} stroke="blue" strokeDasharray="2" />
-          <text x={Z.x} y={origin.y + 30} fontSize="10">{z.re}</text>
-          <text x={origin.x - 25} y={Z.y} fontSize="10">{z.im}</text>
+        {A && (
+          <>
+            <circle cx={A.x} cy={A.y} r={5} fill="red" />
+            <text x={A.x + 5} y={A.y - 5}>a</text>
+          </>
+        )}
 
-          <line x1={FZ.x} y1={FZ.y} x2={FZ.x} y2={origin.y} stroke="green" strokeDasharray="2" />
-          <line x1={FZ.x} y1={FZ.y} x2={origin.x} y2={FZ.y} stroke="green" strokeDasharray="2" />
-          <text x={FZ.x} y={origin.y + 30} fontSize="10">{fz.re}</text>
-          <text x={origin.x - 25} y={FZ.y} fontSize="10">{fz.im}</text>
-        </>
-      )}
+        {/* Projections */}
+        {showProjections && (
+          <>
+            <line x1={Z.x} y1={Z.y} x2={Z.x} y2={origin.y} stroke="blue" strokeDasharray="2" />
+            <line x1={Z.x} y1={Z.y} x2={origin.x} y2={Z.y} stroke="blue" strokeDasharray="2" />
+            <text x={Z.x} y={origin.y + 30} fontSize="10">{z.re}</text>
+            <text x={origin.x - 25} y={Z.y} fontSize="10">{z.im}</text>
 
-      {/* Vecteurs */}
-      <line x1={Z.x} y1={Z.y} x2={FZ.x} y2={FZ.y} stroke="gray" strokeDasharray="4" />
-      {A && <line x1={A.x} y1={A.y} x2={Z.x} y2={Z.y} stroke="orange" />}
-      {A && <line x1={A.x} y1={A.y} x2={FZ.x} y2={FZ.y} stroke="orange" />}
+            <line x1={FZ.x} y1={FZ.y} x2={FZ.x} y2={origin.y} stroke="green" strokeDasharray="2" />
+            <line x1={FZ.x} y1={FZ.y} x2={origin.x} y2={FZ.y} stroke="green" strokeDasharray="2" />
+            <text x={FZ.x} y={origin.y + 30} fontSize="10">{fz.re}</text>
+            <text x={origin.x - 25} y={FZ.y} fontSize="10">{fz.im}</text>
+          </>
+        )}
 
-      {label && <text x={10} y={20} fontWeight="bold">{label}</text>}
-    </svg>
+        {/* Vecteurs */}
+        <line x1={Z.x} y1={Z.y} x2={FZ.x} y2={FZ.y} stroke="gray" strokeDasharray="4" />
+        {A && <line x1={A.x} y1={A.y} x2={Z.x} y2={Z.y} stroke="orange" />}
+        {A && <line x1={A.x} y1={A.y} x2={FZ.x} y2={FZ.y} stroke="orange" />}
+
+        {label && <text x={10} y={20} fontWeight="bold">{label}</text>}
+      </svg>
+    </div>
   );
 }
