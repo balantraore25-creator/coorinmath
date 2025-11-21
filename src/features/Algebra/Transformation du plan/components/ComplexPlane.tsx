@@ -12,11 +12,11 @@ interface Props {
   showProjections?: boolean;
 }
 
-const width = 400;
-const height = 400;
+const width = 640;
+const height = 640;
 const origin = { x: width / 2, y: height / 2 };
 const scale = 40;
-const maxUnits = 5;
+const maxUnits = 8;
 
 function toSVG({ re, im }: Complex) {
   return {
