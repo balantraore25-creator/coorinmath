@@ -1,4 +1,3 @@
-// ComplexPlanePanZoom.tsx
 import React, { useState } from "react";
 
 export type Complex = { re: number; im: number };
@@ -10,11 +9,10 @@ interface Props {
   label?: string;
   showGrid?: boolean;
   showProjections?: boolean;
+  width?: number;
+  height?: number;
+  maxUnits?: number;
 }
-
-const width = 640;
-const height = 640;
-const maxUnits = 8;
 
 function toSVG({ re, im }: Complex, scale: number, origin: { x: number; y: number }) {
   return {
@@ -30,10 +28,13 @@ export default function ComplexPlanePanZoom({
   label,
   showGrid = true,
   showProjections = true,
+  width = 640,
+  height = 640,
+  maxUnits = 8,
 }: Props) {
-  const [scale, setScale] = useState(40); // zoom
-  const [offsetX, setOffsetX] = useState(width / 2); // translation horizontale
-  const [offsetY, setOffsetY] = useState(height / 2); // translation verticale
+  const [scale, setScale] = useState(40);
+  const [offsetX, setOffsetX] = useState(width / 2);
+  const [offsetY, setOffsetY] = useState(height / 2);
 
   const origin = { x: offsetX, y: offsetY };
 
@@ -106,65 +107,62 @@ export default function ComplexPlanePanZoom({
     <div style={{ textAlign: "center" }}>
       {/* Contrôles interactifs */}
       <div style={{ marginBottom: "10px" }}>
-        <label>
-          Zoom (px/unité) : {scale}
-          <input
-            type="range"
-            min="20"
-            max="80"
-            step="5"
-            value={scale}
-            onChange={(e) => setScale(parseInt(e.target.value))}
-          />
-        </label>
+        <label htmlFor="zoom">Zoom (px/unité) : {scale}</label>
+        <input
+          id="zoom"
+          type="range"
+          min="20"
+          max="80"
+          step="5"
+          value={scale}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setScale(parseInt(e.target.value))
+          }
+        />
       </div>
       <div style={{ marginBottom: "10px" }}>
-        <label>
-          Translation X : {offsetX}
-          <input
-            type="range"
-            min="0"
-            max={width}
-            step="10"
-            value={offsetX}
-            onChange={(e) => setOffsetX(parseInt(e.target.value))}
-          />
-        </label>
+        <label htmlFor="tx">Translation X : {offsetX}</label>
+        <input
+          id="tx"
+          type="range"
+          min="0"
+          max={width}
+          step="10"
+          value={offsetX}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setOffsetX(parseInt(e.target.value))
+          }
+        />
       </div>
       <div style={{ marginBottom: "10px" }}>
-        <label>
-          Translation Y : {offsetY}
-          <input
-            type="range"
-            min="0"
-            max={height}
-            step="10"
-            value={offsetY}
-            onChange={(e) => setOffsetY(parseInt(e.target.value))}
-          />
-        </label>
+        <label htmlFor="ty">Translation Y : {offsetY}</label>
+        <input
+          id="ty"
+          type="range"
+          min="0"
+          max={height}
+          step="10"
+          value={offsetY}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setOffsetY(parseInt(e.target.value))
+          }
+        />
       </div>
 
+      {/* SVG */}
       <svg width={width} height={height} style={{ border: "1px solid #ccc" }}>
         {showGrid && gridLines}
+        {ticks}
 
-        {/* Axes avec flèches */}
+        {/* Axes */}
         <defs>
           <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5"
             orient="auto" markerUnits="strokeWidth">
             <path d="M0,0 L10,5 L0,10 Z" fill="black" />
           </marker>
         </defs>
-
         <line x1={0} y1={origin.y} x2={width} y2={origin.y} stroke="black" markerEnd="url(#arrow)" />
         <line x1={origin.x} y1={height} x2={origin.x} y2={0} stroke="black" markerEnd="url(#arrow)" />
-
-        <text x={width - 20} y={origin.y - 5} fontSize="12">U</text>
-        <text x={origin.x + 5} y={15} fontSize="12">V</text>
-        <circle cx={origin.x} cy={origin.y} r={3} fill="black" />
-        <text x={origin.x + 5} y={origin.y - 5} fontSize="12">O</text>
-
-        {ticks}
 
         {/* Points */}
         <circle cx={Z.x} cy={Z.y} r={5} fill="blue" />
@@ -180,7 +178,7 @@ export default function ComplexPlanePanZoom({
           </>
         )}
 
-        {/* Projections */}
+                {/* Projections */}
         {showProjections && (
           <>
             <line x1={Z.x} y1={Z.y} x2={Z.x} y2={origin.y} stroke="blue" strokeDasharray="2" />
@@ -200,6 +198,7 @@ export default function ComplexPlanePanZoom({
         {A && <line x1={A.x} y1={A.y} x2={Z.x} y2={Z.y} stroke="orange" />}
         {A && <line x1={A.x} y1={A.y} x2={FZ.x} y2={FZ.y} stroke="orange" />}
 
+        {/* Label de la transformation */}
         {label && <text x={10} y={20} fontWeight="bold">{label}</text>}
       </svg>
     </div>

@@ -11,17 +11,21 @@ import {
 import ComplexPlanePanZoom from "./ComplexPlane";
 import type { Complex } from "./ComplexPlane";
 
-export default function SymmetryCenter() {
-  const [z, setZ] = useState<Complex>({ re: 3, im: 2 });
-  const [a, setA] = useState<Complex>({ re: 1, im: 1 });
+export default function HomothetyInteractive() {
+  const [z, setZ] = useState<Complex>({ re: 2, im: 1 });
+  const [a, setA] = useState<Complex>({ re: 1, im: 2 });
+  const [k, setK] = useState<number>(2);
 
-  const fz: Complex = { re: 2 * a.re - z.re, im: 2 * a.im - z.im };
+  const fz: Complex = {
+    re: a.re + k * (z.re - a.re),
+    im: a.im + k * (z.im - a.im),
+  };
 
   return (
     <Flex direction="column" align="center" gap={6}>
       <Box p={6} borderWidth="1px" borderRadius="lg" shadow="md" w="md">
         <Heading size="md" mb={6} textAlign="center">
-          Symétrie par rapport à un centre
+          Homothétie dans le plan complexe
         </Heading>
 
         <VStack gap={4} align="stretch">
@@ -68,18 +72,26 @@ export default function SymmetryCenter() {
               }
             />
           </Field.Root>
+
+          <Field.Root>
+            <Field.Label>k</Field.Label>
+            <Input
+              type="number"
+              value={k}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setK(parseFloat(e.target.value))
+              }
+            />
+          </Field.Root>
         </VStack>
 
         <Box mt={6} textAlign="center">
-          <Text>f(z) = 2a - z</Text>
-          <Text>
-            z = {z.re} + {z.im}i
-          </Text>
-          <Text>
-            a = {a.re} + {a.im}i
-          </Text>
+          <Text>f(z) = a + k·(z - a)</Text>
+          <Text>z = {z.re} + {z.im}i</Text>
+          <Text>a = {a.re} + {a.im}i</Text>
+          <Text>k = {k}</Text>
           <Text fontWeight="bold">
-            f(z) = {fz.re} + {fz.im}i
+            f(z) = {fz.re.toFixed(2)} + {fz.im.toFixed(2)}i
           </Text>
         </Box>
       </Box>
@@ -88,7 +100,7 @@ export default function SymmetryCenter() {
         z={z}
         fz={fz}
         a={a}
-        label="Symétrie f(z) = 2a - z"
+        label="Homothétie f(z) = a + k(z - a)"
         showGrid
         showProjections
       />
