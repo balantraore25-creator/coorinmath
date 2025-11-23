@@ -72,12 +72,8 @@ export default function ComplexPlanePanZoom({
   return (
     <Flex direction="column" align="center" gap={6}>
       {/* Contrôles interactifs regroupés dans un Grid responsive avec Cards */}
-      <Grid
-        templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
-        gap={6}
-        w="full"
-        maxW="lg"
-      >
+      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6} w="full" maxW="lg">
+        
         {/* Zoom */}
         <GridItem>
           <Card.Root shadow="md" borderRadius="lg">
@@ -112,6 +108,9 @@ export default function ComplexPlanePanZoom({
                 />
               </Slider.Root>
             </Card.Body>
+            <Card.Footer>
+              <Text fontSize="sm" color="gray.600">Zoom actuel : {scale}px/unité</Text>
+            </Card.Footer>
           </Card.Root>
         </GridItem>
 
@@ -148,6 +147,9 @@ export default function ComplexPlanePanZoom({
                 />
               </Slider.Root>
             </Card.Body>
+            <Card.Footer>
+              <Text fontSize="sm" color="gray.600">Décalage X : {offsetX}</Text>
+            </Card.Footer>
           </Card.Root>
         </GridItem>
 
@@ -188,6 +190,9 @@ export default function ComplexPlanePanZoom({
                 </Slider.Root>
               </Flex>
             </Card.Body>
+            <Card.Footer>
+              <Text fontSize="sm" color="gray.600">Décalage Y : {offsetY}</Text>
+            </Card.Footer>
           </Card.Root>
         </GridItem>
       </Grid>
@@ -199,15 +204,7 @@ export default function ComplexPlanePanZoom({
 
           {/* Axes */}
           <defs>
-            <marker
-              id="arrow"
-              markerWidth="10"
-              markerHeight="10"
-              refX="5"
-              refY="5"
-              orient="auto"
-              markerUnits="strokeWidth"
-            >
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto" markerUnits="strokeWidth">
               <path d="M0,0 L10,5 L0,10 Z" fill="black" />
             </marker>
           </defs>
@@ -231,13 +228,7 @@ export default function ComplexPlanePanZoom({
           {/* Projections */}
           {showProjections && (
             <>
-              {/* Projections de z */}
-              <line x1={Z.x} y1={Z.y} x2={Z.x} y2={origin.y} stroke="blue" strokeDasharray="2" />
-              <line x1={Z.x} y1={Z.y} x2={origin.x} y2={Z.y} stroke="blue" strokeDasharray="2" />
-              <text x={Z.x} y={origin.y + 30} fontSize="10">{z.re}</text>
-              <text x={origin.x - 25} y={Z.y} fontSize="10">{z.im}</text>
-
-                            {/* Projections de f(z) */}
+                           {/* Projections de f(z) */}
               <line x1={FZ.x} y1={FZ.y} x2={FZ.x} y2={origin.y} stroke="green" strokeDasharray="2" />
               <line x1={FZ.x} y1={FZ.y} x2={origin.x} y2={FZ.y} stroke="green" strokeDasharray="2" />
               <text x={FZ.x} y={origin.y + 30} fontSize="10">{fz.re}</text>
@@ -254,6 +245,25 @@ export default function ComplexPlanePanZoom({
           {label && <text x={10} y={20} fontWeight="bold">{label}</text>}
         </svg>
       </Box>
+
+      {/* Footer global pour afficher les coordonnées */}
+      <Card.Root shadow="sm" borderRadius="md" w="full" maxW="lg">
+        <Card.Header>
+          <Text fontWeight="semibold">Coordonnées actuelles</Text>
+        </Card.Header>
+        <Card.Body>
+          <HStack gap={8}>
+            <Text color="blue.600">z = ({z.re}, {z.im})</Text>
+            <Text color="green.600">f(z) = ({fz.re}, {fz.im})</Text>
+            {a && <Text color="red.600">a = ({a.re}, {a.im})</Text>}
+          </HStack>
+        </Card.Body>
+        <Card.Footer>
+          <Text fontSize="sm" color="gray.600">
+            Zoom : {scale}px/unité · Décalage X : {offsetX} · Décalage Y : {offsetY}
+          </Text>
+        </Card.Footer>
+      </Card.Root>
     </Flex>
   )
 }
