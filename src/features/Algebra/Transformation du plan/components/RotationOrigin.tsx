@@ -1,43 +1,39 @@
-import { useState } from "react";
-import {
-  Box,
-  Flex,
-  Heading,
-  VStack,
-  Text,
-  Field,
-  Input,
-} from "@chakra-ui/react";
+"use client"
+
+import { useState, useMemo } from "react"
+import { Field, Input, Text, Separator } from "@chakra-ui/react"
 import ComplexPlanePanZoom from "./ComplexPlane";
 import type { Complex } from "./ComplexPlane";
+import TransformationLayout from "./TransformationLayout"
 
 export default function RotationOrigin() {
-  const [z, setZ] = useState<Complex>({ re: 1, im: 1 });
-  const [theta, setTheta] = useState<number>(Math.PI / 2); // 90°
+  const [z, setZ] = useState<Complex>({ re: 1, im: 1 })
+  const [theta, setTheta] = useState<number>(Math.PI / 2) // 90°
+  const [k, setK] = useState<number>(1)
 
-  const eitheta: Complex = { re: Math.cos(theta), im: Math.sin(theta) };
+  // ✅ f(z) = k·e^(iθ)·z
+  const fz = useMemo<Complex>(() => {
+    const eitheta = { re: Math.cos(theta), im: Math.sin(theta) }
+    return {
+      re: k * (eitheta.re * z.re - eitheta.im * z.im),
+      im: k * (eitheta.re * z.im + eitheta.im * z.re),
+    }
+  }, [z, theta, k])
 
-  const fz: Complex = {
-    re: eitheta.re * z.re - eitheta.im * z.im,
-    im: eitheta.re * z.im + eitheta.im * z.re,
-  };
+  const formatComplex = (c: Complex) =>
+    `${c.re.toFixed(2)}${c.im >= 0 ? " + " : " - "}${Math.abs(c.im).toFixed(2)}i`
 
   return (
-    <Flex direction="column" align="center" gap={6}>
-      <Box p={6} borderWidth="1px" borderRadius="lg" shadow="md" w="md">
-        <Heading size="md" mb={6} textAlign="center">
-          Rotation autour de l’origine
-        </Heading>
-
-        <VStack gap={4} align="stretch">
+    <TransformationLayout
+      title="Rotation autour de l’origine"
+      form={
+        <>
           <Field.Root>
             <Field.Label>z.re</Field.Label>
             <Input
               type="number"
               value={z.re}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setZ({ ...z, re: parseFloat(e.target.value) })
-              }
+              onChange={(e) => setZ({ ...z, re: parseFloat(e.target.value) || 0 })}
             />
           </Field.Root>
 
@@ -46,43 +42,54 @@ export default function RotationOrigin() {
             <Input
               type="number"
               value={z.im}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setZ({ ...z, im: parseFloat(e.target.value) })
-              }
+              onChange={(e) => setZ({ ...z, im: parseFloat(e.target.value) || 0 })}
             />
           </Field.Root>
+
+          <Separator />
 
           <Field.Root>
             <Field.Label>θ (radians)</Field.Label>
             <Input
               type="number"
               value={theta}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setTheta(parseFloat(e.target.value))
-              }
+              onChange={(e) => setTheta(parseFloat(e.target.value) || 0)}
             />
           </Field.Root>
-        </VStack>
 
-        <Box mt={6} textAlign="center">
-          <Text>f(z) = e^(iθ) · z</Text>
-          <Text>θ = {theta} rad</Text>
-          <Text>
-            z = {z.re} + {z.im}i
+          <Field.Root>
+            <Field.Label>k (facteur)</Field.Label>
+            <Input
+              type="number"
+              value={k}
+              onChange={(e) => setK(parseFloat(e.target.value) || 0)}
+            />
+          </Field.Root>
+        </>
+      }
+      results={
+        <>
+          <Text fontSize="lg" fontWeight="semibold">f(z) = k·e^(iθ)·z</Text>
+          <Text mt={2}>θ = {theta.toFixed(2)} rad</Text>
+          <Text>k = {k}</Text>
+          <Text>z = {formatComplex(z)}</Text>
+          <Text fontWeight="bold" mt={2}>
+            f(z) = {formatComplex(fz)}
           </Text>
-          <Text fontWeight="bold">
-            f(z) = {fz.re.toFixed(2)} + {fz.im.toFixed(2)}i
+          <Text mt={2} fontStyle="italic" color="gray.600">
+            La rotation multiplie z par e^(iθ), puis applique le facteur k.
           </Text>
-        </Box>
-      </Box>
-
-      <ComplexPlanePanZoom
-        z={z}
-        fz={fz}
-        label="Rotation f(z) = e^(iθ)·z"
-        showGrid
-        showProjections
-      />
-    </Flex>
-  );
+        </>
+      }
+      plane={
+        <ComplexPlanePanZoom
+          z={z}
+          fz={fz}
+          label="Rotation f(z) = k·e^(iθ)·z"
+          showGrid
+          showProjections
+        />
+      }
+    />
+  )
 }

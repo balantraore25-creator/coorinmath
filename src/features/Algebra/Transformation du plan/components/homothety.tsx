@@ -1,42 +1,39 @@
-import { useState } from "react";
-import {
-  Box,
-  Flex,
-  Heading,
-  VStack,
-  Text,
-  Field,
-  Input,
-} from "@chakra-ui/react";
+"use client"
+
+import { useState, useMemo } from "react"
+import { Field, Input, Text, Separator } from "@chakra-ui/react"
 import ComplexPlanePanZoom from "./ComplexPlane";
 import type { Complex } from "./ComplexPlane";
+import TransformationLayout from "./TransformationLayout"
 
 export default function HomothetyInteractive() {
-  const [z, setZ] = useState<Complex>({ re: 2, im: 1 });
-  const [a, setA] = useState<Complex>({ re: 1, im: 2 });
-  const [k, setK] = useState<number>(2);
+  const [z, setZ] = useState<Complex>({ re: 2, im: 1 })
+  const [a, setA] = useState<Complex>({ re: 1, im: 2 })
+  const [k, setK] = useState<number>(2)
 
-  const fz: Complex = {
-    re: a.re + k * (z.re - a.re),
-    im: a.im + k * (z.im - a.im),
-  };
+  // ✅ f(z) = a + k·(z - a)
+  const fz = useMemo<Complex>(
+    () => ({
+      re: a.re + k * (z.re - a.re),
+      im: a.im + k * (z.im - a.im),
+    }),
+    [z, a, k]
+  )
+
+  const formatComplex = (c: Complex) =>
+    `${c.re.toFixed(2)}${c.im >= 0 ? " + " : " - "}${Math.abs(c.im).toFixed(2)}i`
 
   return (
-    <Flex direction="column" align="center" gap={6}>
-      <Box p={6} borderWidth="1px" borderRadius="lg" shadow="md" w="md">
-        <Heading size="md" mb={6} textAlign="center">
-          Homothétie dans le plan complexe
-        </Heading>
-
-        <VStack gap={4} align="stretch">
+    <TransformationLayout
+      title="Homothétie dans le plan complexe"
+      form={
+        <>
           <Field.Root>
             <Field.Label>z.re</Field.Label>
             <Input
               type="number"
               value={z.re}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setZ({ ...z, re: parseFloat(e.target.value) })
-              }
+              onChange={(e) => setZ({ ...z, re: parseFloat(e.target.value) || 0 })}
             />
           </Field.Root>
 
@@ -45,20 +42,18 @@ export default function HomothetyInteractive() {
             <Input
               type="number"
               value={z.im}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setZ({ ...z, im: parseFloat(e.target.value) })
-              }
+              onChange={(e) => setZ({ ...z, im: parseFloat(e.target.value) || 0 })}
             />
           </Field.Root>
+
+          <Separator />
 
           <Field.Root>
             <Field.Label>a.re</Field.Label>
             <Input
               type="number"
               value={a.re}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setA({ ...a, re: parseFloat(e.target.value) })
-              }
+              onChange={(e) => setA({ ...a, re: parseFloat(e.target.value) || 0 })}
             />
           </Field.Root>
 
@@ -67,43 +62,46 @@ export default function HomothetyInteractive() {
             <Input
               type="number"
               value={a.im}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setA({ ...a, im: parseFloat(e.target.value) })
-              }
+              onChange={(e) => setA({ ...a, im: parseFloat(e.target.value) || 0 })}
             />
           </Field.Root>
 
+          <Separator />
+
           <Field.Root>
-            <Field.Label>k</Field.Label>
+            <Field.Label>k (facteur d’homothétie)</Field.Label>
             <Input
               type="number"
               value={k}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setK(parseFloat(e.target.value))
-              }
+              onChange={(e) => setK(parseFloat(e.target.value) || 0)}
             />
           </Field.Root>
-        </VStack>
-
-        <Box mt={6} textAlign="center">
-          <Text>f(z) = a + k·(z - a)</Text>
-          <Text>z = {z.re} + {z.im}i</Text>
-          <Text>a = {a.re} + {a.im}i</Text>
+        </>
+      }
+      results={
+        <>
+          <Text fontSize="lg" fontWeight="semibold">f(z) = a + k·(z - a)</Text>
+          <Text mt={2}>z = {formatComplex(z)}</Text>
+          <Text>a = {formatComplex(a)}</Text>
           <Text>k = {k}</Text>
-          <Text fontWeight="bold">
-            f(z) = {fz.re.toFixed(2)} + {fz.im.toFixed(2)}i
+          <Text fontWeight="bold" mt={2}>
+            f(z) = {formatComplex(fz)}
           </Text>
-        </Box>
-      </Box>
-
-      <ComplexPlanePanZoom
-        z={z}
-        fz={fz}
-        a={a}
-        label="Homothétie f(z) = a + k(z - a)"
-        showGrid
-        showProjections
-      />
-    </Flex>
-  );
+          <Text mt={2} fontStyle="italic" color="gray.600">
+            L’homothétie agrandit ou réduit z par rapport au centre a avec le facteur k.
+          </Text>
+        </>
+      }
+      plane={
+        <ComplexPlanePanZoom
+          z={z}
+          fz={fz}
+          a={a}
+          label="Homothétie f(z) = a + k(z - a)"
+          showGrid
+          showProjections
+        />
+      }
+    />
+  )
 }
