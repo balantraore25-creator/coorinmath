@@ -45,6 +45,7 @@ import { ComplexActivitytwo } from './features/Algebra/moduleetargument/ComplexA
 import { ComplexActivityRotation} from './features/Algebra/multiplicationetrotation/ComplexActivityRotation'
 import { ComplexActivityRoot } from './features/Algebra/complexroot/ComplexActivityRoot'
 import Transform from './features/Algebra/Transformation du plan/Transform'
+import ComplexGeometryTablesAccordionInteractive from './features/Algebra/configurations du plan/components/ComplexGeometryTablesAccordionInteractive'
 //import { ComplexRotationActivity } from './features/Algebra/multiplicationetrotation/ComplexRotationActivity'
 //import { ComplexCanvas } from './features/Algebra/Multiplicationetrotation/components/ComplexCanvas'
 
@@ -120,6 +121,7 @@ function App() {
                      <Route path="complexnumbers/rotation" element={<ComplexActivityRotation />} />
                      <Route path="complexnumbers/root" element={<ComplexActivityRoot />} />
                      <Route path="complexnumbers/transform" element={<Transform />} />
+                     <Route path="complexnumbers/configuration" element={<ComplexGeometryTablesAccordionInteractive />} />
                    
                    
                   </Route>
