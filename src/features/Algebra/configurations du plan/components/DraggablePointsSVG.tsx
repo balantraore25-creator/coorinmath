@@ -34,19 +34,19 @@ export const DraggablePointsSVG = () => {
   const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     if (!dragging) return
     const rect = e.currentTarget.getBoundingClientRect()
-    let x = e.clientX - rect.left - 100
-    let y = e.clientY - rect.top - 100
+    let x = e.clientX - rect.left - 200
+    let y = e.clientY - rect.top - 200
 
-    const gridSize = 10
+    const gridSize = 20
     const snapX = Math.round(x / gridSize) * gridSize
     const snapY = Math.round(y / gridSize) * gridSize
 
-    setHighlightX(Math.abs(x - snapX) < 5 ? snapX : null)
-    setHighlightY(Math.abs(y - snapY) < 5 ? snapY : null)
-    setNearGrid(Math.abs(x - snapX) < 5 && Math.abs(y - snapY) < 5 ? dragging : null)
+    setHighlightX(Math.abs(x - snapX) < 8 ? snapX : null)
+    setHighlightY(Math.abs(y - snapY) < 8 ? snapY : null)
+    setNearGrid(Math.abs(x - snapX) < 8 && Math.abs(y - snapY) < 8 ? dragging : null)
 
-    if (Math.abs(x - snapX) < 5) x = snapX
-    if (Math.abs(y - snapY) < 5) y = snapY
+    if (Math.abs(x - snapX) < 10) x = snapX
+    if (Math.abs(y - snapY) < 10) y = snapY
 
     const newPoint = { x, y }
     if (dragging === "A") setA(newPoint)
@@ -71,7 +71,7 @@ export const DraggablePointsSVG = () => {
   const center = circumcenter(A,B,C)
   const radius = Math.sqrt((A.x-center.x)**2 + (A.y-center.y)**2)
   const distD = Math.sqrt((D.x-center.x)**2 + (D.y-center.y)**2)
-  const cocyclic = Math.abs(distD - radius) < 5
+  const cocyclic = Math.abs(distD - radius) < 10
 
   // Rapport complexe
   const complexRatio = {
@@ -87,56 +87,62 @@ export const DraggablePointsSVG = () => {
   return (
     <Stack direction="column" gap={3} align="start">
       {/* SVG principal */}
-      <svg viewBox="-100 -100 200 200" width="100%" height="300px"
+      <svg viewBox="-200 -200 400 400" width="100%" height="400px"
         onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}
         style={{ cursor: dragging ? "grabbing" : "default" }}>
         
-        {/* Grille dense */}
+        {/* Grille agrandie */}
         {Array.from({ length: 21 }).map((_, i) => {
-          const x = (i-10) * 10
-          return <line key={`gx${i}`} x1={x} y1={-100} x2={x} y2={100}
+          const x = (i-10) * 20
+          return <line key={`gx${i}`} x1={x} y1={-200} x2={x} y2={200}
             stroke={highlightX === x ? "orange" : grid}
             strokeWidth={highlightX === x ? 2 : 0.5}/>
         })}
         {Array.from({ length: 21 }).map((_, i) => {
-          const y = (i-10) * 10
-          return <line key={`gy${i}`} x1={-100} y1={y} x2={100} y2={y}
+          const y = (i-10) * 20
+          return <line key={`gy${i}`} x1={-200} y1={y} x2={200} y2={y}
             stroke={highlightY === y ? "orange" : grid}
             strokeWidth={highlightY === y ? 2 : 0.5}/>
         })}
 
-        {/* Repère orthonormé avec graduations numérotées */}
-        <line x1={-100} y1={0} x2={100} y2={0} stroke="black" strokeWidth={1} markerEnd="url(#arrowX)" />
-        <line x1={0} y1={100} x2={0} y2={-100} stroke="black" strokeWidth={1} markerEnd="url(#arrowY)" />
+        {/* Axes */}
+        <line x1={-200} y1={0} x2={200} y2={0} stroke="black" strokeWidth={1} markerEnd="url(#arrowX)" />
+        <line x1={0} y1={200} x2={0} y2={-200} stroke="black" strokeWidth={1} markerEnd="url(#arrowY)" />
+
+        {/* Graduations en unités entières */}
         {Array.from({ length: 21 }).map((_, i) => {
-          const x = (i-10) * 10
+          const x = (i-10) * 20
           return (
-            <>
-              <line key={`tickX${i}`} x1={x} y1={-2} x2={x} y2={2} stroke="black" strokeWidth={1} />
-              {x !== 0 && <text x={x-5} y={15} fontSize="8" fill="black">{(i-10)/2}</text>}
-            </>
+            <g key={`tickX${i}`}>
+              <line x1={x} y1={-3} x2={x} y2={3} stroke="black" strokeWidth={1} />
+              {x !== 0 && <text x={x-5} y={15} fontSize="10" fill="black">{i-10}</text>}
+            </g>
           )
         })}
         {Array.from({ length: 21 }).map((_, i) => {
-          const y = (i-10) * 10
+          const y = (i-10) * 20
           return (
-            <>
-              <line key={`tickY${i}`} x1={-2} y1={y} x2={2} y2={y} stroke="black" strokeWidth={1} />
-              {y !== 0 && <text x={-20} y={y+3} fontSize="8" fill="black">{-(i-10)/2}</text>}
-            </>
+            <g key={`tickY${i}`}>
+              <line x1={-3} y1={y} x2={3} y2={y} stroke="black" strokeWidth={1} />
+              {y !== 0 && <text x={-25} y={y+4} fontSize="10" fill="black">{-(i-10)}</text>}
+            </g>
           )
         })}
-        <text x={95} y={-5} fontSize="10" fill="black">x</text>
-        <text x={5} y={-95} fontSize="10" fill="black">y</text>
+        <text x={190} y={-5} fontSize="12" fill="black">x</text>
+        <text x={5} y={-190} fontSize="12" fill="black">y</text>
 
         <defs>
           <marker id="arrowX" markerWidth="10" markerHeight="10" refX="5" refY="5"
             orient="auto" markerUnits="strokeWidth">
-                       <path d="M0,0 L10,5 L0,10 Z" fill="black" />
+            <path d="M0,0 L10,5 L0,10 Z" fill="black" />
+          </marker>
+          <marker id="arrowY" markerWidth="10" markerHeight="10" refX="5" refY="5"
+            orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L10,5 L0,10 Z" fill="black" />
           </marker>
         </defs>
 
-        {/* Points interactifs avec coordonnées en unités */}
+                {/* Points interactifs avec coordonnées en unités */}
         {[{P:A,name:"A",color:accent},{P:B,name:"B",color:accent},{P:C,name:"C",color:accent2},{P:D,name:"D",color:accent2}]
           .map(({P,name,color})=>(
             <g key={name}>
@@ -202,9 +208,9 @@ export const DraggablePointsSVG = () => {
             <Text fontWeight="bold">Point {label}</Text>
             <Text>X = {(point.x/20).toFixed(1)} unités</Text>
             <Slider.Root
-              min={-100}
-              max={100}
-              step={10}
+              min={-200}
+              max={200}
+              step={20}
               value={[point.x]}
               onValueChange={(details) => setter({ ...point, x: details.value[0] })}
             >
@@ -213,9 +219,9 @@ export const DraggablePointsSVG = () => {
             </Slider.Root>
             <Text>Y = {(-point.y/20).toFixed(1)} unités</Text>
             <Slider.Root
-              min={-100}
-              max={100}
-              step={10}
+              min={-200}
+              max={200}
+              step={20}
               value={[point.y]}
               onValueChange={(details) => setter({ ...point, y: details.value[0] })}
             >
