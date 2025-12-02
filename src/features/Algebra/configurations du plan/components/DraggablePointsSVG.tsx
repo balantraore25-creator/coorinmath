@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { Badge, Stack, Text, Button } from "@chakra-ui/react"
 import { useColorModeValue } from "@/components/ui/color-mode"
+import { motion } from "framer-motion"
 
 interface Point { x: number; y: number }
 
@@ -160,10 +161,10 @@ export const DraggablePointsSVG = () => {
         })}
         {Array.from({ length: 21 }).map((_, i) => {
           const y = (i-10) * 20
-          return <line key={`gy${i}`} x1={-200} y1={y} x2={200} y2={y} stroke={grid} strokeWidth={0.5}/>
+                    return <line key={`gy${i}`} x1={-200} y1={y} x2={200} y2={y} stroke={grid} strokeWidth={0.5}/>
         })}
 
-                {/* Points interactifs */}
+        {/* Points interactifs reliés à handleMouseDown */}
         {[{P:A,name:"A"},{P:B,name:"B"},{P:C,name:"C"},{P:D,name:"D"}].map(({P,name})=>(
           <g key={name}>
             <circle
@@ -176,7 +177,59 @@ export const DraggablePointsSVG = () => {
             <text x={P.x+6} y={P.y-6} fontSize="10" fill="black">{name}</text>
           </g>
         ))}
+
+        {/* Cercle et centre animés si cocycliques */}
+        {cocyclic && (
+          <motion.g
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+          >
+            <motion.circle
+              cx={center.x}
+              cy={center.y}
+              r={radius}
+              stroke={mode==="progression" ? "blue" : mode==="challenge" ? "orange" : "red"}
+              strokeWidth={1}
+              fill="none"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 1.5 }}
+            />
+            <motion.circle
+              cx={center.x}
+              cy={center.y}
+              r={4}
+              fill={mode==="progression" ? "blue" : mode==="challenge" ? "orange" : "red"}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5 }}
+            />
+            <motion.text
+              x={center.x+6}
+              y={center.y-6}
+              fontSize="10"
+              fill={mode==="progression" ? "blue" : mode==="challenge" ? "orange" : "red"}
+              initial={{ opacity: 0, y: center.y }}
+              animate={{ opacity: 1, y: center.y-6 }}
+              transition={{ duration: 0.8 }}
+            >
+              O
+            </motion.text>
+          </motion.g>
+        )}
       </svg>
+
+      {/* Tableau dynamique si cocycliques */}
+      {cocyclic && (
+        <Stack direction="column" gap={2} mt={2}>
+          <Text fontWeight="bold" color="red.600">Données du cercle circonscrit</Text>
+          <Stack direction="row" gap={4}>
+            <Badge colorScheme="blue">Centre O: ({center.x.toFixed(2)}, {center.y.toFixed(2)})</Badge>
+            <Badge colorScheme="green">Rayon: {radius.toFixed(2)}</Badge>
+          </Stack>
+        </Stack>
+      )}
 
       {/* Feedback Progression */}
       {mode==="progression" && (
