@@ -1,13 +1,5 @@
 import { useState, useCallback } from "react"
-import {
-  Badge,
-  Stack,
-  Text,
-  Slider,
-  SliderTrack,
-  SliderRange,
-  SliderThumb,
-} from "@chakra-ui/react"
+import { Badge, Stack, Text, Slider, SliderTrack, SliderRange, SliderThumb } from "@chakra-ui/react"
 import { useColorModeValue } from "@/components/ui/color-mode"
 import { motion } from "framer-motion"
 
@@ -23,7 +15,6 @@ export const DraggablePointsSVG = () => {
   const [C, setC] = useState<Point>({ x: 0, y: -40 })
   const [D, setD] = useState<Point>({ x: 20, y: 20 })
   const [dragging, setDragging] = useState<string | null>(null)
-
   const [highlightX, setHighlightX] = useState<number | null>(null)
   const [highlightY, setHighlightY] = useState<number | null>(null)
   const [nearGrid, setNearGrid] = useState<string | null>(null)
@@ -90,8 +81,8 @@ export const DraggablePointsSVG = () => {
       <svg viewBox="-200 -200 400 400" width="100%" height="400px"
         onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}
         style={{ cursor: dragging ? "grabbing" : "default" }}>
-        
-        {/* Grille agrandie */}
+
+        {/* Grille */}
         {Array.from({ length: 21 }).map((_, i) => {
           const x = (i-10) * 20
           return <line key={`gx${i}`} x1={x} y1={-200} x2={x} y2={200}
@@ -105,44 +96,21 @@ export const DraggablePointsSVG = () => {
             strokeWidth={highlightY === y ? 2 : 0.5}/>
         })}
 
-        {/* Axes */}
-        <line x1={-200} y1={0} x2={200} y2={0} stroke="black" strokeWidth={1} markerEnd="url(#arrowX)" />
-        <line x1={0} y1={200} x2={0} y2={-200} stroke="black" strokeWidth={1} markerEnd="url(#arrowY)" />
+        {/* Cercle circonscrit animé */}
+        <motion.circle
+          cx={center.x} cy={center.y}
+          r={radius}
+          fill="none"
+          stroke={accent}
+          strokeWidth={2}
+          animate={cocyclic ? { r: [radius, radius*1.1, radius] } : { r: radius }}
+          transition={cocyclic ? { duration: 1, repeat: Infinity } : {}}
+        />
 
-        {/* Graduations en unités entières */}
-        {Array.from({ length: 21 }).map((_, i) => {
-          const x = (i-10) * 20
-          return (
-            <g key={`tickX${i}`}>
-              <line x1={x} y1={-3} x2={x} y2={3} stroke="black" strokeWidth={1} />
-              {x !== 0 && <text x={x-5} y={15} fontSize="10" fill="black">{i-10}</text>}
-            </g>
-          )
-        })}
-        {Array.from({ length: 21 }).map((_, i) => {
-          const y = (i-10) * 20
-          return (
-            <g key={`tickY${i}`}>
-              <line x1={-3} y1={y} x2={3} y2={y} stroke="black" strokeWidth={1} />
-              {y !== 0 && <text x={-25} y={y+4} fontSize="10" fill="black">{-(i-10)}</text>}
-            </g>
-          )
-        })}
-        <text x={190} y={-5} fontSize="12" fill="black">x</text>
-        <text x={5} y={-190} fontSize="12" fill="black">y</text>
+        {/* Centre violet */}
+        <circle cx={center.x} cy={center.y} r={4} fill="purple" />
 
-        <defs>
-          <marker id="arrowX" markerWidth="10" markerHeight="10" refX="5" refY="5"
-            orient="auto" markerUnits="strokeWidth">
-            <path d="M0,0 L10,5 L0,10 Z" fill="black" />
-          </marker>
-          <marker id="arrowY" markerWidth="10" markerHeight="10" refX="5" refY="5"
-            orient="auto" markerUnits="strokeWidth">
-            <path d="M0,0 L10,5 L0,10 Z" fill="black" />
-          </marker>
-        </defs>
-
-                {/* Points interactifs avec coordonnées en unités */}
+        {/* Points interactifs */}
         {[{P:A,name:"A",color:accent},{P:B,name:"B",color:accent},{P:C,name:"C",color:accent2},{P:D,name:"D",color:accent2}]
           .map(({P,name,color})=>(
             <g key={name}>
@@ -154,11 +122,7 @@ export const DraggablePointsSVG = () => {
                 onMouseDown={handleMouseDown(name)}
                 animate={{ cx: P.x, cy: P.y, r: dragging===name ? [5,8,5] : 5 }}
                 transition={{ duration: 0.4, ease: "easeOut" }} whileHover={{ r: 7 }}/>
-              
-              {/* Nom du point */}
               <text x={P.x+6} y={P.y-6} fontSize="10" fill="black">{name}</text>
-              
-              {/* Coordonnées en unités mathématiques */}
               <text x={P.x+6} y={P.y+12} fontSize="9" fill="blue">
                 ({(P.x/20).toFixed(1)}, {(-P.y/20).toFixed(1)})
               </text>
@@ -171,23 +135,33 @@ export const DraggablePointsSVG = () => {
         <Badge colorScheme={aligned ? "green":"gray"}>Alignés (A,B,C): {aligned?"Oui":"Non"}</Badge>
         <Badge colorScheme={cocyclic ? "green":"red"}>Cocycliques (A,B,C,D): {cocyclic?"Oui":"Non"}</Badge>
         <Badge colorScheme="blue">Rapport complexe: {ratioRe.toFixed(3)} + {ratioIm.toFixed(3)} i</Badge>
-        <Badge colorScheme="purple">|ratio| = {module.toFixed(3)}</Badge>
+               <Badge colorScheme="purple">|ratio| = {module.toFixed(3)}</Badge>
         <Badge colorScheme="orange">arg(ratio) = {argument.toFixed(2)}°</Badge>
       </Stack>
 
       {/* Plan complexe avec cercle unité */}
       <svg viewBox="-1.5 -1.5 3 3" width="220" height="220" style={{ border: "1px solid #ccc", marginTop: "10px" }}>
+        {/* Axes */}
         <line x1={-1.5} y1={0} x2={1.5} y2={0} stroke="black" strokeWidth={0.02}/>
         <line x1={0} y1={-1.5} x2={0} y2={1.5} stroke="black" strokeWidth={0.02}/>
+        
+        {/* Cercle unité */}
         <circle cx={0} cy={0} r={1} stroke="gray" fill="none" strokeDasharray="4"/>
+        
+        {/* Secteur angulaire */}
         <path
           d={`M 0 0 L 1 0 A 1 1 0 ${argument>180?1:0} ${argument<0?0:1} ${Math.cos(argument*Math.PI/180)} ${-Math.sin(argument*Math.PI/180)} Z`}
           fill="rgba(255,165,0,0.2)" stroke="orange" strokeWidth={0.02}
         />
+        
+        {/* Vecteur complexe */}
         <line x1={0} y1={0} x2={ratioRe} y2={-ratioIm}
           stroke={module <= 1 ? "green" : "red"} strokeWidth={0.05} markerEnd="url(#arrow)" />
         <circle cx={ratioRe} cy={-ratioIm} r={0.07} fill={module <= 1 ? "green" : "red"} />
+        
+        {/* Label du module */}
         <text x={ratioRe+0.1} y={-ratioIm-0.1} fontSize="0.15" fill="blue">|z| = {module.toFixed(2)}</text>
+        
         <defs>
           <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5"
             orient="auto" markerUnits="strokeWidth">
@@ -206,6 +180,8 @@ export const DraggablePointsSVG = () => {
         ].map(({label,point,setter})=>(
           <Stack key={label} direction="column" gap={2}>
             <Text fontWeight="bold">Point {label}</Text>
+            
+            {/* Slider X */}
             <Text>X = {(point.x/20).toFixed(1)} unités</Text>
             <Slider.Root
               min={-200}
@@ -217,6 +193,8 @@ export const DraggablePointsSVG = () => {
               <SliderTrack><SliderRange /></SliderTrack>
               <SliderThumb index={0} />
             </Slider.Root>
+            
+            {/* Slider Y */}
             <Text>Y = {(-point.y/20).toFixed(1)} unités</Text>
             <Slider.Root
               min={-200}
