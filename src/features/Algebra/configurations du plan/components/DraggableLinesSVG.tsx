@@ -1,5 +1,11 @@
 import { useState, useCallback, useEffect } from "react"
-import { Badge, Stack, Text, Button } from "@chakra-ui/react"
+import {
+  Badge,
+  Stack,
+  Text,
+  Button,
+  Table,
+} from "@chakra-ui/react"
 import { useColorModeValue } from "@/components/ui/color-mode"
 import { motion } from "framer-motion"
 
@@ -47,14 +53,38 @@ export const DraggableLinesSVG = () => {
   const vCD = { x: D.x - C.x, y: D.y - C.y }
   const dot = vAB.x * vCD.x + vAB.y * vCD.y
   const cross = vAB.x * vCD.y - vAB.y * vCD.x
-  const angleDeg = round((Math.atan2(cross, dot) * 180) / Math.PI)
+  const angleDeg = round(((Math.atan2(cross, dot) * 180) / Math.PI + 360) % 360)
   const isParallel = Math.abs(cross) < 1e-2
   const isPerp = Math.abs(dot) < 1e-2
 
+  // Affixes complexes
+  const zA = { re: A.x, im: A.y }
+  const zB = { re: B.x, im: B.y }
+  const zC = { re: C.x, im: C.y }
+  const zD = { re: D.x, im: D.y }
+
+  const complexDiv = (num: { re: number; im: number }, den: { re: number; im: number }) => {
+    const denom = den.re ** 2 + den.im ** 2
+    return {
+      re: round((num.re * den.re + num.im * den.im) / denom),
+      im: round((num.im * den.re - num.re * den.im) / denom),
+    }
+  }
+
+  // Rapport alignement
+  const alignRatio = complexDiv(
+    { re: zC.re - zA.re, im: zC.im - zA.im },
+    { re: zB.re - zA.re, im: zB.im - zA.im }
+  )
+
+  // Rapport perpendicularité
+  const perpRatio = complexDiv(
+    { re: zB.re - zA.re, im: zB.im - zA.im },
+    { re: zD.re - zC.re, im: zD.im - zC.im }
+  )
+
   // Modes
   const [mode, setMode] = useState<"progression"|"challenge"|"libre">("libre")
-
-  // Progression
   const [currentLevel, setCurrentLevel] = useState(0)
   const [success, setSuccess] = useState(false)
   const [score, setScore] = useState(0)
@@ -68,8 +98,8 @@ export const DraggableLinesSVG = () => {
     else if (level.goal === "perp" && isPerp) setSuccess(true)
     else if (level.goal === "angle" && Math.abs(angleDeg - (level.targetAngle ?? 0)) < 5) setSuccess(true)
     else if (level.goal === "isosceles") {
-      const distAB = Math.sqrt((A.x-B.x)**2 + (A.y-B.y)**2)
-      const distAC = Math.sqrt((A.x-C.x)**2 + (A.y-C.y)**2)
+      const distAB = Math.hypot(A.x-B.x, A.y-B.y)
+      const distAC = Math.hypot(A.x-C.x, A.y-C.y)
       setSuccess(Math.abs(distAB - distAC) < 5)
     } else setSuccess(false)
   }, [mode, currentLevel, isParallel, isPerp, angleDeg, A, B, C])
@@ -83,57 +113,6 @@ export const DraggableLinesSVG = () => {
       }, 1500)
     }
   }, [success, mode])
-
-  // Challenge
-  const [challengeActive, setChallengeActive] = useState(false)
-  const [challengeLevel, setChallengeLevel] = useState<number|null>(null)
-  const [challengeSuccess, setChallengeSuccess] = useState(false)
-  const [challengeScore, setChallengeScore] = useState(0)
-  const [timeLeft, setTimeLeft] = useState(60)
-
-  const pickRandomLevel = () => {
-    const randomIndex = Math.floor(Math.random() * levels.length)
-    setChallengeLevel(randomIndex)
-    setChallengeSuccess(false)
-  }
-
-  const startChallenge = () => {
-    setChallengeActive(true)
-    setChallengeScore(0)
-    setTimeLeft(60)
-    pickRandomLevel()
-  }
-
-  useEffect(() => {
-    if (mode!=="challenge" || challengeLevel===null) return
-    const level = levels[challengeLevel]
-
-    if (level.goal === "parallel" && isParallel) setChallengeSuccess(true)
-    else if (level.goal === "perp" && isPerp) setChallengeSuccess(true)
-    else if (level.goal === "angle" && Math.abs(angleDeg - (level.targetAngle ?? 0)) < 5) setChallengeSuccess(true)
-    else if (level.goal === "isosceles") {
-      const distAB = Math.sqrt((A.x-B.x)**2 + (A.y-B.y)**2)
-      const distAC = Math.sqrt((A.x-C.x)**2 + (A.y-C.y)**2)
-      setChallengeSuccess(Math.abs(distAB - distAC) < 5)
-    } else setChallengeSuccess(false)
-  }, [mode, challengeLevel, isParallel, isPerp, angleDeg, A, B, C])
-
-  useEffect(() => {
-    if (mode==="challenge" && challengeSuccess) {
-      setChallengeScore(prev => prev + 1)
-      setTimeout(() => pickRandomLevel(), 1000)
-    }
-  }, [challengeSuccess, mode])
-
-  useEffect(() => {
-    if (mode!=="challenge" || !challengeActive) return
-    if (timeLeft <= 0) {
-      setChallengeActive(false)
-      return
-    }
-    const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [mode, challengeActive, timeLeft])
 
   return (
     <Stack direction="column" gap={3} align="start">
@@ -167,7 +146,7 @@ export const DraggableLinesSVG = () => {
 
         {/* Droite CD */}
         <line x1={C.x} y1={C.y} x2={D.x} y2={D.y} stroke={accentCD} strokeWidth={2}/>
-                {[{P:C,name:"C"},{P:D,name:"D"}].map(({P,name})=>(
+        {[{P:C,name:"C"},{P:D,name:"D"}].map(({P,name})=>(
           <motion.circle key={name} cx={P.x} cy={P.y} r={5} fill={accentCD}
             onMouseDown={handleMouseDown(name)}
             animate={{ cx: P.x, cy: P.y, r: dragging===name ? [5,8,5] : 5 }}
@@ -180,8 +159,8 @@ export const DraggableLinesSVG = () => {
         <path
           d={`M ${A.x} ${A.y} 
               L ${A.x + vAB.x*0.3} ${A.y + vAB.y*0.3}
-              A 30 30 0 0 1 ${A.x + vCD.x*0.3} ${A.y + vCD.y*0.3}
-              Z`}
+              A 30 30
+                            Z`}
           fill="rgba(255,165,0,0.2)" stroke="orange" strokeWidth={1}
         />
         <text x={A.x+15} y={A.y-10} fontSize="12" fill="orange">θ={angleDeg}°</text>
@@ -200,7 +179,7 @@ export const DraggableLinesSVG = () => {
         </Button>
       </Stack>
 
-      {/* Feedback selon le mode */}
+      {/* Feedback progression */}
       {mode==="progression" && (
         <Stack direction="column" gap={2} mt={2}>
           {currentLevel < levels.length ? (
@@ -217,26 +196,7 @@ export const DraggableLinesSVG = () => {
         </Stack>
       )}
 
-      {mode==="challenge" && (
-        <Stack direction="column" gap={2} mt={2}>
-          {!challengeActive ? (
-            <Button colorScheme="blue" onClick={startChallenge}>Démarrer le challenge</Button>
-          ) : (
-            <>
-              <Text>Temps restant : {timeLeft}s</Text>
-              <Text>Score : {challengeScore}</Text>
-              {challengeLevel!==null && <Text>{levels[challengeLevel].label}</Text>}
-              <Text fontSize="sm" color={challengeSuccess ? "green.600":"red.600"}>
-                {challengeSuccess ? "✅ Bravo !" : "❌ Continue…"}
-              </Text>
-            </>
-          )}
-          {!challengeActive && timeLeft<=0 && (
-            <Text fontWeight="bold" color="purple.600">🎉 Challenge terminé ! Score final : {challengeScore}</Text>
-          )}
-        </Stack>
-      )}
-
+      {/* Feedback libre */}
       {mode==="libre" && (
         <Stack direction="column" gap={2} mt={2}>
           <Text>Mode libre activé : explore les points et observe les propriétés des droites.</Text>
@@ -247,6 +207,47 @@ export const DraggableLinesSVG = () => {
           </Stack>
         </Stack>
       )}
+
+      {/* 🔹 Caractérisations complexes */}
+      <Text fontWeight="bold" mt={4}>Caractérisations complexes</Text>
+
+      <Table.ScrollArea>
+        <Table.Root size="sm" variant="outline">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader>Propriété</Table.ColumnHeader>
+              <Table.ColumnHeader>Rapport complexe</Table.ColumnHeader>
+              <Table.ColumnHeader>Partie réelle</Table.ColumnHeader>
+              <Table.ColumnHeader>Partie imaginaire</Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>Alignement (A,B,C)</Table.Cell>
+              <Table.Cell>(zC - zA) / (zB - zA)</Table.Cell>
+              <Table.Cell>{alignRatio.re}</Table.Cell>
+              <Table.Cell>{alignRatio.im}</Table.Cell>
+            </Table.Row>
+
+            <Table.Row>
+              <Table.Cell>Perpendicularité (AB ⟂ CD)</Table.Cell>
+              <Table.Cell>(zB - zA) / (zD - zC)</Table.Cell>
+              <Table.Cell>{perpRatio.re}</Table.Cell>
+              <Table.Cell>{perpRatio.im}</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table.Root>
+      </Table.ScrollArea>
+
+      <Stack direction="row" gap={4} mt={2}>
+        <Badge colorScheme={Math.abs(alignRatio.im) < 1e-2 ? "green":"gray"}>
+          Alignés: {Math.abs(alignRatio.im) < 1e-2 ? "Oui":"Non"}
+        </Badge>
+        <Badge colorScheme={Math.abs(perpRatio.re) < 1e-2 ? "green":"gray"}>
+          Perpendiculaires: {Math.abs(perpRatio.re) < 1e-2 ? "Oui":"Non"}
+        </Badge>
+      </Stack>
     </Stack>
   )
 }
