@@ -208,46 +208,46 @@ export const DraggableLinesSVG = () => {
         </Stack>
       )}
 
-      {/* 🔹 Caractérisations complexes */}
-      <Text fontWeight="bold" mt={4}>Caractérisations complexes</Text>
+     {/* 🔹 Caractérisations complexes */}
+<Text fontWeight="bold" mt={4}>Caractérisations complexes</Text>
 
-      <Table.ScrollArea>
-        <Table.Root size="sm" variant="outline">
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeader>Propriété</Table.ColumnHeader>
-              <Table.ColumnHeader>Rapport complexe</Table.ColumnHeader>
-              <Table.ColumnHeader>Partie réelle</Table.ColumnHeader>
-              <Table.ColumnHeader>Partie imaginaire</Table.ColumnHeader>
-            </Table.Row>
-          </Table.Header>
+<Table.ScrollArea>
+  <Table.Root size="sm" variant="outline">
+    <Table.Header>
+      <Table.Row>
+        <Table.ColumnHeader>Propriété</Table.ColumnHeader>
+        <Table.ColumnHeader>Rapport complexe</Table.ColumnHeader>
+        <Table.ColumnHeader>Partie réelle</Table.ColumnHeader>
+        <Table.ColumnHeader>Partie imaginaire</Table.ColumnHeader>
+      </Table.Row>
+    </Table.Header>
 
-          <Table.Body>
-            <Table.Row>
-              <Table.Cell>Alignement (A,B,C)</Table.Cell>
-              <Table.Cell>(zC - zA) / (zB - zA)</Table.Cell>
-              <Table.Cell>{alignRatio.re}</Table.Cell>
-              <Table.Cell>{alignRatio.im}</Table.Cell>
-            </Table.Row>
+    <Table.Body>
+      <Table.Row>
+        <Table.Cell>Parallélisme (AB ∥ CD)</Table.Cell>
+        <Table.Cell>(zC - zA) / (zB - zA)</Table.Cell>
+        <Table.Cell>{alignRatio.re}</Table.Cell>
+        <Table.Cell>{alignRatio.im}</Table.Cell>
+      </Table.Row>
 
-            <Table.Row>
-              <Table.Cell>Perpendicularité (AB ⟂ CD)</Table.Cell>
-              <Table.Cell>(zB - zA) / (zD - zC)</Table.Cell>
-              <Table.Cell>{perpRatio.re}</Table.Cell>
-              <Table.Cell>{perpRatio.im}</Table.Cell>
-            </Table.Row>
-          </Table.Body>
-        </Table.Root>
-      </Table.ScrollArea>
+      <Table.Row>
+        <Table.Cell>Perpendicularité (AB ⟂ CD)</Table.Cell>
+        <Table.Cell>(zB - zA) / (zD - zC)</Table.Cell>
+        <Table.Cell>{perpRatio.re}</Table.Cell>
+        <Table.Cell>{perpRatio.im}</Table.Cell>
+      </Table.Row>
+    </Table.Body>
+  </Table.Root>
+</Table.ScrollArea>
 
-      <Stack direction="row" gap={4} mt={2}>
-        <Badge colorScheme={Math.abs(alignRatio.im) < 1e-2 ? "green":"gray"}>
-          Alignés: {Math.abs(alignRatio.im) < 1e-2 ? "Oui":"Non"}
-        </Badge>
-        <Badge colorScheme={Math.abs(perpRatio.re) < 1e-2 ? "green":"gray"}>
-          Perpendiculaires: {Math.abs(perpRatio.re) < 1e-2 ? "Oui":"Non"}
-        </Badge>
-      </Stack>
-    </Stack>
+<Stack direction="row" gap={4} mt={2}>
+  <Badge colorScheme={Math.abs(alignRatio.im) < 1e-2 ? "green":"gray"}>
+    Parallèles: {Math.abs(alignRatio.im) < 1e-2 ? "Oui":"Non"}
+  </Badge>
+  <Badge colorScheme={Math.abs(perpRatio.re) < 1e-2 ? "green":"gray"}>
+    Perpendiculaires: {Math.abs(perpRatio.re) < 1e-2 ? "Oui":"Non"}
+  </Badge>
+</Stack>
+</Stack>
   )
 }
