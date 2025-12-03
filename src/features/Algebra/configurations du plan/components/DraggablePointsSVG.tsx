@@ -1,7 +1,9 @@
-import { useState, useCallback, useEffect } from "react"
-import { Badge, Stack, Text, Button } from "@chakra-ui/react"
+import { useState, useCallback } from "react"
+import { Badge, Stack, Text, Button, Table } from "@chakra-ui/react"
 import { useColorModeValue } from "@/components/ui/color-mode"
 import { motion } from "framer-motion"
+import 'katex/dist/katex.min.css'
+import { BlockMath } from 'react-katex'
 
 interface Point { x: number; y: number }
 
@@ -56,93 +58,15 @@ export const DraggablePointsSVG = () => {
   const module = Math.sqrt(ratioRe**2 + ratioIm**2)
   const argument = Math.atan2(ratioIm, ratioRe) * 180 / Math.PI
 
-  // Modes
-  const [mode, setMode] = useState<"progression"|"challenge"|"libre">("libre")
-
-  // Progression
-  const [level, setLevel] = useState(0)
-  const [success, setSuccess] = useState(false)
-  const [score, setScore] = useState(0)
-
-  useEffect(() => {
-    if (mode!=="progression") return
-    if (level === 0 && aligned) setSuccess(true)
-    else if (level === 1 && cocyclic) setSuccess(true)
-    else if (level === 2 && module <= 1) setSuccess(true)
-    else if (level === 3 && Math.abs(argument - 90) < 5) setSuccess(true)
-    else setSuccess(false)
-  }, [mode, level, aligned, cocyclic, module, argument])
-
-  useEffect(() => {
-    if (mode==="progression" && success) {
-      setScore(prev => prev + 1)
-      setTimeout(() => {
-        setLevel(prev => prev + 1)
-        setSuccess(false)
-      }, 1500)
-    }
-  }, [success, mode])
-
-  // Challenge
-  const [challengeActive, setChallengeActive] = useState(false)
-  const [challengeLevel, setChallengeLevel] = useState<number|null>(null)
-  const [challengeSuccess, setChallengeSuccess] = useState(false)
-  const [challengeScore, setChallengeScore] = useState(0)
-  const [timeLeft, setTimeLeft] = useState(60)
-
-  const pickRandomLevel = () => {
-    const randomIndex = Math.floor(Math.random() * 4)
-    setChallengeLevel(randomIndex)
-    setChallengeSuccess(false)
-  }
-  const startChallenge = () => {
-    setChallengeActive(true)
-    setChallengeScore(0)
-    setTimeLeft(60)
-    pickRandomLevel()
-  }
-
-  useEffect(() => {
-    if (mode!=="challenge" || challengeLevel===null) return
-    if (challengeLevel === 0 && aligned) setChallengeSuccess(true)
-    else if (challengeLevel === 1 && cocyclic) setChallengeSuccess(true)
-    else if (challengeLevel === 2 && module <= 1) setChallengeSuccess(true)
-    else if (challengeLevel === 3 && Math.abs(argument - 90) < 5) setChallengeSuccess(true)
-    else setChallengeSuccess(false)
-  }, [mode, challengeLevel, aligned, cocyclic, module, argument])
-
-  useEffect(() => {
-    if (mode==="challenge" && challengeSuccess) {
-      setChallengeScore(prev => prev + 1)
-      setTimeout(() => pickRandomLevel(), 1000)
-    }
-  }, [challengeSuccess, mode])
-
-  useEffect(() => {
-    if (mode!=="challenge" || !challengeActive) return
-    if (timeLeft <= 0) {
-      setChallengeActive(false)
-      return
-    }
-    const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [mode, challengeActive, timeLeft])
-
   return (
     <Stack direction="column" gap={4} align="start">
       <Text fontSize="lg" fontWeight="bold">Exploration interactive du plan</Text>
 
-      {/* Choix du mode */}
+      {/* Boutons de mode */}
       <Stack direction="row" gap={2}>
-        <Button size="sm" colorScheme={mode==="progression"?"blue":"gray"} onClick={() => setMode("progression")}>
-          Progression
-        </Button>
-        <Button size="sm" colorScheme={mode==="challenge"?"blue":"gray"} onClick={() => setMode("challenge")}>
-          Challenge
-        </Button>
-        <Button size="sm" colorScheme={mode==="libre"?"blue":"gray"} onClick={() => setMode("libre")}>
-          Libre
-        </Button>
+        <Button size="sm" colorScheme="blue">Progression</Button>
+        <Button size="sm" colorScheme="orange">Challenge</Button>
+        <Button size="sm" colorScheme="green">Libre</Button>
       </Stack>
 
       {/* SVG principal */}
@@ -161,149 +85,87 @@ export const DraggablePointsSVG = () => {
         })}
         {Array.from({ length: 21 }).map((_, i) => {
           const y = (i-10) * 20
-                    return <line key={`gy${i}`} x1={-200} y1={y} x2={200} y2={y} stroke={grid} strokeWidth={0.5}/>
+          return <line key={`gy${i}`} x1={-200} y1={y} x2={200} y2={y} stroke={grid} strokeWidth={0.5}/>
         })}
 
-        {/* Points interactifs reliés à handleMouseDown */}
+        {/* Points interactifs animés */}
         {[{P:A,name:"A"},{P:B,name:"B"},{P:C,name:"C"},{P:D,name:"D"}].map(({P,name})=>(
-          <g key={name}>
-            <circle
-              cx={P.x}
-              cy={P.y}
-              r={5}
-              fill="blue"
-              onMouseDown={handleMouseDown(name)}
-            />
-            <text x={P.x+6} y={P.y-6} fontSize="10" fill="black">{name}</text>
-          </g>
+          <motion.circle
+            key={name}
+            cx={P.x}
+            cy={P.y}
+            r={5}
+            fill="blue"
+            onMouseDown={handleMouseDown(name)}
+            animate={{ cx: P.x, cy: P.y, r: dragging===name ? [5,8,5] : 5 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            whileHover={{ r: 7 }}
+          />
         ))}
 
-        {/* Cercle et centre animés si cocycliques */}
+        {/* Cercle circonscrit */}
         {cocyclic && (
-          <motion.g
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-          >
-            <motion.circle
-              cx={center.x}
-              cy={center.y}
-              r={radius}
-              stroke={mode==="progression" ? "blue" : mode==="challenge" ? "orange" : "red"}
-              strokeWidth={1}
-              fill="none"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1.5 }}
-            />
-            <motion.circle
-              cx={center.x}
-              cy={center.y}
-              r={4}
-              fill={mode==="progression" ? "blue" : mode==="challenge" ? "orange" : "red"}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.5 }}
-            />
-            <motion.text
-              x={center.x+6}
-              y={center.y-6}
-              fontSize="10"
-              fill={mode==="progression" ? "blue" : mode==="challenge" ? "orange" : "red"}
-              initial={{ opacity: 0, y: center.y }}
-              animate={{ opacity: 1, y: center.y-6 }}
-              transition={{ duration: 0.8 }}
-            >
-              O
-            </motion.text>
-          </motion.g>
+          <>
+            <circle cx={center.x} cy={center.y} r={radius} stroke="orange" strokeWidth={1} fill="none"/>
+            <circle cx={center.x} cy={center.y} r={4} fill="orange"/>
+            <text x={center.x+6} y={center.y-6} fontSize="10" fill="orange">O</text>
+          </>
         )}
       </svg>
 
-      {/* Tableau dynamique si cocycliques */}
-      {cocyclic && (
-        <Stack direction="column" gap={2} mt={2}>
-          <Text fontWeight="bold" color="red.600">Données du cercle circonscrit</Text>
-          <Stack direction="row" gap={4}>
-            <Badge colorScheme="blue">Centre O: ({center.x.toFixed(2)}, {center.y.toFixed(2)})</Badge>
-            <Badge colorScheme="green">Rayon: {radius.toFixed(2)}</Badge>
-          </Stack>
-        </Stack>
-      )}
+      {/* Badge pour l’alignement */}
+      <Badge colorScheme={aligned ? "green":"red"}>
+        Alignés (A,B,C): {aligned ? "Oui" : "Non"}
+      </Badge>
 
-      {/* Feedback Progression */}
-      {mode==="progression" && (
-        <Stack direction="column" gap={2} mt={2}>
-          {level < 4 ? (
-            <>
-              <Text>
-                {level === 0 && "Niveau 1 : Aligner A, B, C"}
-                {level === 1 && "Niveau 2 : Cocycliques A, B, C, D"}
-                {level === 2 && "Niveau 3 : Module du rapport ≤ 1"}
-                {level === 3 && "Niveau 4 : Argument ≈ 90°"}
-              </Text>
-              <Text fontSize="sm" color={success ? "green.600":"red.600"}>
-                {success ? "✅ Bravo !" : "❌ Continue…"}
-              </Text>
-            </>
-          ) : (
-            <Text fontWeight="bold" color="green.600">🎉 Félicitations, progression terminée !</Text>
-          )}
-          <Badge colorScheme="purple">Score: {score}</Badge>
-        </Stack>
-      )}
+      {/* Tableau des rapports complexes et cocyclicité */}
+      <Text fontWeight="bold" mt={4}>Caractérisations numériques</Text>
+      <Table.Root size="sm" variant="outline">
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeader>Propriété</Table.ColumnHeader>
+            <Table.ColumnHeader>Valeur</Table.ColumnHeader>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          <Table.Row>
+            <Table.Cell>Partie réelle</Table.Cell>
+            <Table.Cell>{ratioRe.toFixed(3)}</Table.Cell>
+          </Table.Row>
+          <Table.Row>
+            <Table.Cell>Partie imaginaire</Table.Cell>
+            <Table.Cell>{ratioIm.toFixed(3)}</Table.Cell>
+          </Table.Row>
+          <Table.Row>
+            <Table.Cell>Module</Table.Cell>
+            <Table.Cell>{module.toFixed(3)}</Table.Cell>
+          </Table.Row>
+          <Table.Row>
+            <Table.Cell>Argument</Table.Cell>
+            <Table.Cell>{argument.toFixed(2)}°</Table.Cell>
+          </Table.Row>
+          <Table.Row>
+            <Table.Cell>Cocyclicité (A,B,C,D)</Table.Cell>
+            <Table.Cell>{cocyclic ? "Oui" : "Non"}</Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>
 
-      {/* Feedback Challenge */}
-      {mode==="challenge" && (
-        <Stack direction="column" gap={2} mt={2}>
-          {!challengeActive ? (
-            <Button colorScheme="blue" onClick={startChallenge}>
-              Démarrer le challenge
-            </Button>
-          ) : (
-            <>
-              <Text>Temps restant : {timeLeft}s</Text>
-              <Text>Score : {challengeScore}</Text>
-              {challengeLevel!==null && (
-                <Text>
-                  {challengeLevel === 0 && "Objectif: Aligner A, B, C"}
-                  {challengeLevel === 1 && "Objectif: Cocycliques A, B, C, D"}
-                  {challengeLevel === 2 && "Objectif: Module du rapport ≤ 1"}
-                  {challengeLevel === 3 && "Objectif: Argument ≈ 90°"}
-                </Text>
-              )}
-              <Text fontSize="sm" color={challengeSuccess ? "green.600":"red.600"}>
-                {challengeSuccess ? "✅ Bravo !" : "❌ Continue…"}
-              </Text>
-            </>
-          )}
-          {!challengeActive && timeLeft<=0 && (
-            <Text fontWeight="bold" color="purple.600">
-              🎉 Challenge terminé ! Score final : {challengeScore}
-            </Text>
-          )}
-        </Stack>
-      )}
+            {/* Section théorique en LaTeX */}
+      <Text fontWeight="bold" mt={6} fontSize="lg">Caractérisations complexes (formules)</Text>
+      <Stack direction="column" gap={3} mt={2}>
+        <Text><strong>Alignement :</strong></Text>
+        <BlockMath math="\frac{z_C - z_A}{z_B - z_A} \in \mathbb{R}" />
 
-      {/* Feedback Libre */}
-      {mode==="libre" && (
-        <Stack direction="column" gap={2} mt={2}>
-          <Text>Mode libre activé : explore les points et observe les propriétés géométriques.</Text>
-          <Stack direction="row" gap={4}>
-            <Badge colorScheme={aligned ? "green":"gray"}>
-              Alignés (A,B,C): {aligned ? "Oui":"Non"}
-            </Badge>
-            <Badge colorScheme={cocyclic ? "green":"red"}>
-              Cocycliques (A,B,C,D): {cocyclic ? "Oui":"Non"}
-            </Badge>
-            <Badge colorScheme="blue">
-              Rapport complexe: {ratioRe.toFixed(3)} + {ratioIm.toFixed(3)} i
-            </Badge>
-            <Badge colorScheme="purple">|ratio| = {module.toFixed(3)}</Badge>
-            <Badge colorScheme="orange">arg(ratio) = {argument.toFixed(2)}°</Badge>
-          </Stack>
-        </Stack>
-      )}
+        <Text><strong>Cocyclicité :</strong></Text>
+        <BlockMath math="\frac{(z_A - z_B)(z_C - z_D)}{(z_A - z_D)(z_C - z_B)} \in \mathbb{R}" />
+
+        <Text><strong>Distance et module :</strong></Text>
+        <BlockMath math="|z_B - z_A|" />
+
+        <Text><strong>Angle et argument :</strong></Text>
+        <BlockMath math="\arg\left(\frac{z_B}{z_A}\right)" />
+      </Stack>
     </Stack>
   )
 }
